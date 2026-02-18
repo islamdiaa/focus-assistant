@@ -237,11 +237,17 @@ export default function SettingsPage() {
       {/* About */}
       <div className="bg-warm-sand/50 rounded-2xl border border-border p-6">
         <h3 className="font-serif text-lg text-foreground mb-2">About Your Focus Assistant</h3>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          A warm, focused productivity tool built to help you manage tasks, track focus sessions,
-          and prioritize with the Eisenhower Matrix. Your data syncs to Google Sheets for cloud
-          persistence, or stays safely in your browser's local storage.
+        <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+          Built with ADHD-friendly design principles in mind. This app uses color-coding, chunky interactive elements,
+          and satisfying feedback to help you stay focused and motivated. Your data is stored locally in your browser
+          — it's private and always available, even offline. Optionally sync to Google Sheets for cloud persistence.
         </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">v1.0</span>
+          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">Local Storage</span>
+          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">ADHD-Friendly</span>
+          <span className="text-xs px-3 py-1 rounded-full bg-warm-sage-light border border-warm-sage/20 text-warm-sage font-medium">Google Sheets Sync</span>
+        </div>
       </div>
     </div>
   );

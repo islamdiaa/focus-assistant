@@ -2,15 +2,16 @@
  * Tasks Page — Warm Productivity design
  * Task list with filters, sorting, add/edit/delete
  * Category, Energy, button-group Priority
+ * Inline edit on task cards with pencil icon
  */
 import { useState, useMemo } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check } from 'lucide-react';
+import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check, Pencil, X, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { Priority, TaskStatus, Category, EnergyLevel } from '@/lib/types';
+import type { Task, Priority, TaskStatus, Category, EnergyLevel } from '@/lib/types';
 
 const PRIORITY_COLORS: Record<Priority, string> = {
   urgent: 'bg-warm-terracotta/15 text-warm-terracotta border-warm-terracotta/30',
@@ -36,9 +37,9 @@ const CATEGORY_CONFIG: Record<Category, { emoji: string; label: string }> = {
 };
 
 const ENERGY_CONFIG: Record<EnergyLevel, { emoji: string; label: string }> = {
-  low: { emoji: '🔋', label: 'Low' },
-  medium: { emoji: '⚡', label: 'Medium' },
-  high: { emoji: '🔥', label: 'High' },
+  low: { emoji: '🔋', label: 'Low Energy' },
+  medium: { emoji: '⚡', label: 'Medium Energy' },
+  high: { emoji: '🔥', label: 'High Energy' },
 };
 
 type Filter = 'all' | 'active' | 'done';
@@ -48,11 +49,132 @@ const PRIORITY_ORDER: Record<Priority, number> = { urgent: 0, high: 1, medium: 2
 
 const EMPTY_TASKS_IMG = 'https://private-us-east-1.manuscdn.com/sessionFile/PlXiEUsi6v4VD1JuecPpX3/sandbox/k4s8ZO93y8NMD02oOYn6TD-img-1_1771447504000_na1fn_ZW1wdHktdGFza3M.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvUGxYaUVVc2k2djRWRDFKdWVjUHBYMy9zYW5kYm94L2s0czhaTzkzeThOTUQwMm9PWW42VEQtaW1nLTFfMTc3MTQ0NzUwNDAwMF9uYTFmbl9aVzF3ZEhrdGRHRnphM00ucG5nP3gtb3NzLXByb2Nlc3M9aW1hZ2UvcmVzaXplLHdfMTkyMCxoXzE5MjAvZm9ybWF0LHdlYnAvcXVhbGl0eSxxXzgwIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=amTtVIynHBRmIEVQIldvf4-bXMes21S3AX6LLFog5bRL60efcFgUSN3AJ2WmE-HkJPU90jm95LEtxx6105fZKASdQIJuW-o~kYZ43Cueotk~TRv77zsOIaMJg5D3EScTFkU8g1xCMfqaXF1sAzyiP2qRlcRH0HnCtWgS3HcJ1qap46LqW8k2FMkYkC0oTFTQ5FU1NzfHgFl185ayg5i1Xdo0veHJKTyXMGu-S~-w3s423z~GlaEiQ6t1CQyGASCVhshStkv6gNCDwT83Gq604ZbHt8kjenbxl0U327xOWsQvm~9m4J6gX64kQjnHplxs31yis8U4zWkJOKk4oeY6uQ__';
 
+// ---- Inline Edit Form ----
+function InlineEditForm({ task, onSave, onCancel }: { task: Task; onSave: (updates: Partial<Task>) => void; onCancel: () => void }) {
+  const [title, setTitle] = useState(task.title);
+  const [desc, setDesc] = useState(task.description || '');
+  const [priority, setPriority] = useState<Priority>(task.priority);
+  const [category, setCategory] = useState<Category | ''>(task.category || '');
+  const [energy, setEnergy] = useState<EnergyLevel | ''>(task.energy || '');
+  const [dueDate, setDueDate] = useState(task.dueDate || '');
+
+  function handleSave() {
+    if (!title.trim()) return;
+    onSave({
+      title: title.trim(),
+      description: desc.trim() || undefined,
+      priority,
+      category: category || undefined,
+      energy: energy || undefined,
+      dueDate: dueDate || undefined,
+    });
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border space-y-4 animate-in slide-in-from-top-2 duration-200">
+      {/* Title */}
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Title</label>
+        <Input value={title} onChange={e => setTitle(e.target.value)} className="bg-background" />
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Description (optional)</label>
+        <Textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="Add more details..." className="bg-background resize-none" rows={2} />
+      </div>
+
+      {/* Priority */}
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Priority</label>
+        <div className="grid grid-cols-4 gap-2">
+          {(['low', 'medium', 'high', 'urgent'] as Priority[]).map(p => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPriority(p)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200
+                ${priority === p
+                  ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]`
+                  : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
+                }`}
+            >
+              {PRIORITY_LABELS[p]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Category */}
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Category</label>
+        <div className="grid grid-cols-3 gap-2">
+          {(Object.keys(CATEGORY_CONFIG) as Category[]).map(c => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setCategory(category === c ? '' : c)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
+                ${category === c
+                  ? 'bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]'
+                  : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
+                }`}
+            >
+              <span>{CATEGORY_CONFIG[c].emoji}</span>
+              <span>{CATEGORY_CONFIG[c].label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Energy */}
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Energy Level</label>
+        <div className="grid grid-cols-3 gap-2">
+          {(Object.keys(ENERGY_CONFIG) as EnergyLevel[]).map(e => (
+            <button
+              key={e}
+              type="button"
+              onClick={() => setEnergy(energy === e ? '' : e)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
+                ${energy === e
+                  ? 'bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]'
+                  : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
+                }`}
+            >
+              <span>{ENERGY_CONFIG[e].emoji}</span>
+              <span>{ENERGY_CONFIG[e].label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Due Date */}
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Due Date (optional)</label>
+        <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="bg-background" />
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2">
+        <Button onClick={handleSave} className="flex-1 bg-warm-sage hover:bg-warm-sage/90 text-white gap-2">
+          <Save className="w-4 h-4" /> Save Changes
+        </Button>
+        <Button onClick={onCancel} variant="outline" className="gap-2">
+          <X className="w-4 h-4" /> Cancel
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ---- Main Page ----
 export default function TasksPage() {
   const { state, dispatch } = useApp();
   const [filter, setFilter] = useState<Filter>('all');
   const [sort, setSort] = useState<Sort>('newest');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newPriority, setNewPriority] = useState<Priority>('medium');
@@ -110,13 +232,18 @@ export default function TasksPage() {
     setDialogOpen(false);
   }
 
+  function handleInlineSave(taskId: string, updates: Partial<Task>) {
+    dispatch({ type: 'UPDATE_TASK', payload: { id: taskId, ...updates } });
+    setEditingId(null);
+  }
+
   return (
     <div className="p-8 max-w-4xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-serif text-3xl text-foreground">My Tasks</h2>
-          <p className="text-sm text-muted-foreground mt-1">{todayCount} tasks to tackle today</p>
+          <p className="text-sm text-muted-foreground mt-1">{todayCount} task{todayCount !== 1 ? 's' : ''} to tackle today</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -132,7 +259,7 @@ export default function TasksPage() {
             <div className="space-y-5 mt-2">
               {/* Title */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">What needs to be done?</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Title</label>
                 <Input
                   placeholder="e.g., Finish the report..."
                   value={newTitle}
@@ -144,9 +271,9 @@ export default function TasksPage() {
 
               {/* Description */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Details (optional)</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Description (optional)</label>
                 <Textarea
-                  placeholder="Add any notes or context..."
+                  placeholder="Add more details..."
                   value={newDesc}
                   onChange={e => setNewDesc(e.target.value)}
                   className="bg-background resize-none"
@@ -199,7 +326,7 @@ export default function TasksPage() {
 
               {/* Energy Required - Button Group */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Energy Required</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Energy Level</label>
                 <div className="grid grid-cols-3 gap-2">
                   {(Object.keys(ENERGY_CONFIG) as EnergyLevel[]).map(e => (
                     <button
@@ -287,59 +414,92 @@ export default function TasksPage() {
           {filteredTasks.map(task => (
             <div
               key={task.id}
-              className={`group bg-card rounded-xl border border-border p-4 flex items-start gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5
-                ${task.status === 'done' ? 'opacity-60' : ''}`}
+              className={`group bg-card rounded-xl border border-border p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5
+                ${task.status === 'done' ? 'opacity-60' : ''}
+                ${editingId === task.id ? 'ring-2 ring-warm-sage/30 shadow-md' : ''}`}
             >
-              {/* Checkbox */}
-              <button
-                onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: task.id })}
-                className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
-                  ${task.status === 'done'
-                    ? 'bg-warm-sage border-warm-sage'
-                    : 'border-border hover:border-warm-sage'
-                  }`}
-              >
-                {task.status === 'done' && <Check className="w-3 h-3 text-white" />}
-              </button>
+              <div className="flex items-start gap-3">
+                {/* Checkbox */}
+                <button
+                  onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: task.id })}
+                  className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
+                    ${task.status === 'done'
+                      ? 'bg-warm-sage border-warm-sage'
+                      : 'border-border hover:border-warm-sage'
+                    }`}
+                >
+                  {task.status === 'done' && <Check className="w-3 h-3 text-white" />}
+                </button>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium ${task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-                  {task.title}
-                </p>
-                {task.description && (
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.description}</p>
-                )}
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <span className={`text-xs px-2 py-0.5 rounded-full border ${PRIORITY_COLORS[task.priority]}`}>
-                    {PRIORITY_LABELS[task.priority]}
-                  </span>
-                  {task.category && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-warm-sage-light/60 text-warm-charcoal border border-warm-sage/15">
-                      {CATEGORY_CONFIG[task.category].emoji} {CATEGORY_CONFIG[task.category].label}
-                    </span>
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                    {task.title}
+                  </p>
+                  {task.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.description}</p>
                   )}
-                  {task.energy && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-warm-amber-light/60 text-warm-charcoal border border-warm-amber/15">
-                      {ENERGY_CONFIG[task.energy].emoji} {ENERGY_CONFIG[task.energy].label}
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${PRIORITY_COLORS[task.priority]}`}>
+                      {PRIORITY_LABELS[task.priority]}
                     </span>
-                  )}
-                  {task.dueDate && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </span>
-                  )}
+                    {task.category && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-warm-sage-light/60 text-warm-charcoal border border-warm-sage/15">
+                        {CATEGORY_CONFIG[task.category].emoji} {CATEGORY_CONFIG[task.category].label}
+                      </span>
+                    )}
+                    {task.energy && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-warm-amber-light/60 text-warm-charcoal border border-warm-amber/15">
+                        {ENERGY_CONFIG[task.energy].emoji} {ENERGY_CONFIG[task.energy].label}
+                      </span>
+                    )}
+                    {task.dueDate && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Icons */}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: task.id })}
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
+                    title={task.status === 'done' ? 'Mark as active' : 'Mark as done'}
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setEditingId(editingId === task.id ? null : task.id)}
+                    className={`p-1.5 rounded-md transition-colors ${
+                      editingId === task.id
+                        ? 'text-warm-sage bg-warm-sage-light'
+                        : 'text-muted-foreground hover:text-warm-blue hover:bg-warm-blue-light'
+                    }`}
+                    title="Edit task"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => dispatch({ type: 'DELETE_TASK', payload: task.id })}
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
+                    title="Delete task"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
-              {/* Delete */}
-              <button
-                onClick={() => dispatch({ type: 'DELETE_TASK', payload: task.id })}
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-warm-terracotta p-1"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {/* Inline Edit Form */}
+              {editingId === task.id && (
+                <InlineEditForm
+                  task={task}
+                  onSave={(updates) => handleInlineSave(task.id, updates)}
+                  onCancel={() => setEditingId(null)}
+                />
+              )}
             </div>
           ))}
         </div>
