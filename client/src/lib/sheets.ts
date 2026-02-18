@@ -1,29 +1,50 @@
 /**
- * Google Sheets Integration
+ * Storage Layer — Unified interface for all backends
  * 
- * This module handles reading/writing data to a Google Sheet.
- * The sheet acts as a simple cloud database.
+ * Three storage modes:
+ * 1. "local" (default) — localStorage only, always active as fallback
+ * 2. "file" — Local Markdown file via File System Access API + localStorage
+ * 3. "sheets" — Google Sheets cloud sync + localStorage
  * 
- * Setup:
- * 1. Create a Google Sheet
- * 2. Share it as "Anyone with the link can edit"
- * 3. Get the Sheet ID from the URL
- * 4. Create a Google API key (or use a service account)
- * 5. Set SHEET_ID and API_KEY in the config
- * 
- * Sheet structure:
- * - Sheet "Tasks": id, title, description, priority, status, dueDate, quadrant, createdAt, completedAt
- * - Sheet "Pomodoros": id, title, duration, elapsed, status, createdAt, completedAt
- * - Sheet "Settings": key, value
- * - Sheet "DailyStats": date, tasksCompleted, focusMinutes, pomodorosCompleted
+ * When "sheets" is active, the MD file is ignored.
+ * When "file" is active, Google Sheets is ignored.
+ * localStorage always acts as the base layer.
  */
 
 import type { Task, Pomodoro, TimerSettings, DailyStats, AppState } from './types';
 import { DEFAULT_SETTINGS } from './types';
+import {
+  isFileSystemSupported,
+  hasFileHandle,
+  loadFromFile,
+  saveToFile,
+  pickFile,
+  disconnectFile,
+  getFileName,
+} from './md-storage';
+
+export type StorageMode = 'local' | 'file' | 'sheets';
 
 const STORAGE_KEY = 'focus-assist-data';
+const MODE_KEY = 'focus-assist-storage-mode';
 
-// Google Sheets config - users will set these
+// ---- Storage mode ----
+
+export function getStorageMode(): StorageMode {
+  const saved = localStorage.getItem(MODE_KEY);
+  if (saved === 'sheets' || saved === 'file') return saved;
+  return 'local';
+}
+
+export function setStorageMode(mode: StorageMode) {
+  localStorage.setItem(MODE_KEY, mode);
+}
+
+// ---- Re-export file helpers ----
+export { isFileSystemSupported, hasFileHandle, pickFile, disconnectFile, getFileName };
+
+// ---- Google Sheets config ----
+
 let SHEET_ID = localStorage.getItem('focus-assist-sheet-id') || '';
 let API_KEY = localStorage.getItem('focus-assist-api-key') || '';
 
@@ -76,7 +97,7 @@ async function writeSheet(sheetName: string, values: string[][]): Promise<boolea
   }
 }
 
-// ---- Local storage fallback ----
+// ---- Local storage ----
 
 function loadLocal(): AppState {
   try {
@@ -96,13 +117,13 @@ function saveLocal(state: AppState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-// ---- Sync logic ----
+// ---- Sheets row converters ----
 
 function tasksToRows(tasks: Task[]): string[][] {
-  const header = ['id', 'title', 'description', 'priority', 'status', 'dueDate', 'quadrant', 'createdAt', 'completedAt'];
+  const header = ['id', 'title', 'description', 'priority', 'status', 'dueDate', 'category', 'energy', 'quadrant', 'createdAt', 'completedAt'];
   return [header, ...tasks.map(t => [
     t.id, t.title, t.description || '', t.priority, t.status,
-    t.dueDate || '', t.quadrant, t.createdAt, t.completedAt || '',
+    t.dueDate || '', t.category || '', t.energy || '', t.quadrant, t.createdAt, t.completedAt || '',
   ])];
 }
 
@@ -115,9 +136,11 @@ function rowsToTasks(rows: string[][]): Task[] {
     priority: (r[3] as Task['priority']) || 'medium',
     status: (r[4] as Task['status']) || 'active',
     dueDate: r[5] || undefined,
-    quadrant: (r[6] as Task['quadrant']) || 'unassigned',
-    createdAt: r[7] || new Date().toISOString(),
-    completedAt: r[8] || undefined,
+    category: (r[6] as Task['category']) || undefined,
+    energy: (r[7] as Task['energy']) || undefined,
+    quadrant: (r[8] as Task['quadrant']) || 'unassigned',
+    createdAt: r[9] || new Date().toISOString(),
+    completedAt: r[10] || undefined,
   })).filter(t => t.id);
 }
 
@@ -190,45 +213,74 @@ function rowsToSettings(rows: string[][]): { settings: TimerSettings; streak: nu
 
 export async function loadState(): Promise<AppState> {
   const local = loadLocal();
+  const mode = getStorageMode();
 
-  if (!isSheetConfigured()) return local;
-
-  try {
-    const [taskRows, pomRows, settingsRows, statsRows] = await Promise.all([
-      readSheet('Tasks'),
-      readSheet('Pomodoros'),
-      readSheet('Settings'),
-      readSheet('DailyStats'),
-    ]);
-
-    const tasks = taskRows.length > 1 ? rowsToTasks(taskRows) : local.tasks;
-    const pomodoros = pomRows.length > 1 ? rowsToPomodoros(pomRows) : local.pomodoros;
-    const { settings, streak } = settingsRows.length > 1
-      ? rowsToSettings(settingsRows)
-      : { settings: local.settings, streak: local.currentStreak };
-    const dailyStats = statsRows.length > 1 ? rowsToStats(statsRows) : local.dailyStats;
-
-    const state: AppState = { tasks, pomodoros, settings, dailyStats, currentStreak: streak };
-    saveLocal(state);
-    return state;
-  } catch {
+  // File mode
+  if (mode === 'file' && hasFileHandle()) {
+    try {
+      const fileState = await loadFromFile();
+      if (fileState) {
+        saveLocal(fileState); // keep localStorage in sync
+        return fileState;
+      }
+    } catch {
+      // fall through to local
+    }
     return local;
   }
+
+  // Sheets mode
+  if (mode === 'sheets' && isSheetConfigured()) {
+    try {
+      const [taskRows, pomRows, settingsRows, statsRows] = await Promise.all([
+        readSheet('Tasks'),
+        readSheet('Pomodoros'),
+        readSheet('Settings'),
+        readSheet('DailyStats'),
+      ]);
+
+      const tasks = taskRows.length > 1 ? rowsToTasks(taskRows) : local.tasks;
+      const pomodoros = pomRows.length > 1 ? rowsToPomodoros(pomRows) : local.pomodoros;
+      const { settings, streak } = settingsRows.length > 1
+        ? rowsToSettings(settingsRows)
+        : { settings: local.settings, streak: local.currentStreak };
+      const dailyStats = statsRows.length > 1 ? rowsToStats(statsRows) : local.dailyStats;
+
+      const state: AppState = { tasks, pomodoros, settings, dailyStats, currentStreak: streak };
+      saveLocal(state);
+      return state;
+    } catch {
+      return local;
+    }
+  }
+
+  // Default: local only
+  return local;
 }
 
 export async function saveState(state: AppState): Promise<void> {
+  // Always save to localStorage
   saveLocal(state);
 
-  if (!isSheetConfigured()) return;
+  const mode = getStorageMode();
 
-  try {
-    await Promise.all([
-      writeSheet('Tasks', tasksToRows(state.tasks)),
-      writeSheet('Pomodoros', pomodorosToRows(state.pomodoros)),
-      writeSheet('Settings', settingsToRows(state.settings, state.currentStreak)),
-      writeSheet('DailyStats', statsToRows(state.dailyStats)),
-    ]);
-  } catch (e) {
-    console.warn('Failed to sync to Google Sheets:', e);
+  // File mode
+  if (mode === 'file' && hasFileHandle()) {
+    await saveToFile(state);
+    return;
+  }
+
+  // Sheets mode
+  if (mode === 'sheets' && isSheetConfigured()) {
+    try {
+      await Promise.all([
+        writeSheet('Tasks', tasksToRows(state.tasks)),
+        writeSheet('Pomodoros', pomodorosToRows(state.pomodoros)),
+        writeSheet('Settings', settingsToRows(state.settings, state.currentStreak)),
+        writeSheet('DailyStats', statsToRows(state.dailyStats)),
+      ]);
+    } catch (e) {
+      console.warn('Failed to sync to Google Sheets:', e);
+    }
   }
 }

@@ -177,6 +177,7 @@ interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<Action>;
   syncToCloud: () => Promise<void>;
+  reloadState: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType>(null as unknown as AppContextType);
@@ -212,8 +213,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await saveState(stateRef.current);
   }, []);
 
+  const reloadState = useCallback(async () => {
+    const loaded = await loadState();
+    dispatch({ type: 'LOAD_STATE', payload: loaded });
+  }, []);
+
   return (
-    <AppContext.Provider value={{ state, dispatch, syncToCloud }}>
+    <AppContext.Provider value={{ state, dispatch, syncToCloud, reloadState }}>
       {children}
     </AppContext.Provider>
   );
