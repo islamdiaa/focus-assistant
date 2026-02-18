@@ -1,6 +1,8 @@
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskStatus = 'active' | 'done';
 export type QuadrantType = 'do-first' | 'schedule' | 'delegate' | 'eliminate' | 'unassigned';
+export type Category = 'work' | 'personal' | 'health' | 'learning' | 'errands' | 'other';
+export type EnergyLevel = 'low' | 'medium' | 'high';
 
 export interface Task {
   id: string;
@@ -9,6 +11,8 @@ export interface Task {
   priority: Priority;
   status: TaskStatus;
   dueDate?: string;
+  category?: Category;
+  energy?: EnergyLevel;
   quadrant: QuadrantType;
   createdAt: string;
   completedAt?: string;

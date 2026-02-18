@@ -1,7 +1,7 @@
 /**
  * Tasks Page — Warm Productivity design
  * Task list with filters, sorting, add/edit/delete
- * Warm earth tones, paper-like cards
+ * Category, Energy, button-group Priority
  */
 import { useState, useMemo } from 'react';
 import { useApp } from '@/contexts/AppContext';
@@ -10,8 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Priority, TaskStatus } from '@/lib/types';
+import type { Priority, TaskStatus, Category, EnergyLevel } from '@/lib/types';
 
 const PRIORITY_COLORS: Record<Priority, string> = {
   urgent: 'bg-warm-terracotta/15 text-warm-terracotta border-warm-terracotta/30',
@@ -25,6 +24,21 @@ const PRIORITY_LABELS: Record<Priority, string> = {
   high: 'High',
   medium: 'Medium',
   low: 'Low',
+};
+
+const CATEGORY_CONFIG: Record<Category, { emoji: string; label: string }> = {
+  work: { emoji: '💼', label: 'Work' },
+  personal: { emoji: '🏠', label: 'Personal' },
+  health: { emoji: '💪', label: 'Health' },
+  learning: { emoji: '📚', label: 'Learning' },
+  errands: { emoji: '🛒', label: 'Errands' },
+  other: { emoji: '📌', label: 'Other' },
+};
+
+const ENERGY_CONFIG: Record<EnergyLevel, { emoji: string; label: string }> = {
+  low: { emoji: '🔋', label: 'Low' },
+  medium: { emoji: '⚡', label: 'Medium' },
+  high: { emoji: '🔥', label: 'High' },
 };
 
 type Filter = 'all' | 'active' | 'done';
@@ -42,16 +56,16 @@ export default function TasksPage() {
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newPriority, setNewPriority] = useState<Priority>('medium');
+  const [newCategory, setNewCategory] = useState<Category | ''>('');
+  const [newEnergy, setNewEnergy] = useState<EnergyLevel | ''>('');
   const [newDueDate, setNewDueDate] = useState('');
 
   const filteredTasks = useMemo(() => {
     let tasks = [...state.tasks];
 
-    // Filter
     if (filter === 'active') tasks = tasks.filter(t => t.status === 'active');
     if (filter === 'done') tasks = tasks.filter(t => t.status === 'done');
 
-    // Sort
     if (sort === 'newest') tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     if (sort === 'priority') tasks.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
     if (sort === 'dueDate') tasks.sort((a, b) => {
@@ -83,11 +97,15 @@ export default function TasksPage() {
         description: newDesc.trim() || undefined,
         priority: newPriority,
         dueDate: newDueDate || undefined,
+        category: newCategory || undefined,
+        energy: newEnergy || undefined,
       },
     });
     setNewTitle('');
     setNewDesc('');
     setNewPriority('medium');
+    setNewCategory('');
+    setNewEnergy('');
     setNewDueDate('');
     setDialogOpen(false);
   }
@@ -106,47 +124,114 @@ export default function TasksPage() {
               <Plus className="w-4 h-4" /> Add Task
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-card">
+          <DialogContent className="bg-card max-w-md">
             <DialogHeader>
               <DialogTitle className="font-serif text-xl">New Task</DialogTitle>
               <DialogDescription className="sr-only">Create a new task</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 mt-2">
-              <Input
-                placeholder="What needs to be done?"
-                value={newTitle}
-                onChange={e => setNewTitle(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAddTask()}
-                className="bg-background"
-              />
-              <Textarea
-                placeholder="Description (optional)"
-                value={newDesc}
-                onChange={e => setNewDesc(e.target.value)}
-                className="bg-background resize-none"
-                rows={2}
-              />
-              <div className="flex gap-3">
-                <Select value={newPriority} onValueChange={v => setNewPriority(v as Priority)}>
-                  <SelectTrigger className="bg-background flex-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low Priority</SelectItem>
-                    <SelectItem value="medium">Medium Priority</SelectItem>
-                    <SelectItem value="high">High Priority</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="space-y-5 mt-2">
+              {/* Title */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">What needs to be done?</label>
+                <Input
+                  placeholder="e.g., Finish the report..."
+                  value={newTitle}
+                  onChange={e => setNewTitle(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAddTask()}
+                  className="bg-background"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Details (optional)</label>
+                <Textarea
+                  placeholder="Add any notes or context..."
+                  value={newDesc}
+                  onChange={e => setNewDesc(e.target.value)}
+                  className="bg-background resize-none"
+                  rows={2}
+                />
+              </div>
+
+              {/* Priority - Button Group */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Priority</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {(['low', 'medium', 'high', 'urgent'] as Priority[]).map(p => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setNewPriority(p)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200
+                        ${newPriority === p
+                          ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]`
+                          : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
+                        }`}
+                    >
+                      {PRIORITY_LABELS[p]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category - Button Group */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Category</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(Object.keys(CATEGORY_CONFIG) as Category[]).map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setNewCategory(newCategory === c ? '' : c)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
+                        ${newCategory === c
+                          ? 'bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]'
+                          : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
+                        }`}
+                    >
+                      <span>{CATEGORY_CONFIG[c].emoji}</span>
+                      <span>{CATEGORY_CONFIG[c].label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Energy Required - Button Group */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Energy Required</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(Object.keys(ENERGY_CONFIG) as EnergyLevel[]).map(e => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => setNewEnergy(newEnergy === e ? '' : e)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
+                        ${newEnergy === e
+                          ? 'bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]'
+                          : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
+                        }`}
+                    >
+                      <span>{ENERGY_CONFIG[e].emoji}</span>
+                      <span>{ENERGY_CONFIG[e].label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Due Date */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Due Date (optional)</label>
                 <Input
                   type="date"
                   value={newDueDate}
                   onChange={e => setNewDueDate(e.target.value)}
-                  className="bg-background flex-1"
+                  className="bg-background"
                 />
               </div>
-              <Button onClick={handleAddTask} className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white">
-                Add Task
+
+              <Button onClick={handleAddTask} className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white font-medium py-2.5">
+                Create Task
               </Button>
             </div>
           </DialogContent>
@@ -225,10 +310,20 @@ export default function TasksPage() {
                 {task.description && (
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.description}</p>
                 )}
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <span className={`text-xs px-2 py-0.5 rounded-full border ${PRIORITY_COLORS[task.priority]}`}>
                     {PRIORITY_LABELS[task.priority]}
                   </span>
+                  {task.category && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-warm-sage-light/60 text-warm-charcoal border border-warm-sage/15">
+                      {CATEGORY_CONFIG[task.category].emoji} {CATEGORY_CONFIG[task.category].label}
+                    </span>
+                  )}
+                  {task.energy && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-warm-amber-light/60 text-warm-charcoal border border-warm-amber/15">
+                      {ENERGY_CONFIG[task.energy].emoji} {ENERGY_CONFIG[task.energy].label}
+                    </span>
+                  )}
                   {task.dueDate && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <Calendar className="w-3 h-3" />

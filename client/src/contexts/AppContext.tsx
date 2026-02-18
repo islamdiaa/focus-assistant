@@ -1,13 +1,13 @@
 import { createContext, useContext, useReducer, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { nanoid } from 'nanoid';
-import type { Task, Pomodoro, TimerSettings, DailyStats, AppState, Priority, QuadrantType } from '@/lib/types';
+import type { Task, Pomodoro, TimerSettings, DailyStats, AppState, Priority, QuadrantType, Category, EnergyLevel } from '@/lib/types';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 import { loadState, saveState } from '@/lib/sheets';
 
 // ---- Actions ----
 type Action =
   | { type: 'LOAD_STATE'; payload: AppState }
-  | { type: 'ADD_TASK'; payload: { title: string; description?: string; priority: Priority; dueDate?: string } }
+  | { type: 'ADD_TASK'; payload: { title: string; description?: string; priority: Priority; dueDate?: string; category?: Category; energy?: EnergyLevel } }
   | { type: 'UPDATE_TASK'; payload: Partial<Task> & { id: string } }
   | { type: 'DELETE_TASK'; payload: string }
   | { type: 'TOGGLE_TASK'; payload: string }
@@ -65,6 +65,8 @@ function reducer(state: AppState, action: Action): AppState {
         priority: action.payload.priority,
         status: 'active',
         dueDate: action.payload.dueDate,
+        category: action.payload.category,
+        energy: action.payload.energy,
         quadrant: 'unassigned',
         createdAt: new Date().toISOString(),
       };
