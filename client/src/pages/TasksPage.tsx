@@ -238,11 +238,11 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 lg:p-8 max-w-4xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="font-serif text-3xl text-foreground">My Tasks</h2>
+          <h2 className="font-serif text-2xl lg:text-3xl text-foreground">My Tasks</h2>
           <p className="text-sm text-muted-foreground mt-1">{todayCount} task{todayCount !== 1 ? 's' : ''} to tackle today</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -366,7 +366,7 @@ export default function TasksPage() {
       </div>
 
       {/* Filters & Sort */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
         <div className="flex bg-warm-sand/50 rounded-lg p-1 gap-1">
           {(['all', 'active', 'done'] as Filter[]).map(f => (
             <button
@@ -382,7 +382,7 @@ export default function TasksPage() {
             </button>
           ))}
         </div>
-        <div className="flex bg-warm-sand/50 rounded-lg p-1 gap-1 ml-auto">
+        <div className="flex bg-warm-sand/50 rounded-lg p-1 gap-1 sm:ml-auto">
           {(['newest', 'priority', 'dueDate'] as Sort[]).map(s => (
             <button
               key={s}

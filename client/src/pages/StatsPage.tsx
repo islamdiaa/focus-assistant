@@ -65,22 +65,22 @@ export default function StatsPage() {
   [state.dailyStats]);
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 lg:p-8 max-w-4xl">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="font-serif text-3xl text-foreground">Your Progress</h2>
+        <h2 className="font-serif text-2xl lg:text-3xl text-foreground">Your Progress</h2>
         <p className="text-sm text-muted-foreground mt-1">Track your focus journey and celebrate your wins</p>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 mb-8">
         {/* Streak */}
         <div className="bg-warm-peach rounded-2xl p-5 border border-warm-peach/50">
           <div className="flex items-center gap-2 mb-2">
             <Flame className="w-4 h-4 text-warm-terracotta" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">Current Streak</span>
           </div>
-          <p className="font-serif text-3xl text-warm-charcoal">{state.currentStreak} days</p>
+          <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">{state.currentStreak} days</p>
           <p className="text-xs text-warm-charcoal/60 mt-1">{state.currentStreak === 0 ? 'Start today!' : 'Keep it going!'}</p>
         </div>
 
@@ -90,7 +90,7 @@ export default function StatsPage() {
             <CheckCircle2 className="w-4 h-4 text-warm-sage" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">Today's Tasks</span>
           </div>
-          <p className="font-serif text-3xl text-warm-charcoal">{todayStats?.tasksCompleted || 0}</p>
+          <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">{todayStats?.tasksCompleted || 0}</p>
           <p className="text-xs text-warm-charcoal/60 mt-1">completed today</p>
         </div>
 
@@ -100,7 +100,7 @@ export default function StatsPage() {
             <Clock className="w-4 h-4 text-warm-blue" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">Focus Today</span>
           </div>
-          <p className="font-serif text-3xl text-warm-charcoal">{todayStats?.focusMinutes || 0}m</p>
+          <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">{todayStats?.focusMinutes || 0}m</p>
           <p className="text-xs text-warm-charcoal/60 mt-1">minutes focused</p>
         </div>
 
@@ -110,13 +110,13 @@ export default function StatsPage() {
             <Target className="w-4 h-4 text-warm-amber" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">Total Sessions</span>
           </div>
-          <p className="font-serif text-3xl text-warm-charcoal">{totalSessions}</p>
+          <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">{totalSessions}</p>
           <p className="text-xs text-warm-charcoal/60 mt-1">focus sessions</p>
         </div>
       </div>
 
       {/* Weekly Charts */}
-      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+      <div className="bg-card rounded-2xl border border-border p-4 lg:p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-4 h-4 text-warm-sage" />
           <h3 className="font-semibold text-sm text-foreground">This Week</h3>
@@ -156,18 +156,18 @@ export default function StatsPage() {
       </div>
 
       {/* All-Time Stats */}
-      <div className="bg-warm-lavender-light rounded-2xl border border-warm-lavender/20 p-6">
+      <div className="bg-warm-lavender-light rounded-2xl border border-warm-lavender/20 p-4 lg:p-6">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-4 h-4 text-warm-lavender" />
           <h3 className="font-semibold text-sm text-foreground">All-Time Stats</h3>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="font-serif text-3xl text-warm-charcoal">{allTimeTasks}</p>
+            <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">{allTimeTasks}</p>
             <p className="text-xs text-muted-foreground mt-1">Tasks Completed</p>
           </div>
           <div>
-            <p className="font-serif text-3xl text-warm-charcoal">{allTimeFocus}</p>
+            <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">{allTimeFocus}</p>
             <p className="text-xs text-muted-foreground mt-1">Total Focus Time</p>
           </div>
         </div>

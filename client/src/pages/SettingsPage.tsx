@@ -130,10 +130,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 lg:p-8 max-w-3xl">
       {/* Header */}
       <div className="mb-8">
-        <h2 className="font-serif text-3xl text-foreground">Settings</h2>
+        <h2 className="font-serif text-2xl lg:text-3xl text-foreground">Settings</h2>
         <p className="text-sm text-muted-foreground mt-1">Customize your focus experience</p>
       </div>
 

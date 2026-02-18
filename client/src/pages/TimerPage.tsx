@@ -117,11 +117,11 @@ export default function TimerPage() {
   }, [dispatch]);
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 lg:p-8 max-w-4xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="font-serif text-3xl text-foreground">Focus Timer</h2>
+          <h2 className="font-serif text-2xl lg:text-3xl text-foreground">Focus Timer</h2>
           <p className="text-sm text-muted-foreground mt-1">Create multiple Pomodoros · Start each when you're ready</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
