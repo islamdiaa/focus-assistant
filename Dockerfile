@@ -23,7 +23,7 @@ RUN pnpm install --frozen-lockfile
 # Copy source
 COPY . .
 
-# Build client (Vite) + server (esbuild)
+# Build client (Vite → dist/public/) + server (esbuild → dist/index.js)
 RUN pnpm build
 
 # --- Production stage ---
@@ -32,8 +32,8 @@ FROM node:22-alpine AS production
 # Labels for Unraid and container registries
 LABEL org.opencontainers.image.title="Focus Assistant"
 LABEL org.opencontainers.image.description="ADHD-friendly productivity app with tasks, Pomodoro timer, Eisenhower matrix, and stats"
-LABEL org.opencontainers.image.source="https://github.com/user/FocusAssistant"
-LABEL org.opencontainers.image.version="1.1.0"
+LABEL org.opencontainers.image.source="https://github.com/islamdiaa/focus-assistant"
+LABEL org.opencontainers.image.version="1.8.0"
 LABEL net.unraid.docker.icon="https://cdn-icons-png.flaticon.com/512/7246/7246748.png"
 LABEL net.unraid.docker.webui="http://[IP]:[PORT:1992]/"
 LABEL net.unraid.docker.managed="dockerman"
@@ -51,8 +51,8 @@ COPY patches/ ./patches/
 RUN pnpm install --frozen-lockfile --prod
 
 # Copy built artifacts from builder
+# dist/index.js = server bundle, dist/public/ = client assets
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/client/dist ./client/dist
 
 # Copy shared and drizzle for runtime
 COPY --from=builder /app/shared ./shared

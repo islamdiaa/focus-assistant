@@ -109,3 +109,4 @@
 - [x] Navigation + sidebar updates for Read Later
 - [x] V1.8 tests
 - [x] CHANGELOG + version bump to 1.8.0
+- [x] Fix Dockerfile — client/dist path not found after template upgrade to tRPC/Express
