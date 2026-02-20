@@ -124,7 +124,7 @@ export function stateToMarkdown(state: AppState): string {
     lines.push('| ID | Title | Description | Date | Recurrence | Category | Acknowledged | AcknowledgedAt | Created |');
     lines.push('|----|-------|-------------|------|------------|----------|--------------|----------------|---------|');
     for (const r of state.reminders) {
-      lines.push(`| ${r.id} | ${escapeField(r.title)} | ${escapeField(r.description || '')} | ${r.date} | ${r.recurrence} | ${r.category} | ${r.acknowledged ? 'true' : ''} | ${r.acknowledgedAt || ''} | ${r.createdAt} |`);
+      lines.push(`| ${r.id} | ${escapeField(r.title)} | ${escapeField(r.description || '')} | ${r.date} | ${r.recurrence} | ${r.category} | ${r.acknowledged === true ? 'true' : r.acknowledged === false ? 'false' : ''} | ${r.acknowledgedAt || ''} | ${r.createdAt} |`);
     }
     lines.push('');
   }
@@ -320,7 +320,7 @@ export function markdownToState(md: string): AppState {
           date: r[3] || '',
           recurrence: (r[4] as Reminder['recurrence']) || 'none',
           category: (r[5] as Reminder['category']) || 'other',
-          acknowledged: r[6] === 'true' ? true : undefined,
+          acknowledged: r[6] === 'true' ? true : r[6] === 'false' ? false : undefined,
           acknowledgedAt: r[7] || undefined,
           createdAt: r[8] || new Date().toISOString(),
         });

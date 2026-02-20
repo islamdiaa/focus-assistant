@@ -1,0 +1,23 @@
+BUG INVESTIGATION: Task done not persisting after refresh
+
+ROOT CAUSE FOUND:
+
+The `appStateSchema` in dataRouter.ts is the Zod validation schema for the save endpoint.
+It's MISSING several new fields that were added in V1.8.x:
+
+1. Task schema missing:
+   - `quarterly` recurrence option (only has daily/weekly/monthly/weekdays/none)
+   - `quarterlyDayOfMonth` field
+   - `quarterlyStartMonth` field
+
+2. Pomodoro schema missing:
+   - `linkedTasks` array (new multi-task linking)
+   - Still only has `linkedTaskId` (old single-task field)
+
+3. Entire `reminders` array is missing from appStateSchema
+
+When the client sends state with these new fields, Zod strips them (or fails validation),
+causing data loss on save. The server saves a stripped version, and on reload the changes are gone.
+
+FIX: Update appStateSchema to include all new fields.
+Also need to add `reminders` to emptyState.

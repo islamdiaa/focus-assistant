@@ -128,3 +128,17 @@
 - [ ] README screenshots — capture key pages and add to README.md
 - [ ] Update architecture.md, claude.md, agent.md with V1.8.x changes
 - [ ] Version bump to 1.8.1, CHANGELOG update
+
+# Bug Fix — Task persistence
+
+- [x] Fix: marking task as done doesn't persist after refresh (state not saved to server)
+- [x] Add vitest tests for save/load round-trip covering all state mutations
+
+# Architecture Fix — Single Source of Truth
+
+- [x] Refactor shared/appTypes.ts to Zod-first schemas (define Zod schemas, infer TS types)
+- [x] Remove duplicate Zod schema from dataRouter.ts, import from shared
+- [x] Update all imports across codebase to use new exports
+- [x] Add integration test for save endpoint to catch schema drift
+- [x] Add full persistence round-trip tests for all key mutations (add/toggle/edit task, subtasks, pomodoros with linked tasks, reminders, reading items, quarterly tasks, etc.)
+- [x] Add .strict() or .passthrough() to prevent silent field stripping

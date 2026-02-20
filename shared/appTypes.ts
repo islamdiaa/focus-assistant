@@ -1,159 +1,187 @@
 /**
- * Shared types for FocusAssist — used by both server and client
+ * Shared types for FocusAssist — SINGLE SOURCE OF TRUTH
+ * 
+ * All data types are defined as Zod schemas first, then TS types are inferred.
+ * This ensures runtime validation (Zod) and compile-time types (TS) never drift.
+ * 
+ * RULE: When adding a new field, add it to the Zod schema here.
+ *       The TS type is auto-inferred. No other file needs a schema update.
  */
+import { z } from 'zod';
 
-export type Priority = 'low' | 'medium' | 'high' | 'urgent';
-export type TaskStatus = 'active' | 'done';
-export type QuadrantType = 'do-first' | 'schedule' | 'delegate' | 'eliminate' | 'unassigned';
-export type Category = 'work' | 'personal' | 'health' | 'learning' | 'errands' | 'other';
-export type EnergyLevel = 'low' | 'medium' | 'high';
-export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'weekdays' | 'none';
-export type NotificationSound = 'gentle-chime' | 'bell' | 'singing-bowl' | 'wood-block' | 'digital-beep' | 'none';
-export type ReadingStatus = 'unread' | 'reading' | 'read';
+// ---- Enum Schemas ----
 
-export interface ReadingItem {
-  id: string;
-  url: string;
-  title: string;
-  description?: string;
-  /** User-defined tags for categorization */
-  tags: string[];
-  status: ReadingStatus;
-  /** User notes / highlights */
-  notes?: string;
-  /** Favicon or preview image URL */
-  imageUrl?: string;
-  /** Domain extracted from URL */
-  domain?: string;
-  createdAt: string;
-  readAt?: string;
-}
+export const prioritySchema = z.enum(['low', 'medium', 'high', 'urgent']);
+export const taskStatusSchema = z.enum(['active', 'done']);
+export const quadrantSchema = z.enum(['do-first', 'schedule', 'delegate', 'eliminate', 'unassigned']);
+export const categorySchema = z.enum(['work', 'personal', 'health', 'learning', 'errands', 'other']);
+export const energySchema = z.enum(['low', 'medium', 'high']);
+export const recurrenceSchema = z.enum(['daily', 'weekly', 'monthly', 'quarterly', 'weekdays', 'none']);
+export const notificationSoundSchema = z.enum(['gentle-chime', 'bell', 'singing-bowl', 'wood-block', 'digital-beep', 'none']);
+export const readingStatusSchema = z.enum(['unread', 'reading', 'read']);
+export const reminderRecurrenceSchema = z.enum(['none', 'yearly', 'monthly', 'weekly']);
+export const reminderCategorySchema = z.enum(['birthday', 'appointment', 'event', 'other']);
 
-export interface Subtask {
-  id: string;
-  title: string;
-  done: boolean;
-}
+// ---- Entity Schemas ----
 
-export interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  priority: Priority;
-  status: TaskStatus;
-  dueDate?: string;
-  category?: Category;
-  energy?: EnergyLevel;
-  quadrant: QuadrantType;
-  createdAt: string;
-  completedAt?: string;
-  /** Recurring task settings */
-  recurrence?: RecurrenceFrequency;
-  /** For recurring tasks: the template task ID this was spawned from */
-  recurrenceParentId?: string;
-  /** For recurring tasks: next scheduled creation date (ISO string) */
-  recurrenceNextDate?: string;
-  /** For quarterly recurrence: the day of month to recur on (e.g., 16) */
-  recurrenceDayOfMonth?: number;
-  /** For quarterly recurrence: starting month (1-12, e.g., 2 for Feb) */
-  recurrenceStartMonth?: number;
-  /** Subtasks (checklist items within a task) */
-  subtasks?: Subtask[];
-}
+export const subtaskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  done: z.boolean(),
+});
 
-/** A linked task or subtask reference for a pomodoro */
-export interface PomodoroLink {
-  taskId: string;
-  subtaskId?: string;
-}
+export const taskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  priority: prioritySchema,
+  status: taskStatusSchema,
+  dueDate: z.string().optional(),
+  category: categorySchema.optional(),
+  energy: energySchema.optional(),
+  quadrant: quadrantSchema,
+  createdAt: z.string(),
+  completedAt: z.string().optional(),
+  recurrence: recurrenceSchema.optional(),
+  recurrenceParentId: z.string().optional(),
+  recurrenceNextDate: z.string().optional(),
+  recurrenceDayOfMonth: z.number().optional(),
+  recurrenceStartMonth: z.number().optional(),
+  subtasks: z.array(subtaskSchema).optional(),
+});
 
-export interface Pomodoro {
-  id: string;
-  title: string;
-  duration: number; // minutes
-  elapsed: number; // seconds
-  status: 'idle' | 'running' | 'paused' | 'completed';
-  createdAt: string;
-  completedAt?: string;
-  /** Timer persistence: when the timer was started/resumed (ISO string) */
-  startedAt?: string;
-  /** Timer persistence: accumulated seconds before the current run */
-  accumulatedSeconds?: number;
-  /** Optional: linked task ID for focus mode (legacy, single task) */
-  linkedTaskId?: string;
-  /** Multiple linked tasks/subtasks for this pomodoro session */
-  linkedTasks?: PomodoroLink[];
-}
+export const pomodoroLinkSchema = z.object({
+  taskId: z.string(),
+  subtaskId: z.string().optional(),
+});
 
-export interface TimerSettings {
-  focusDuration: number;
-  shortBreak: number;
-  longBreak: number;
-  sessionsBeforeLongBreak: number;
-}
+export const pomodoroSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  duration: z.number(),
+  elapsed: z.number(),
+  status: z.enum(['idle', 'running', 'paused', 'completed']),
+  createdAt: z.string(),
+  completedAt: z.string().optional(),
+  startedAt: z.string().optional(),
+  accumulatedSeconds: z.number().optional(),
+  linkedTaskId: z.string().optional(),
+  linkedTasks: z.array(pomodoroLinkSchema).optional(),
+});
 
-export interface DailyStats {
-  date: string;
-  tasksCompleted: number;
-  focusMinutes: number;
-  pomodorosCompleted: number;
-}
+export const timerSettingsSchema = z.object({
+  focusDuration: z.number(),
+  shortBreak: z.number(),
+  longBreak: z.number(),
+  sessionsBeforeLongBreak: z.number(),
+});
 
-/** Task template — a reusable set of tasks */
-export interface TaskTemplate {
-  id: string;
-  name: string;
-  description?: string;
-  tasks: Array<{
-    title: string;
-    description?: string;
-    priority: Priority;
-    category?: Category;
-    energy?: EnergyLevel;
-    subtasks?: Array<{ title: string }>;
-  }>;
-  createdAt: string;
-}
+export const dailyStatsSchema = z.object({
+  date: z.string(),
+  tasksCompleted: z.number(),
+  focusMinutes: z.number(),
+  pomodorosCompleted: z.number(),
+});
 
-/** A reminder — birthdays, appointments, recurring events */
-export interface Reminder {
-  id: string;
-  title: string;
-  description?: string;
-  /** ISO date string (YYYY-MM-DD) */
-  date: string;
-  /** Recurrence: 'none' for one-off, 'yearly' for birthdays, etc. */
-  recurrence: 'none' | 'yearly' | 'monthly' | 'weekly';
-  /** Category for visual grouping */
-  category: 'birthday' | 'appointment' | 'event' | 'other';
-  /** Whether this occurrence has been acknowledged */
-  acknowledged?: boolean;
-  /** Date when acknowledged (ISO string) */
-  acknowledgedAt?: string;
-  createdAt: string;
-}
+export const templateTaskSchema = z.object({
+  title: z.string(),
+  description: z.string().optional(),
+  priority: prioritySchema,
+  category: categorySchema.optional(),
+  energy: energySchema.optional(),
+  subtasks: z.array(z.object({ title: z.string() })).optional(),
+});
 
-export interface AppState {
-  tasks: Task[];
-  pomodoros: Pomodoro[];
-  settings: TimerSettings;
-  dailyStats: DailyStats[];
-  currentStreak: number;
-  /** Saved task templates */
-  templates?: TaskTemplate[];
-  /** User preferences */
-  preferences?: AppPreferences;
-  /** Read Later pocket — saved links */
-  readingList?: ReadingItem[];
-  /** Reminders — birthdays, appointments, events */
-  reminders?: Reminder[];
-}
+export const taskTemplateSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  tasks: z.array(templateTaskSchema),
+  createdAt: z.string(),
+});
 
-export interface AppPreferences {
-  notificationSound?: NotificationSound;
-  obsidianVaultPath?: string;
-  obsidianAutoSync?: boolean;
-}
+export const reminderSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  date: z.string(),
+  recurrence: reminderRecurrenceSchema,
+  category: reminderCategorySchema,
+  acknowledged: z.boolean().optional(),
+  acknowledgedAt: z.string().optional(),
+  createdAt: z.string(),
+});
+
+export const readingItemSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  tags: z.array(z.string()),
+  status: readingStatusSchema,
+  notes: z.string().optional(),
+  imageUrl: z.string().optional(),
+  domain: z.string().optional(),
+  createdAt: z.string(),
+  readAt: z.string().optional(),
+});
+
+export const appPreferencesSchema = z.object({
+  notificationSound: notificationSoundSchema.optional(),
+  obsidianVaultPath: z.string().optional(),
+  obsidianAutoSync: z.boolean().optional(),
+});
+
+/**
+ * The main AppState schema — used for save endpoint validation.
+ * .strict() ensures unknown fields cause errors instead of being silently stripped.
+ */
+export const appStateSchema = z.object({
+  tasks: z.array(taskSchema),
+  pomodoros: z.array(pomodoroSchema),
+  settings: timerSettingsSchema,
+  dailyStats: z.array(dailyStatsSchema),
+  currentStreak: z.number(),
+  templates: z.array(taskTemplateSchema).optional(),
+  preferences: appPreferencesSchema.optional(),
+  readingList: z.array(readingItemSchema).optional(),
+  reminders: z.array(reminderSchema).optional(),
+}).strict();
+
+export const storageConfigSchema = z.object({
+  mode: z.enum(['local', 'file', 'sheets']),
+  sheetsId: z.string().optional(),
+  sheetsApiKey: z.string().optional(),
+});
+
+// ---- Inferred TypeScript Types ----
+// These are auto-derived from the Zod schemas above.
+// NEVER define these manually — they stay in sync automatically.
+
+export type Priority = z.infer<typeof prioritySchema>;
+export type TaskStatus = z.infer<typeof taskStatusSchema>;
+export type QuadrantType = z.infer<typeof quadrantSchema>;
+export type Category = z.infer<typeof categorySchema>;
+export type EnergyLevel = z.infer<typeof energySchema>;
+export type RecurrenceFrequency = z.infer<typeof recurrenceSchema>;
+export type NotificationSound = z.infer<typeof notificationSoundSchema>;
+export type ReadingStatus = z.infer<typeof readingStatusSchema>;
+
+export type Subtask = z.infer<typeof subtaskSchema>;
+export type Task = z.infer<typeof taskSchema>;
+export type PomodoroLink = z.infer<typeof pomodoroLinkSchema>;
+export type Pomodoro = z.infer<typeof pomodoroSchema>;
+export type TimerSettings = z.infer<typeof timerSettingsSchema>;
+export type DailyStats = z.infer<typeof dailyStatsSchema>;
+export type TaskTemplate = z.infer<typeof taskTemplateSchema>;
+export type Reminder = z.infer<typeof reminderSchema>;
+export type ReadingItem = z.infer<typeof readingItemSchema>;
+export type AppPreferences = z.infer<typeof appPreferencesSchema>;
+export type AppState = z.infer<typeof appStateSchema>;
+export type StorageMode = z.infer<typeof storageConfigSchema>['mode'];
+export type StorageConfig = z.infer<typeof storageConfigSchema>;
+
+// ---- Constants ----
 
 export const DEFAULT_SETTINGS: TimerSettings = {
   focusDuration: 25,
@@ -167,14 +195,6 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   obsidianVaultPath: '',
   obsidianAutoSync: false,
 };
-
-export type StorageMode = 'local' | 'file' | 'sheets';
-
-export interface StorageConfig {
-  mode: StorageMode;
-  sheetsId?: string;
-  sheetsApiKey?: string;
-}
 
 export const DAILY_TIPS = [
   "Break big tasks into small steps. Your brain loves checking things off!",
