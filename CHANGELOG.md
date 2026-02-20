@@ -6,6 +6,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.7.0] - 2026-02-20 (V1.2 Release)
+
+### Added
+- **Subtasks** — parent/child task relationships with inline add/toggle/delete and progress bars on task cards
+- **Task Templates** — save reusable task sets, apply them to create multiple tasks at once, manage from dedicated Templates page
+- **Daily Planner** ("Today" page) — time-of-day greeting, due/overdue tasks, high-priority tasks, energy-matched suggestions, completed today section
+- **Motivational Quote Box** — 40 curated quotes from authors and books (Seneca, Cal Newport, James Clear, Steve Jobs, etc.), randomized on each page load
+- **Weekly Review** page — end-of-week summary with task completion stats, carry-over of incomplete tasks, next week planning
+- **Focus Mode** — full-screen distraction-free view with current task display, integrated Pomodoro timer, ambient background, keyboard shortcut (F)
+- **Obsidian Vault Sync** — configurable vault path in Settings, auto-sync toggle for automatic export on data changes
+- **Notification Sound Options** — 6 sound choices (Gentle Chime, Bell, Digital Ping, Soft Gong, Nature, None) selectable in Settings
+- **Data Integrity Check** — scan and auto-fix data inconsistencies (orphaned refs, missing fields, duplicate IDs) from Settings
+- **Framer Motion animations** — page transitions, card enter/exit animations, layout animations across all new pages
+- **Sidebar reorganization** — section headers (Tools, System, Quick Actions), Focus Mode quick-launch button
+- **Keyboard shortcuts** — F for Focus Mode, 1-8 for page switching, Esc to exit Focus Mode
+- **LinkedTaskId** on Pomodoros — data model support for linking focus sessions to specific tasks
+- 10 new V1.2 tests (46 total across 7 test files) covering subtasks, templates, preferences, and integrity check serialization
+
+### Changed
+- Default landing page changed from Tasks to Daily Planner ("Today")
+- Sidebar expanded from 5 to 8 navigation items with section grouping
+- Version bumped to 1.2.0 in package.json and Settings About section
+- AppState model extended with `templates`, `preferences`, and `subtasks` fields
+- Markdown serialization updated for subtasks (JSON column), templates section, and preferences section
+
+---
+
 ## [1.6.0] - 2026-02-20 (V1.1 Release)
 
 ### Added

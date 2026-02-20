@@ -65,3 +65,5 @@
 - [x] 8. Notification sound options — multiple chime choices for timer completion
 - [x] 9. Data integrity check — verify/fix MD file structure from Settings
 - [x] 10. Motivational quote box on Daily Planner — curated quotes from authors/books, changes on refresh
+- [x] Update CHANGELOG.md with V1.2 entries
+- [x] Update version number in package.json and SettingsPage
