@@ -52,6 +52,7 @@ export const taskSchema = z.object({
   recurrenceDayOfMonth: z.number().nullable().optional(),
   recurrenceStartMonth: z.number().nullable().optional(),
   subtasks: z.array(subtaskSchema).nullable().optional(),
+  pinnedToday: z.string().nullable().optional(), // YYYY-MM-DD — when set to today's date, task shows in Today view
 });
 
 export const pomodoroLinkSchema = z.object({

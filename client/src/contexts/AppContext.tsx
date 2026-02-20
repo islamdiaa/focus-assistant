@@ -38,6 +38,8 @@ type Action =
   | { type: 'DELETE_REMINDER'; payload: string }
   | { type: 'ACK_REMINDER'; payload: string }
   | { type: 'UNACK_REMINDER'; payload: string }
+  | { type: 'PIN_TO_TODAY'; payload: string }
+  | { type: 'UNPIN_FROM_TODAY'; payload: string }
   | { type: 'UNDO' }
   | { type: 'REDO' };
 
@@ -189,6 +191,7 @@ function appReducer(state: AppState, action: Action): AppState {
               ...t,
               status: newStatus as Task['status'],
               completedAt: newStatus === 'done' ? new Date().toISOString() : undefined,
+              pinnedToday: newStatus === 'done' ? null : t.pinnedToday, // Clear pin on completion
               subtasks: newStatus === 'done' && t.subtasks
                 ? t.subtasks.map(s => ({ ...s, done: true }))
                 : newStatus === 'active' && t.subtasks
@@ -502,6 +505,25 @@ function appReducer(state: AppState, action: Action): AppState {
           r.id === action.payload
             ? { ...r, acknowledged: false, acknowledgedAt: undefined }
             : r
+        ),
+      };
+    }
+
+    case 'PIN_TO_TODAY': {
+      const todayDate = new Date().toISOString().split('T')[0];
+      return {
+        ...state,
+        tasks: state.tasks.map(t =>
+          t.id === action.payload ? { ...t, pinnedToday: todayDate } : t
+        ),
+      };
+    }
+
+    case 'UNPIN_FROM_TODAY': {
+      return {
+        ...state,
+        tasks: state.tasks.map(t =>
+          t.id === action.payload ? { ...t, pinnedToday: null } : t
         ),
       };
     }

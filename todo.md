@@ -179,3 +179,7 @@
 - [x] Undo-acknowledge reminder — make acknowledged status reversible/editable
 - [x] Make priority view the default in Tasks page
 - [x] Add reminder creation from Tasks page with R shortcut
+- [x] Manual task picker on Today page — pin any active task to Today view
+- [x] Audit codebase for bugs and issues
+- [x] Fix bugs found during audit (pinnedToday cleared on completion, energy suggestions exclude pinned/due tasks)
+- [x] Add tests for new features and bug fixes (6 tests in v182-pintoday.test.ts)

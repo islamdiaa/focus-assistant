@@ -4,8 +4,10 @@
  */
 import { useMemo, useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { CheckCircle2, Circle, Clock, Sun, Sunset, Moon, Target, Zap, Calendar, ChevronRight, Check, ListChecks, Quote, BookOpen, ExternalLink, Globe, Bell, Cake, Star, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Sun, Sunset, Moon, Target, Zap, Calendar, ChevronRight, Check, ListChecks, Quote, BookOpen, ExternalLink, Globe, Bell, Cake, Star, AlertCircle, Plus, Pin, PinOff, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import type { Task, EnergyLevel, Reminder } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -145,10 +147,20 @@ export default function DailyPlannerPage() {
     };
   }, [state.dailyStats, today]);
 
-  // Tasks due today or overdue
+  // Pinned tasks (manually added to Today)
+  const pinnedTasks = useMemo(() => {
+    return state.tasks.filter(t =>
+      t.status === 'active' && t.pinnedToday === today
+    ).sort((a, b) => {
+      const pOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+      return pOrder[a.priority] - pOrder[b.priority];
+    });
+  }, [state.tasks, today]);
+
+  // Tasks due today or overdue (excluding already pinned)
   const dueTasks = useMemo(() => {
     return state.tasks.filter(t =>
-      t.status === 'active' && t.dueDate && t.dueDate <= today
+      t.status === 'active' && t.dueDate && t.dueDate <= today && t.pinnedToday !== today
     ).sort((a, b) => {
       // Overdue first, then by priority
       const aOverdue = a.dueDate! < today;
@@ -159,14 +171,34 @@ export default function DailyPlannerPage() {
     });
   }, [state.tasks, today]);
 
-  // High-priority tasks (not due today but urgent/high)
+  // High-priority tasks (not due today but urgent/high, excluding pinned)
   const highPriorityTasks = useMemo(() => {
     return state.tasks.filter(t =>
       t.status === 'active' &&
       (t.priority === 'urgent' || t.priority === 'high') &&
-      (!t.dueDate || t.dueDate > today)
+      (!t.dueDate || t.dueDate > today) &&
+      t.pinnedToday !== today
     );
   }, [state.tasks, today]);
+
+  // Task picker state
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState('');
+
+  const pickableTasks = useMemo(() => {
+    return state.tasks.filter(t =>
+      t.status === 'active' &&
+      t.pinnedToday !== today &&
+      !(t.dueDate && t.dueDate <= today)
+    ).filter(t => {
+      if (!pickerSearch.trim()) return true;
+      const q = pickerSearch.toLowerCase();
+      return t.title.toLowerCase().includes(q) || (t.description && t.description.toLowerCase().includes(q));
+    }).sort((a, b) => {
+      const pOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+      return pOrder[a.priority] - pOrder[b.priority];
+    });
+  }, [state.tasks, today, pickerSearch]);
 
   // Energy-matched suggestions
   const energySuggestions = useMemo(() => {
@@ -177,7 +209,9 @@ export default function DailyPlannerPage() {
     };
     const suggestedEnergy = energyMap[timeOfDay];
     return state.tasks.filter(t =>
-      t.status === 'active' && t.energy === suggestedEnergy
+      t.status === 'active' && t.energy === suggestedEnergy &&
+      t.pinnedToday !== today &&
+      !(t.dueDate && t.dueDate <= today)
     ).slice(0, 5);
   }, [state.tasks, timeOfDay]);
 
@@ -284,6 +318,131 @@ export default function DailyPlannerPage() {
           </motion.div>
         ))}
       </div>
+
+      {/* My Today — Pinned Tasks */}
+      <div className="bg-card rounded-xl border border-border p-5 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
+            <Pin className="w-5 h-5 text-warm-sage" />
+            My Today ({pinnedTasks.length})
+          </h3>
+          <Button onClick={() => { setPickerSearch(''); setPickerOpen(true); }} size="sm" variant="outline" className="gap-1.5 text-warm-sage border-warm-sage/30 hover:bg-warm-sage-light">
+            <Plus className="w-3.5 h-3.5" /> Add Task
+          </Button>
+        </div>
+        {pinnedTasks.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No tasks pinned to today. Click "Add Task" to pick tasks you want to focus on.</p>
+        ) : (
+          <div className="space-y-2">
+            {pinnedTasks.map(t => (
+              <motion.div key={t.id} layout initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                className={`flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-background/50 hover:bg-background transition-colors ${
+                  t.status === 'done' ? 'opacity-50' : ''
+                }`}
+              >
+                <button
+                  onClick={() => toggleTask(t.id)}
+                  className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
+                    ${t.status === 'done' ? 'bg-warm-sage border-warm-sage' : 'border-border hover:border-warm-sage'}`}
+                >
+                  {t.status === 'done' && <Check className="w-3 h-3 text-white" />}
+                </button>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${t.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                    {t.title}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {t.energy && <span className="text-[10px] text-muted-foreground">{ENERGY_EMOJI[t.energy]} {t.energy}</span>}
+                    {t.dueDate && (
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                        <Calendar className="w-2.5 h-2.5" />
+                        {new Date(t.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
+                    {(t.subtasks?.length || 0) > 0 && (
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                        <ListChecks className="w-2.5 h-2.5" /> {t.subtasks?.filter(s => s.done).length || 0}/{t.subtasks?.length || 0}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => dispatch({ type: 'UNPIN_FROM_TODAY', payload: t.id })}
+                  title="Remove from Today"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta/10 transition-colors shrink-0"
+                >
+                  <PinOff className="w-3.5 h-3.5" />
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Task Picker Dialog */}
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="bg-card max-w-md max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl">Add to Today</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">Pick tasks to focus on today</DialogDescription>
+          </DialogHeader>
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search tasks..."
+              value={pickerSearch}
+              onChange={e => setPickerSearch(e.target.value)}
+              className="pl-10 bg-background"
+              autoFocus
+            />
+            {pickerSearch && (
+              <button onClick={() => setPickerSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <div className="flex-1 overflow-y-auto space-y-1.5 min-h-0">
+            {pickableTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                {pickerSearch ? 'No matching tasks found.' : 'All active tasks are already in Today or due today.'}
+              </p>
+            ) : (
+              pickableTasks.map(t => {
+                const PRIORITY_COLORS: Record<string, string> = {
+                  urgent: 'bg-warm-terracotta/15 text-warm-terracotta',
+                  high: 'bg-warm-terracotta-light text-warm-terracotta',
+                  medium: 'bg-warm-amber-light text-warm-amber',
+                  low: 'bg-warm-sage-light text-warm-sage',
+                };
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      dispatch({ type: 'PIN_TO_TODAY', payload: t.id });
+                    }}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-background/50 hover:bg-warm-sage-light/30 hover:border-warm-sage/30 transition-colors text-left group"
+                  >
+                    <Plus className="w-4 h-4 text-muted-foreground group-hover:text-warm-sage transition-colors shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{t.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${PRIORITY_COLORS[t.priority]}`}>{t.priority}</span>
+                        {t.category && <span className="text-[10px] text-muted-foreground">{t.category}</span>}
+                        {t.dueDate && (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                            <Calendar className="w-2.5 h-2.5" />
+                            {new Date(t.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Overdue Reminders */}
       {overdueReminders.length > 0 && (

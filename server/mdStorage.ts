@@ -63,13 +63,13 @@ export function stateToMarkdown(state: AppState): string {
   if (state.tasks.length === 0) {
     lines.push('_No tasks yet._');
   } else {
-    lines.push('| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate | Subtasks | RecurrenceDayOfMonth | RecurrenceStartMonth |');
-    lines.push('|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|----------|---------------------|----------------------|');
+    lines.push('| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate | Subtasks | RecurrenceDayOfMonth | RecurrenceStartMonth | PinnedToday |');
+    lines.push('|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|----------|---------------------|----------------------|-------------|');
     for (const t of state.tasks) {
       const subtasksJson = t.subtasks && t.subtasks.length > 0
         ? escapeField(JSON.stringify(t.subtasks))
         : '';
-      lines.push(`| ${t.id} | ${escapeField(t.title)} | ${escapeField(t.description || '')} | ${t.priority} | ${t.status} | ${t.dueDate || ''} | ${t.category || ''} | ${t.energy || ''} | ${t.quadrant} | ${t.createdAt} | ${t.completedAt || ''} | ${t.recurrence || ''} | ${t.recurrenceParentId || ''} | ${t.recurrenceNextDate || ''} | ${subtasksJson} | ${t.recurrenceDayOfMonth ?? ''} | ${t.recurrenceStartMonth ?? ''} |`);
+      lines.push(`| ${t.id} | ${escapeField(t.title)} | ${escapeField(t.description || '')} | ${t.priority} | ${t.status} | ${t.dueDate || ''} | ${t.category || ''} | ${t.energy || ''} | ${t.quadrant} | ${t.createdAt} | ${t.completedAt || ''} | ${t.recurrence || ''} | ${t.recurrenceParentId || ''} | ${t.recurrenceNextDate || ''} | ${subtasksJson} | ${t.recurrenceDayOfMonth ?? ''} | ${t.recurrenceStartMonth ?? ''} | ${t.pinnedToday || ''} |`);
     }
   }
   lines.push('');
@@ -242,6 +242,7 @@ export function markdownToState(md: string): AppState {
           subtasks,
           recurrenceDayOfMonth: r[15] ? parseInt(r[15]) : undefined,
           recurrenceStartMonth: r[16] ? parseInt(r[16]) : undefined,
+          pinnedToday: r[17] || undefined,
         });
       }
     }
