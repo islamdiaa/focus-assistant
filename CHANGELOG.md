@@ -6,6 +6,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.8.4] - 2026-02-20
+
+### Fixed
+- **Silent save failures causing data loss** — save errors were silently swallowed; now tracked with up to 3 retries, exponential backoff, and a red error banner in the UI with a Retry button. Data is always cached in localStorage as a safety net.
+- **Column format resilience** — task deserialization now safely handles old markdown formats with fewer columns (15-col V1.8.0, 17-col V1.8.1) without crashing or losing data
+- **Analytics URIError on self-hosted** — analytics script tag now only loads when `VITE_ANALYTICS_ENDPOINT` env var is actually set, preventing `URIError: URI malformed` on self-hosted deployments
+
+### Added
+- **Save status indicator** — red error banner appears when saves fail, with error details and a manual Retry button; clears automatically when saves recover
+- **Graceful shutdown** — server now handles SIGTERM/SIGINT signals, closing HTTP connections cleanly before exit; Dockerfile includes `STOPSIGNAL SIGTERM`
+- **Save retry with backoff** — failed saves retry up to 3 times with increasing delays (2s, 4s, 6s) before reporting failure
+
+---
+
 ## [1.8.3] - 2026-02-20
 
 ### Fixed

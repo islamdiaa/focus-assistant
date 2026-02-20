@@ -60,6 +60,23 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
   });
+
+  // Graceful shutdown — ensure in-flight requests complete before exit
+  const shutdown = (signal: string) => {
+    console.log(`\n[Shutdown] Received ${signal}. Closing server gracefully...`);
+    server.close(() => {
+      console.log('[Shutdown] Server closed. Exiting.');
+      process.exit(0);
+    });
+    // Force exit after 10 seconds if graceful shutdown stalls
+    setTimeout(() => {
+      console.error('[Shutdown] Forced exit after timeout.');
+      process.exit(1);
+    }, 10_000);
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 startServer().catch(console.error);

@@ -220,9 +220,13 @@ export function markdownToState(md: string): AppState {
       for (let i = 1; i < rows.length; i++) {
         const r = rows[i];
         if (!r[0]) continue;
+        // Column-count resilience: safely access columns that may not exist in older formats
+        // Old format had 15 columns (indices 0-14), V1.8.1 added 2 more (15-16), V1.8.3 added 1 more (17)
+        const col = (idx: number) => (idx < r.length ? r[idx] : '') || '';
         let subtasks = undefined;
-        if (r[14]) {
-          try { subtasks = JSON.parse(r[14]); } catch { /* ignore parse errors */ }
+        const subtasksRaw = col(14);
+        if (subtasksRaw) {
+          try { subtasks = JSON.parse(subtasksRaw); } catch { /* ignore parse errors */ }
         }
         state.tasks.push({
           id: r[0],
@@ -230,19 +234,19 @@ export function markdownToState(md: string): AppState {
           description: r[2] || undefined,
           priority: (r[3] as Task['priority']) || 'medium',
           status: (r[4] as Task['status']) || 'active',
-          dueDate: r[5] || undefined,
-          category: (r[6] as Task['category']) || undefined,
-          energy: (r[7] as Task['energy']) || undefined,
-          quadrant: (r[8] as Task['quadrant']) || 'unassigned',
-          createdAt: r[9] || new Date().toISOString(),
-          completedAt: r[10] || undefined,
-          recurrence: (r[11] as Task['recurrence']) || undefined,
-          recurrenceParentId: r[12] || undefined,
-          recurrenceNextDate: r[13] || undefined,
+          dueDate: col(5) || undefined,
+          category: (col(6) as Task['category']) || undefined,
+          energy: (col(7) as Task['energy']) || undefined,
+          quadrant: (col(8) as Task['quadrant']) || 'unassigned',
+          createdAt: col(9) || new Date().toISOString(),
+          completedAt: col(10) || undefined,
+          recurrence: (col(11) as Task['recurrence']) || undefined,
+          recurrenceParentId: col(12) || undefined,
+          recurrenceNextDate: col(13) || undefined,
           subtasks,
-          recurrenceDayOfMonth: r[15] ? parseInt(r[15]) : undefined,
-          recurrenceStartMonth: r[16] ? parseInt(r[16]) : undefined,
-          pinnedToday: r[17] || undefined,
+          recurrenceDayOfMonth: col(15) ? parseInt(col(15)) : undefined,
+          recurrenceStartMonth: col(16) ? parseInt(col(16)) : undefined,
+          pinnedToday: col(17) || undefined,
         });
       }
     }

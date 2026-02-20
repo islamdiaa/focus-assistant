@@ -187,3 +187,7 @@
 - [ ] Version bump to 1.8.3
 - [x] Tasks page default filter: Open (active) tasks instead of All
 - [x] Version bump to 1.8.3
+- [x] BUG: Tasks added in browser not persisted to disk — data lost on container restart
+- [x] Fix save reliability: save errors now tracked with retry (3 attempts), error banner in UI
+- [x] Add graceful shutdown (SIGTERM handler + STOPSIGNAL in Dockerfile)
+- [x] Column format resilience: col() helper safely handles missing columns in old formats

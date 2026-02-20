@@ -6,12 +6,38 @@
  * 
  * This module provides the same loadState/saveState API used by AppContext,
  * but now routes through the server instead of directly accessing files or sheets.
+ * 
+ * V1.8.3: Added save error tracking, retry logic, and error reporting to prevent
+ * silent data loss. Save failures are now visible to the user via onSaveError callback.
  */
 
 import type { AppState, StorageConfig, StorageMode } from './types';
 import { DEFAULT_SETTINGS } from './types';
 
 const STORAGE_KEY = 'focus-assist-data';
+
+// ---- Save error tracking ----
+
+type SaveErrorCallback = (error: string, retryCount: number) => void;
+type SaveSuccessCallback = () => void;
+
+let onSaveError: SaveErrorCallback | null = null;
+let onSaveSuccess: SaveSuccessCallback | null = null;
+let consecutiveFailures = 0;
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+
+export function setSaveErrorHandler(handler: SaveErrorCallback) {
+  onSaveError = handler;
+}
+
+export function setSaveSuccessHandler(handler: SaveSuccessCallback) {
+  onSaveSuccess = handler;
+}
+
+export function getConsecutiveFailures(): number {
+  return consecutiveFailures;
+}
 
 // ---- Local cache (localStorage) ----
 
@@ -51,7 +77,7 @@ async function serverLoad(): Promise<AppState | null> {
   }
 }
 
-async function serverSave(state: AppState): Promise<boolean> {
+async function serverSave(state: AppState): Promise<{ ok: boolean; error?: string }> {
   try {
     const res = await fetch('/api/trpc/data.save', {
       method: 'POST',
@@ -59,10 +85,24 @@ async function serverSave(state: AppState): Promise<boolean> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ json: state }),
     });
-    return res.ok;
+    if (!res.ok) {
+      let errorMsg = `Server returned ${res.status}`;
+      try {
+        const body = await res.json();
+        // tRPC error format
+        if (body?.error?.json?.message) {
+          errorMsg = body.error.json.message;
+        } else if (body?.[0]?.error?.json?.message) {
+          errorMsg = body[0].error.json.message;
+        }
+      } catch {}
+      return { ok: false, error: errorMsg };
+    }
+    return { ok: true };
   } catch (e) {
+    const errorMsg = e instanceof Error ? e.message : 'Network error';
     console.warn('Failed to save to server:', e);
-    return false;
+    return { ok: false, error: errorMsg };
   }
 }
 
@@ -109,11 +149,36 @@ export async function loadState(): Promise<AppState> {
   return loadLocal();
 }
 
-export async function saveState(state: AppState): Promise<void> {
-  // Always cache locally
+export async function saveState(state: AppState): Promise<boolean> {
+  // Always cache locally first (safety net)
   saveLocal(state);
-  // Save to server
-  await serverSave(state);
+  
+  // Try to save to server with retry
+  let lastError = '';
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const result = await serverSave(state);
+    if (result.ok) {
+      if (consecutiveFailures > 0) {
+        console.log(`[Save] Recovered after ${consecutiveFailures} failures`);
+        consecutiveFailures = 0;
+        onSaveSuccess?.();
+      }
+      return true;
+    }
+    lastError = result.error || 'Unknown error';
+    console.warn(`[Save] Attempt ${attempt + 1}/${MAX_RETRIES + 1} failed: ${lastError}`);
+    
+    if (attempt < MAX_RETRIES) {
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (attempt + 1)));
+    }
+  }
+  
+  // All retries exhausted
+  consecutiveFailures++;
+  console.error(`[Save] FAILED after ${MAX_RETRIES + 1} attempts. Consecutive failures: ${consecutiveFailures}. Error: ${lastError}`);
+  console.error('[Save] Data is cached in localStorage but NOT persisted to server.');
+  onSaveError?.(lastError, consecutiveFailures);
+  return false;
 }
 
 // ---- Config API ----

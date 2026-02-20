@@ -28,7 +28,7 @@ import ReadLaterPage from './ReadLaterPage';
 import RemindersPage from './RemindersPage';
 import FocusModePage from './FocusModePage';
 import { useApp } from '@/contexts/AppContext';
-import { Smile, Clock, Menu, Undo2, Redo2 } from 'lucide-react';
+import { Smile, Clock, Menu, Undo2, Redo2, AlertTriangle, Cloud, CloudOff } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const MOTIVATIONAL = [
@@ -57,7 +57,7 @@ export default function Home() {
   const [activePage, setActivePage] = useState<Page>('planner');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
-  const { state, canUndo, canRedo, undo, redo } = useApp();
+  const { state, canUndo, canRedo, undo, redo, saveStatus, saveError } = useApp();
 
   // Expose triggers for keyboard shortcuts in child components
   const [newTaskTrigger, setNewTaskTrigger] = useState(0);
@@ -214,6 +214,20 @@ export default function Home() {
               </div>
             </div>
           </header>
+
+          {/* Save error banner */}
+          {saveStatus === 'error' && (
+            <div className="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center gap-2 text-sm text-red-700">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span className="flex-1">{saveError || 'Changes not saved to server. Data is cached locally.'}</span>
+              <button
+                onClick={() => { /* trigger manual retry */ import('@/lib/sheets').then(m => m.saveState(state)); }}
+                className="text-xs font-medium px-2 py-1 rounded bg-red-100 hover:bg-red-200 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
           {/* Page content */}
           <main className="flex-1 overflow-y-auto">

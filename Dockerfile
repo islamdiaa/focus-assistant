@@ -40,7 +40,7 @@ FROM node:22-alpine AS production
 LABEL org.opencontainers.image.title="Focus Assistant"
 LABEL org.opencontainers.image.description="ADHD-friendly productivity app with tasks, Pomodoro timer, Eisenhower matrix, and stats"
 LABEL org.opencontainers.image.source="https://github.com/islamdiaa/focus-assistant"
-LABEL org.opencontainers.image.version="1.8.3"
+LABEL org.opencontainers.image.version="1.8.4"
 LABEL net.unraid.docker.icon="https://cdn-icons-png.flaticon.com/512/7246/7246748.png"
 LABEL net.unraid.docker.webui="http://[IP]:[PORT:1992]/"
 LABEL net.unraid.docker.managed="dockerman"
@@ -81,6 +81,9 @@ ENV JWT_SECRET=focus-assistant-local-secret
 
 # Volume for persistent data
 VOLUME ["/app/data"]
+
+# Ensure Docker sends SIGTERM for graceful shutdown
+STOPSIGNAL SIGTERM
 
 # Start the server
 CMD ["node", "dist/index.js"]

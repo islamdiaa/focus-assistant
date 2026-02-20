@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer, useEffect, useCallback, useRef, 
 import { nanoid } from 'nanoid';
 import type { Task, Pomodoro, PomodoroLink, TimerSettings, DailyStats, AppState, Priority, QuadrantType, Category, EnergyLevel, RecurrenceFrequency, Subtask, TaskTemplate, AppPreferences, ReadingItem, ReadingStatus, Reminder } from '@/lib/types';
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from '@/lib/types';
-import { loadState, saveState, pollTimestamp } from '@/lib/sheets';
+import { loadState, saveState, pollTimestamp, setSaveErrorHandler, setSaveSuccessHandler } from '@/lib/sheets';
 
 // ---- Actions ----
 type Action =
@@ -577,6 +577,8 @@ interface AppContextType {
   canRedo: boolean;
   undo: () => void;
   redo: () => void;
+  saveStatus: 'ok' | 'saving' | 'error';
+  saveError: string | null;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -597,8 +599,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   stateRef.current = state;
 
+  const [saveStatus, setSaveStatus] = useState<'ok' | 'saving' | 'error'>('ok');
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const dispatch = useCallback((action: Action) => {
     rawDispatch(action);
+  }, []);
+
+  // Register save error/success handlers
+  useEffect(() => {
+    setSaveErrorHandler((error, failures) => {
+      setSaveStatus('error');
+      setSaveError(`Save failed (${failures}x): ${error}`);
+    });
+    setSaveSuccessHandler(() => {
+      setSaveStatus('ok');
+      setSaveError(null);
+    });
   }, []);
 
   useEffect(() => {
@@ -614,9 +631,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!loadedRef.current) return;
     clearTimeout(saveTimeoutRef.current);
+    setSaveStatus('saving');
     saveTimeoutRef.current = setTimeout(() => {
-      saveState(stateRef.current).then(() => {
-        pollTimestamp().then(ts => { lastTimestampRef.current = ts; }).catch(() => {});
+      saveState(stateRef.current).then((ok) => {
+        if (ok) {
+          setSaveStatus('ok');
+          setSaveError(null);
+          pollTimestamp().then(ts => { lastTimestampRef.current = ts; }).catch(() => {});
+        }
+        // Error state is set by the error handler in sheets.ts
       });
     }, 500);
     return () => clearTimeout(saveTimeoutRef.current);
@@ -660,6 +683,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       canRedo: undoState.future.length > 0,
       undo,
       redo,
+      saveStatus,
+      saveError,
     }}>
       {children}
     </AppContext.Provider>
@@ -683,6 +708,8 @@ export function useApp(): AppContextType {
         canRedo: false,
         undo: noop,
         redo: noop,
+        saveStatus: 'ok' as const,
+        saveError: null,
       };
     }
     throw new Error('useApp must be used within AppProvider');
