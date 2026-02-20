@@ -3,6 +3,10 @@
 # ============================================================
 # Stage 1: Install deps + build
 # Stage 2: Slim production image
+#
+# Supports multi-arch (amd64 + arm64) builds via buildx.
+# Uses --ignore-scripts to avoid QEMU crashes on ARM64, then
+# explicitly rebuilds native packages for the target platform.
 # ============================================================
 
 # --- Build stage ---
@@ -18,13 +22,14 @@ COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 
 # Install all dependencies (including devDependencies for build)
-# --ignore-scripts prevents native package build scripts from crashing
-# under QEMU emulation (e.g. @tailwindcss/oxide, esbuild)
+# --ignore-scripts prevents native package postinstall scripts from
+# crashing under QEMU emulation on ARM64 cross-builds
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
-# Rebuild native packages for the current platform after install
-# This ensures esbuild and other native binaries are correct for the target arch
-RUN node node_modules/esbuild/install.js 2>/dev/null || true
+# Rebuild native packages for the actual target platform.
+# esbuild's postinstall downloads the platform-specific binary;
+# without it, the wrong ELF binary is left in place.
+RUN npx --yes esbuild --version
 
 # Copy source
 COPY . .
