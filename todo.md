@@ -112,3 +112,9 @@
 - [x] Fix Dockerfile — client/dist path not found after template upgrade to tRPC/Express
 - [x] Fix Docker production error — vite imported at runtime in dist/index.js but not in prod dependencies
 - [x] Fix Docker standalone mode — Invalid URL error when VITE_ OAuth env vars are missing
+
+# CI Workflow Update
+
+- [x] Update CI to push to Docker Hub (islamdiaa/focus-assistant) instead of only GHCR
+- [x] Add Docker Hub login step with secrets
+- [x] Keep GHCR push as secondary registry
