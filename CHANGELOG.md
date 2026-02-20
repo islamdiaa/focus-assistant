@@ -6,7 +6,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [1.7.0] - 2026-02-20 (V1.2 Release)
+## [1.7.0] - 2026-02-20
 
 ### Added
 - **Subtasks** — parent/child task relationships with inline add/toggle/delete and progress bars on task cards
@@ -27,7 +27,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 - Default landing page changed from Tasks to Daily Planner ("Today")
 - Sidebar expanded from 5 to 8 navigation items with section grouping
-- Version bumped to 1.2.0 in package.json and Settings About section
+- Version bumped to 1.7.0 in package.json and Settings About section
 - AppState model extended with `templates`, `preferences`, and `subtasks` fields
 - Markdown serialization updated for subtasks (JSON column), templates section, and preferences section
 

@@ -67,3 +67,4 @@
 - [x] 10. Motivational quote box on Daily Planner — curated quotes from authors/books, changes on refresh
 - [x] Update CHANGELOG.md with V1.2 entries
 - [x] Update version number in package.json and SettingsPage
+- [x] Align all version references to V1.7.0 (package.json, SettingsPage, CHANGELOG, Git tag)
