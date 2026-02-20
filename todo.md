@@ -30,3 +30,7 @@
 - [x] 6. Undo/redo action history
 - [x] 7. Recurring tasks (auto-creation on schedule)
 - [x] 8. Export to MD/JSON + Import from file
+
+# CI/CD
+
+- [x] GitHub Actions CI workflow (test + Docker build on every push)
