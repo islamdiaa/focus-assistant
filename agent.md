@@ -120,6 +120,35 @@ The UI follows a "Warm Scandinavian" design language:
 | 1993 | Reserved (future) |
 | 1994 | Reserved (future) |
 
+## Changelog Maintenance
+
+**MANDATORY:** Every change to this project MUST be documented in `CHANGELOG.md`.
+
+The changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
+
+**Rules:**
+1. Add all changes under the `[Unreleased]` section at the top of the file
+2. Categorize changes: `Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, `Security`
+3. Be specific — "Added dark mode toggle in Settings" not "Updated UI"
+4. Never delete or modify existing changelog entries
+5. When cutting a release, move `[Unreleased]` items to a new `[X.Y.Z] - YYYY-MM-DD` section
+
+**Template:**
+```markdown
+## [Unreleased]
+
+### Added
+- Description of new feature
+
+### Fixed
+- Description of bug fix
+
+### Changed
+- Description of modification
+```
+
+This ensures full context for any agent or developer picking up the project later.
+
 ## Testing Checklist
 
 Before submitting changes:
@@ -129,3 +158,4 @@ Before submitting changes:
 - [ ] New server logic has corresponding test cases
 - [ ] MD storage round-trips correctly (serialize → deserialize → same data)
 - [ ] UI works on both desktop and mobile viewports
+- [ ] `CHANGELOG.md` updated with all changes under `[Unreleased]`

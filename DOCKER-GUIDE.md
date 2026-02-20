@@ -154,17 +154,160 @@ To use Google Sheets instead of the local file:
 
 When Sheets mode is active, the local `.md` file is ignored. Switch back anytime in Settings.
 
-## Updating
+## Automatic Updates (Recommended)
 
-```bash
-# Pull latest code, rebuild, and restart
-cd /path/to/focus-assist
-docker compose down
-docker compose build --no-cache
-docker compose up -d
+The CI/CD pipeline automatically builds and pushes Docker images to **GitHub Container Registry (GHCR)** on every push to `main`. Combined with **Watchtower** on Unraid, your container updates itself automatically.
+
+### Step 1: Use the GHCR Image
+
+Instead of building locally, pull the pre-built image. Update your `docker-compose.yml`:
+
+```yaml
+services:
+  focus-assist:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/focusassistant:latest
+    # Remove the 'build: .' line
+    restart: unless-stopped
+    ports:
+      - "1992:1992"
+    volumes:
+      - focus-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=1992
+
+volumes:
+  focus-data:
 ```
 
-Your data persists in the volume — it survives container rebuilds.
+Replace `YOUR_GITHUB_USERNAME` with your actual GitHub username (lowercase).
+
+### Step 2: Authenticate with GHCR (Private Repos)
+
+If your GitHub repo is **private**, you need to authenticate Docker with GHCR:
+
+```bash
+# Create a GitHub Personal Access Token (PAT) with 'read:packages' scope
+# Go to: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+# Generate with scope: read:packages
+
+# Login to GHCR on your Unraid server
+ssh root@YOUR_UNRAID_IP
+echo "YOUR_GITHUB_PAT" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+```
+
+This only needs to be done once — Docker saves the credentials.
+
+### Step 3: Install Watchtower on Unraid
+
+Watchtower monitors your running containers and automatically pulls new images when available.
+
+**Option A: Community Applications (Easiest)**
+1. Go to **Apps** in Unraid
+2. Search for **Watchtower**
+3. Install it with default settings
+4. It will automatically check for updates every 24 hours
+
+**Option B: Docker Run**
+```bash
+docker run -d \
+  --name watchtower \
+  --restart unless-stopped \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e WATCHTOWER_CLEANUP=true \
+  -e WATCHTOWER_POLL_INTERVAL=86400 \
+  -e WATCHTOWER_INCLUDE_STOPPED=false \
+  containrrr/watchtower
+```
+
+**Option C: Docker Compose** — Add to your `docker-compose.yml`:
+```yaml
+services:
+  focus-assist:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/focusassistant:latest
+    restart: unless-stopped
+    ports:
+      - "1992:1992"
+    volumes:
+      - focus-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=1992
+
+  watchtower:
+    image: containrrr/watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=86400
+      - WATCHTOWER_INCLUDE_STOPPED=false
+    # For private GHCR repos, mount Docker config:
+    # - /root/.docker/config.json:/config.json:ro
+
+volumes:
+  focus-data:
+```
+
+### How It Works
+
+```
+Push to GitHub main
+       │
+       ▼
+GitHub Actions CI
+  ├── Run tests
+  ├── Build Docker image (amd64 + arm64)
+  └── Push to ghcr.io/user/focusassistant:latest
+       │
+       ▼
+Watchtower on Unraid (checks every 24h)
+  ├── Detects new image digest
+  ├── Pulls new image
+  ├── Stops old container
+  ├── Starts new container (same config + volumes)
+  └── Removes old image
+       │
+       ▼
+Your data persists in the Docker volume ✓
+```
+
+### Watchtower Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `WATCHTOWER_POLL_INTERVAL` | `86400` | Check interval in seconds (86400 = 24h) |
+| `WATCHTOWER_CLEANUP` | `true` | Remove old images after update |
+| `WATCHTOWER_INCLUDE_STOPPED` | `false` | Only update running containers |
+| `WATCHTOWER_SCHEDULE` | — | Cron schedule (alternative to poll interval), e.g. `0 0 4 * * *` for 4am daily |
+| `WATCHTOWER_NOTIFICATIONS` | — | Set to `email` or `slack` for update notifications |
+
+### Manual Update (Alternative)
+
+If you prefer not to use Watchtower:
+
+```bash
+# Pull latest image and restart
+cd /path/to/focus-assist
+docker compose pull
+docker compose up -d
+
+# Or with docker run:
+docker pull ghcr.io/YOUR_GITHUB_USERNAME/focusassistant:latest
+docker stop focus-assist
+docker rm focus-assist
+docker run -d \
+  --name focus-assist \
+  --restart unless-stopped \
+  -p 1992:1992 \
+  -v focus-data:/app/data \
+  -e NODE_ENV=production \
+  -e PORT=1992 \
+  ghcr.io/YOUR_GITHUB_USERNAME/focusassistant:latest
+```
+
+Your data persists in the volume — it survives container rebuilds and image updates.
 
 ## Troubleshooting
 

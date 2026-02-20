@@ -14,8 +14,9 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import {
   Save, RotateCcw, Cloud, CloudOff, Timer, Link2,
-  FileText, HardDrive, Unplug, Download, Upload,
+  FileText, HardDrive, Unplug, Download, Upload, Sun, Moon,
 } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   getStorageConfig, setStorageConfig, exportData,
 } from '@/lib/sheets';
@@ -38,6 +39,7 @@ const PRESETS: Preset[] = [
 
 export default function SettingsPage() {
   const { state, dispatch, syncToCloud, reloadState } = useApp();
+  const { theme, toggleTheme } = useTheme();
   const [settings, setSettings] = useState<TimerSettings>({ ...state.settings });
   const [sheetId, setSheetId] = useState('');
   const [apiKey, setApiKey] = useState('');
@@ -280,6 +282,32 @@ export default function SettingsPage() {
               </div>
             )
           )}
+        </div>
+      </div>
+
+      {/* ========== APPEARANCE ========== */}
+      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          {theme === 'dark' ? <Moon className="w-4 h-4 text-warm-lavender" /> : <Sun className="w-4 h-4 text-warm-amber" />}
+          <h3 className="font-semibold text-sm text-foreground">Appearance</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Switch between light and dark themes. Your preference is saved locally.
+        </p>
+        <div className="flex items-center justify-between bg-background rounded-xl border border-border p-4">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-warm-lavender/10' : 'bg-warm-amber-light'}`}>
+              {theme === 'dark' ? <Moon className="w-4 h-4 text-warm-lavender" /> : <Sun className="w-4 h-4 text-warm-amber" />}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</p>
+              <p className="text-xs text-muted-foreground">{theme === 'dark' ? 'Warm dark palette for low-light environments' : 'Warm cream palette for daytime use'}</p>
+            </div>
+          </div>
+          <Switch
+            checked={theme === 'dark'}
+            onCheckedChange={() => toggleTheme?.()}
+          />
         </div>
       </div>
 

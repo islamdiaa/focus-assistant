@@ -20,6 +20,7 @@ type Action =
   | { type: 'UPDATE_SETTINGS'; payload: TimerSettings }
   | { type: 'UPDATE_DAILY_STATS'; payload: Partial<DailyStats> }
   | { type: 'SET_STREAK'; payload: number }
+  | { type: 'REORDER_TASKS'; payload: string[] }
   | { type: 'UNDO' }
   | { type: 'REDO' };
 
@@ -231,6 +232,15 @@ function appReducer(state: AppState, action: Action): AppState {
 
     case 'SET_STREAK':
       return { ...state, currentStreak: action.payload };
+
+    case 'REORDER_TASKS': {
+      const orderedIds = action.payload;
+      const taskMap = new Map(state.tasks.map(t => [t.id, t]));
+      const reordered = orderedIds.map(id => taskMap.get(id)).filter(Boolean) as Task[];
+      // Append any tasks not in the ordered list (safety)
+      const remaining = state.tasks.filter(t => !orderedIds.includes(t.id));
+      return { ...state, tasks: [...reordered, ...remaining] };
+    }
 
     default:
       return state;

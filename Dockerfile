@@ -29,6 +29,15 @@ RUN pnpm build
 # --- Production stage ---
 FROM node:22-alpine AS production
 
+# Labels for Unraid and container registries
+LABEL org.opencontainers.image.title="Focus Assistant"
+LABEL org.opencontainers.image.description="ADHD-friendly productivity app with tasks, Pomodoro timer, Eisenhower matrix, and stats"
+LABEL org.opencontainers.image.source="https://github.com/user/FocusAssistant"
+LABEL org.opencontainers.image.version="1.1.0"
+LABEL net.unraid.docker.icon="https://cdn-icons-png.flaticon.com/512/7246/7246748.png"
+LABEL net.unraid.docker.webui="http://[IP]:[PORT:1992]/"
+LABEL net.unraid.docker.managed="dockerman"
+
 WORKDIR /app
 
 # Install pnpm

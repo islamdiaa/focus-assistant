@@ -34,3 +34,21 @@
 # CI/CD
 
 - [x] GitHub Actions CI workflow (test + Docker build on every push)
+
+# New Batch
+
+- [x] Comprehensive unit test suite (server logic, storage, data router) — 36 tests across 6 files
+- [x] CHANGELOG.md with full history
+- [x] Update agent.md and claude.md with changelog instructions
+- [x] Dark mode toggle in Settings
+- [x] Drag-and-drop task reordering on Tasks page
+- [x] Verify/enhance CI workflow for PR + deployment (already set up in previous checkpoint)
+
+# V1.1 Release
+
+- [x] Fix dnd-kit React 19 compatibility (migrated to @dnd-kit/react + @dnd-kit/react/sortable)
+- [x] Add custom checklist icon (favicon, PWA icons, Docker/Unraid icon)
+- [x] Update CHANGELOG.md for V1.1
+- [x] Push to GitHub as V1.1
+- [x] CI/CD push Docker image to GHCR on every push to main
+- [x] Update Docker guide with Watchtower auto-update setup for Unraid

@@ -106,6 +106,27 @@ Test files:
 
 When adding new features, write tests for any server-side logic. The MD storage serializer is particularly important to test since it handles escaping.
 
+## Changelog Maintenance
+
+**IMPORTANT:** Every time you make changes to this project, you MUST update `CHANGELOG.md`.
+
+1. Add your changes under the `[Unreleased]` section at the top of the file
+2. Use the correct category: `Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, `Security`
+3. Write concise but specific descriptions of what changed
+4. When a release is cut, move `[Unreleased]` items to a new versioned section with the date
+5. Never delete existing changelog entries
+
+Example:
+```markdown
+## [Unreleased]
+
+### Added
+- Dark mode toggle in Settings with warm palette variant
+
+### Fixed
+- Timer not resuming after page refresh
+```
+
 ## Common Tasks
 
 **Add a new field to tasks:**

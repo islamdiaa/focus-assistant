@@ -3,16 +3,19 @@
  * Task list with search, filters, sorting, add/edit/delete
  * Category, Energy, Recurrence, button-group Priority
  * Inline edit on task cards with pencil icon
+ * Drag-and-drop reordering via dnd-kit
  * Keyboard shortcuts: N=new task, /=focus search
  */
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check, Pencil, X, Save, Search, Repeat } from 'lucide-react';
+import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check, Pencil, X, Save, Search, Repeat, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { Task, Priority, Category, EnergyLevel, RecurrenceFrequency } from '@/lib/types';
+import { DragDropProvider } from '@dnd-kit/react';
+import { useSortable } from '@dnd-kit/react/sortable';
 
 interface TasksPageProps {
   newTaskTrigger?: number;
@@ -57,7 +60,7 @@ const RECURRENCE_CONFIG: Record<RecurrenceFrequency, { label: string; short: str
 };
 
 type Filter = 'all' | 'active' | 'done';
-type Sort = 'newest' | 'priority' | 'dueDate';
+type Sort = 'newest' | 'priority' | 'dueDate' | 'manual';
 
 const PRIORITY_ORDER: Record<Priority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
 
@@ -160,11 +163,135 @@ function InlineEditForm({ task, onSave, onCancel }: { task: Task; onSave: (updat
   );
 }
 
+// ---- Sortable Task Card ----
+function SortableTaskCard({
+  task,
+  index,
+  editingId,
+  setEditingId,
+  dispatch,
+  handleInlineSave,
+  isDragDisabled,
+}: {
+  task: Task;
+  index: number;
+  editingId: string | null;
+  setEditingId: (id: string | null) => void;
+  dispatch: (action: any) => void;
+  handleInlineSave: (taskId: string, updates: Partial<Task>) => void;
+  isDragDisabled: boolean;
+}) {
+  const { ref, isDragSource } = useSortable({ id: task.id, index, disabled: isDragDisabled });
+
+  return (
+    <div
+      ref={ref}
+      className={`group bg-card rounded-xl border border-border p-4 transition-all duration-200 hover:shadow-md
+        ${task.status === 'done' ? 'opacity-60' : ''}
+        ${editingId === task.id ? 'ring-2 ring-warm-sage/30 shadow-md' : ''}
+        ${isDragSource ? 'shadow-xl ring-2 ring-warm-sage/40 opacity-50' : ''}`}
+    >
+      <div className="flex items-start gap-3">
+        {/* Drag handle */}
+        {!isDragDisabled && (
+          <div
+            className="mt-0.5 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
+            title="Drag to reorder"
+          >
+            <GripVertical className="w-4 h-4" />
+          </div>
+        )}
+
+        {/* Checkbox */}
+        <button
+          onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: task.id })}
+          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
+            ${task.status === 'done' ? 'bg-warm-sage border-warm-sage' : 'border-border hover:border-warm-sage'}`}
+        >
+          {task.status === 'done' && <Check className="w-3 h-3 text-white" />}
+        </button>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-medium ${task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+            {task.title}
+          </p>
+          {task.description && (
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.description}</p>
+          )}
+          {/* Badges */}
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            <span className={`text-xs px-2 py-0.5 rounded-full border ${PRIORITY_COLORS[task.priority]}`}>
+              {PRIORITY_LABELS[task.priority]}
+            </span>
+            {task.category && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-warm-sage-light/60 text-warm-charcoal border border-warm-sage/15">
+                {CATEGORY_CONFIG[task.category].emoji} {CATEGORY_CONFIG[task.category].label}
+              </span>
+            )}
+            {task.energy && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-warm-amber-light/60 text-warm-charcoal border border-warm-amber/15">
+                {ENERGY_CONFIG[task.energy].emoji} {ENERGY_CONFIG[task.energy].label}
+              </span>
+            )}
+            {task.recurrence && task.recurrence !== 'none' && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-warm-blue-light/60 text-warm-charcoal border border-warm-blue/15 flex items-center gap-1">
+                <Repeat className="w-3 h-3" /> {RECURRENCE_CONFIG[task.recurrence].short}
+              </span>
+            )}
+            {task.dueDate && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Action Icons */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: task.id })}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
+            title={task.status === 'done' ? 'Mark as active' : 'Mark as done'}
+          >
+            <Check className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setEditingId(editingId === task.id ? null : task.id)}
+            className={`p-1.5 rounded-md transition-colors ${
+              editingId === task.id ? 'text-warm-sage bg-warm-sage-light' : 'text-muted-foreground hover:text-warm-blue hover:bg-warm-blue-light'}`}
+            title="Edit task"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => dispatch({ type: 'DELETE_TASK', payload: task.id })}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
+            title="Delete task"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Inline Edit Form */}
+      {editingId === task.id && (
+        <InlineEditForm
+          task={task}
+          onSave={(updates) => handleInlineSave(task.id, updates)}
+          onCancel={() => setEditingId(null)}
+        />
+      )}
+    </div>
+  );
+}
+
 // ---- Main Page ----
 export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: TasksPageProps) {
   const { state, dispatch } = useApp();
   const [filter, setFilter] = useState<Filter>('all');
-  const [sort, setSort] = useState<Sort>('newest');
+  const [sort, setSort] = useState<Sort>('manual');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -189,6 +316,10 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
     if (searchTrigger > 0) searchInputRef.current?.focus();
   }, [searchTrigger]);
 
+  // drag-and-drop state
+
+  const isDragDisabled = sort !== 'manual' || !!searchQuery.trim();
+
   const filteredTasks = useMemo(() => {
     let tasks = [...state.tasks];
 
@@ -211,6 +342,7 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
       if (!b.dueDate) return -1;
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     });
+    // 'manual' keeps the order from state.tasks
 
     return tasks;
   }, [state.tasks, filter, sort, searchQuery]);
@@ -253,6 +385,20 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
   function handleInlineSave(taskId: string, updates: Partial<Task>) {
     dispatch({ type: 'UPDATE_TASK', payload: { id: taskId, ...updates } });
     setEditingId(null);
+  }
+
+  function handleDragEnd(event: any) {
+    const { source, target } = event.operation;
+    if (!source || !target || source.id === target.id) return;
+
+    const oldIndex = filteredTasks.findIndex(t => t.id === source.id);
+    const newIndex = filteredTasks.findIndex(t => t.id === target.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = [...filteredTasks];
+    const [moved] = reordered.splice(oldIndex, 1);
+    reordered.splice(newIndex, 0, moved);
+    dispatch({ type: 'REORDER_TASKS', payload: reordered.map(t => t.id) });
   }
 
   return (
@@ -374,15 +520,16 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
             </button>
           ))}
         </div>
-        <div className="flex bg-warm-sand/50 rounded-lg p-1 gap-1 sm:ml-auto">
-          {(['newest', 'priority', 'dueDate'] as Sort[]).map(s => (
+        <div className="flex bg-warm-sand/50 rounded-lg p-1 gap-1 sm:ml-auto flex-wrap">
+          {(['manual', 'newest', 'priority', 'dueDate'] as Sort[]).map(s => (
             <button key={s} onClick={() => setSort(s)}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-1.5
                 ${sort === s ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+              {s === 'manual' && <GripVertical className="w-3.5 h-3.5" />}
               {s === 'newest' && <ArrowUpDown className="w-3.5 h-3.5" />}
               {s === 'priority' && <Flag className="w-3.5 h-3.5" />}
               {s === 'dueDate' && <Calendar className="w-3.5 h-3.5" />}
-              {s === 'newest' ? 'Newest' : s === 'priority' ? 'Priority' : 'Due Date'}
+              {s === 'manual' ? 'Manual' : s === 'newest' ? 'Newest' : s === 'priority' ? 'Priority' : 'Due Date'}
             </button>
           ))}
         </div>
@@ -406,98 +553,29 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
           )}
         </div>
       ) : (
-        <div className="space-y-2">
-          {filteredTasks.map(task => (
-            <div
-              key={task.id}
-              className={`group bg-card rounded-xl border border-border p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5
-                ${task.status === 'done' ? 'opacity-60' : ''}
-                ${editingId === task.id ? 'ring-2 ring-warm-sage/30 shadow-md' : ''}`}
-            >
-              <div className="flex items-start gap-3">
-                {/* Checkbox */}
-                <button
-                  onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: task.id })}
-                  className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
-                    ${task.status === 'done' ? 'bg-warm-sage border-warm-sage' : 'border-border hover:border-warm-sage'}`}
-                >
-                  {task.status === 'done' && <Check className="w-3 h-3 text-white" />}
-                </button>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-                    {task.title}
-                  </p>
-                  {task.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.description}</p>
-                  )}
-                  <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${PRIORITY_COLORS[task.priority]}`}>
-                      {PRIORITY_LABELS[task.priority]}
-                    </span>
-                    {task.category && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-warm-sage-light/60 text-warm-charcoal border border-warm-sage/15">
-                        {CATEGORY_CONFIG[task.category].emoji} {CATEGORY_CONFIG[task.category].label}
-                      </span>
-                    )}
-                    {task.energy && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-warm-amber-light/60 text-warm-charcoal border border-warm-amber/15">
-                        {ENERGY_CONFIG[task.energy].emoji} {ENERGY_CONFIG[task.energy].label}
-                      </span>
-                    )}
-                    {task.recurrence && task.recurrence !== 'none' && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-warm-blue-light/60 text-warm-charcoal border border-warm-blue/15 flex items-center gap-1">
-                        <Repeat className="w-3 h-3" /> {RECURRENCE_CONFIG[task.recurrence].short}
-                      </span>
-                    )}
-                    {task.dueDate && (
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Action Icons */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: task.id })}
-                    className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
-                    title={task.status === 'done' ? 'Mark as active' : 'Mark as done'}
-                  >
-                    <Check className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setEditingId(editingId === task.id ? null : task.id)}
-                    className={`p-1.5 rounded-md transition-colors ${
-                      editingId === task.id ? 'text-warm-sage bg-warm-sage-light' : 'text-muted-foreground hover:text-warm-blue hover:bg-warm-blue-light'}`}
-                    title="Edit task"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => dispatch({ type: 'DELETE_TASK', payload: task.id })}
-                    className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
-                    title="Delete task"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Inline Edit Form */}
-              {editingId === task.id && (
-                <InlineEditForm
-                  task={task}
-                  onSave={(updates) => handleInlineSave(task.id, updates)}
-                  onCancel={() => setEditingId(null)}
-                />
+        <DragDropProvider
+          onDragEnd={handleDragEnd}
+        >
+            <div className="space-y-2">
+              {sort === 'manual' && !searchQuery && (
+                <p className="text-xs text-muted-foreground/60 mb-2 flex items-center gap-1.5">
+                  <GripVertical className="w-3.5 h-3.5" /> Drag tasks to reorder
+                </p>
               )}
+              {filteredTasks.map((task, idx) => (
+                <SortableTaskCard
+                  key={task.id}
+                  task={task}
+                  index={idx}
+                  editingId={editingId}
+                  setEditingId={setEditingId}
+                  dispatch={dispatch}
+                  handleInlineSave={handleInlineSave}
+                  isDragDisabled={isDragDisabled}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+        </DragDropProvider>
       )}
 
       {/* Keyboard shortcuts hint */}
