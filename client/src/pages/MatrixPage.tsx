@@ -2,13 +2,16 @@
  * Eisenhower Matrix Page — Warm Productivity design
  * 4 quadrants with drag-and-drop
  * Side panel for unassigned tasks
+ * Inline task editing: click a task to edit title, priority, due date
  * Mobile: stacked layout, unassigned panel below matrix
  * Desktop: side-by-side layout
  */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { Info, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, GripVertical } from 'lucide-react';
-import type { QuadrantType } from '@/lib/types';
+import { Info, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, GripVertical, Pencil, X, Check } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import type { QuadrantType, Priority } from '@/lib/types';
 
 const EMPTY_MATRIX_IMG = 'https://private-us-east-1.manuscdn.com/sessionFile/PlXiEUsi6v4VD1JuecPpX3/sandbox/k4s8ZO93y8NMD02oOYn6TD-img-3_1771447502000_na1fn_ZW1wdHktbWF0cml4.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvUGxYaUVVc2k2djRWRDFKdWVjUHBYMy9zYW5kYm94L2s0czhaTzkzeThOTUQwMm9PWW42VEQtaW1nLTNfMTc3MTQ0NzUwMjAwMF9uYTFmbl9aVzF3ZEhrdGJXRjBjbWw0LnBuZz94LW9zcy1wcm9jZXNzPWltYWdlL3Jlc2l6ZSx3XzE5MjAsaF8xOTIwL2Zvcm1hdCx3ZWJwL3F1YWxpdHkscV84MCIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5ODc2MTYwMH19fV19&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=rAeoXHfOL1AQlur01UCUEB5-LTROSoOKnq3Qs7SOkYf3umtWoDqWmtBO1BRZsXP8mFXt8C9ofQqUp2JhAEv0C~dDO4PpJT8jur35ejs6lVF3IWJP5JxFTn-pr9m1Z7zfMcIVaCvV1q9zm3hsP9uvwgaMTabGHdQ5RVz3YOuYX-ZLFXWqJcRoz3D9qPjQBA5tmXs-3e4hhj6dBzPqeJNvOEeTuLsOs2nBmKxtf7y-5ns40Dgp9FAi2S5FEHDLtXb1IzasqjQKK6-iXu6wV7bJLawgEfaYOMXUHBZboobVUm8kmtmQ7ViCzd9xQrfx4aZ6b3KeCR7MeJmqCMAtVo1yIA__';
 
@@ -61,11 +64,118 @@ const QUADRANTS: QuadrantConfig[] = [
   },
 ];
 
+const PRIORITY_OPTIONS: { value: Priority; label: string; color: string }[] = [
+  { value: 'low', label: 'Low', color: 'bg-warm-sage-light text-warm-sage border-warm-sage/30' },
+  { value: 'medium', label: 'Med', color: 'bg-warm-blue-light text-warm-blue border-warm-blue/30' },
+  { value: 'high', label: 'High', color: 'bg-warm-amber-light text-warm-amber border-warm-amber/30' },
+  { value: 'urgent', label: 'Urgent', color: 'bg-red-50 text-red-500 border-red-200' },
+];
+
+function getPriorityBadge(priority: Priority) {
+  const opt = PRIORITY_OPTIONS.find(p => p.value === priority);
+  if (!opt) return null;
+  return (
+    <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-medium ${opt.color}`}>
+      {opt.label}
+    </span>
+  );
+}
+
+/** Inline edit form shown when clicking a task in the matrix */
+function InlineEditForm({
+  taskId,
+  initialTitle,
+  initialPriority,
+  initialDueDate,
+  onSave,
+  onCancel,
+}: {
+  taskId: string;
+  initialTitle: string;
+  initialPriority: Priority;
+  initialDueDate: string;
+  onSave: (data: { id: string; title: string; priority: Priority; dueDate: string | null }) => void;
+  onCancel: () => void;
+}) {
+  const [title, setTitle] = useState(initialTitle);
+  const [priority, setPriority] = useState<Priority>(initialPriority);
+  const [dueDate, setDueDate] = useState(initialDueDate);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+
+  function handleSave() {
+    if (!title.trim()) return;
+    onSave({ id: taskId, title: title.trim(), priority, dueDate: dueDate || null });
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSave();
+    } else if (e.key === 'Escape') {
+      onCancel();
+    }
+  }
+
+  return (
+    <div
+      className="bg-card rounded-xl border border-warm-sage/30 shadow-lg p-3 space-y-2.5 animate-in fade-in-0 zoom-in-95 duration-150"
+      onClick={e => e.stopPropagation()}
+    >
+      <Input
+        ref={inputRef}
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+        onKeyDown={handleKeyDown}
+        className="bg-background text-xs h-8"
+        placeholder="Task title..."
+      />
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] text-muted-foreground mr-1">Priority:</span>
+        {PRIORITY_OPTIONS.map(opt => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => setPriority(opt.value)}
+            className={`text-[10px] px-2 py-1 rounded-md border font-medium transition-all
+              ${priority === opt.value ? `${opt.color} scale-105 shadow-sm` : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <div>
+        <label className="text-[10px] text-muted-foreground block mb-1">Due date</label>
+        <Input
+          type="date"
+          value={dueDate}
+          onChange={e => setDueDate(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="bg-background text-xs h-8"
+        />
+      </div>
+      <div className="flex items-center gap-2 justify-end">
+        <Button variant="ghost" size="sm" onClick={onCancel} className="h-7 text-xs gap-1 text-muted-foreground">
+          <X className="w-3 h-3" /> Cancel
+        </Button>
+        <Button size="sm" onClick={handleSave} disabled={!title.trim()} className="h-7 text-xs gap-1 bg-warm-sage hover:bg-warm-sage/90 text-white">
+          <Check className="w-3 h-3" /> Save
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function MatrixPage() {
   const { state, dispatch } = useApp();
   const [showPanel, setShowPanel] = useState(true);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverQuadrant, setDragOverQuadrant] = useState<QuadrantType | null>(null);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   const activeTasks = state.tasks.filter(t => t.status === 'active');
   const unassigned = useMemo(() => activeTasks.filter(t => t.quadrant === 'unassigned'), [activeTasks]);
@@ -106,12 +216,81 @@ export default function MatrixPage() {
     dispatch({ type: 'MOVE_TASK_QUADRANT', payload: { id: taskId, quadrant } });
   }
 
+  function handleInlineSave(data: { id: string; title: string; priority: Priority; dueDate: string | null }) {
+    dispatch({
+      type: 'UPDATE_TASK',
+      payload: {
+        id: data.id,
+        title: data.title,
+        priority: data.priority,
+        dueDate: data.dueDate,
+      },
+    });
+    setEditingTaskId(null);
+  }
+
+  function renderTaskCard(task: typeof activeTasks[0], showMobileAssign = false) {
+    if (editingTaskId === task.id) {
+      return (
+        <InlineEditForm
+          key={task.id}
+          taskId={task.id}
+          initialTitle={task.title}
+          initialPriority={task.priority}
+          initialDueDate={task.dueDate || ''}
+          onSave={handleInlineSave}
+          onCancel={() => setEditingTaskId(null)}
+        />
+      );
+    }
+
+    return (
+      <div
+        key={task.id}
+        draggable
+        onDragStart={() => handleDragStart(task.id)}
+        className="bg-card/80 rounded-lg px-3 py-2 text-xs font-medium text-foreground flex items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-card shadow-sm group"
+      >
+        <GripVertical className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+        <div className="flex-1 min-w-0 flex items-center gap-1.5">
+          <span className="truncate">{task.title}</span>
+          {getPriorityBadge(task.priority)}
+        </div>
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            setEditingTaskId(task.id);
+          }}
+          title="Edit task"
+          className="p-1 rounded text-muted-foreground/40 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors opacity-0 group-hover:opacity-100"
+        >
+          <Pencil className="w-3 h-3" />
+        </button>
+        {showMobileAssign && (
+          <select
+            className="lg:hidden text-xs bg-transparent border border-border rounded px-1 py-0.5 text-muted-foreground"
+            value=""
+            onChange={e => {
+              if (e.target.value) handleMobileAssign(task.id, e.target.value as QuadrantType);
+            }}
+          >
+            <option value="">Move to...</option>
+            <option value="do-first">🔥 Do First</option>
+            <option value="schedule">📅 Schedule</option>
+            <option value="delegate">🤝 Delegate</option>
+            <option value="eliminate">🪶 Eliminate</option>
+          </select>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 lg:p-8">
       {/* Header */}
       <div className="mb-6">
         <h2 className="font-serif text-2xl lg:text-3xl text-foreground">Eisenhower Matrix</h2>
-        <p className="text-sm text-muted-foreground mt-1">Drag tasks into quadrants to prioritize by urgency and importance</p>
+        <p className="text-sm text-muted-foreground mt-1">Drag tasks into quadrants to prioritize · Click <Pencil className="w-3 h-3 inline" /> to edit inline</p>
       </div>
 
       {/* Info banner */}
@@ -173,17 +352,7 @@ export default function MatrixPage() {
                     </div>
                   ) : (
                     <div className="space-y-1.5">
-                      {quadrantTasks.map(task => (
-                        <div
-                          key={task.id}
-                          draggable
-                          onDragStart={() => handleDragStart(task.id)}
-                          className="bg-card/80 rounded-lg px-3 py-2 text-xs font-medium text-foreground flex items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-card shadow-sm"
-                        >
-                          <GripVertical className="w-3 h-3 text-muted-foreground/40 shrink-0" />
-                          <span className="truncate">{task.title}</span>
-                        </div>
-                      ))}
+                      {quadrantTasks.map(task => renderTaskCard(task))}
                     </div>
                   )}
                 </div>
@@ -224,31 +393,7 @@ export default function MatrixPage() {
                 </p>
               ) : (
                 <div className="space-y-1.5">
-                  {unassigned.map(task => (
-                    <div
-                      key={task.id}
-                      draggable
-                      onDragStart={() => handleDragStart(task.id)}
-                      className="bg-warm-sand/50 rounded-lg px-3 py-2 text-xs font-medium text-foreground flex items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-warm-sand"
-                    >
-                      <GripVertical className="w-3 h-3 text-muted-foreground/40 shrink-0" />
-                      <span className="truncate flex-1">{task.title}</span>
-                      {/* Mobile: quick-assign dropdown */}
-                      <select
-                        className="lg:hidden text-xs bg-transparent border border-border rounded px-1 py-0.5 text-muted-foreground"
-                        value=""
-                        onChange={e => {
-                          if (e.target.value) handleMobileAssign(task.id, e.target.value as QuadrantType);
-                        }}
-                      >
-                        <option value="">Move to...</option>
-                        <option value="do-first">🔥 Do First</option>
-                        <option value="schedule">📅 Schedule</option>
-                        <option value="delegate">🤝 Delegate</option>
-                        <option value="eliminate">🪶 Eliminate</option>
-                      </select>
-                    </div>
-                  ))}
+                  {unassigned.map(task => renderTaskCard(task, true))}
                 </div>
               )}
               <p className="text-xs text-muted-foreground/50 mt-3 text-center hidden lg:block">Drag tasks into quadrants above</p>

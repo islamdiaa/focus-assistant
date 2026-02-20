@@ -81,7 +81,7 @@ function playCompletionSound() {
  * Calculate effective elapsed seconds for a pomodoro,
  * accounting for timer persistence via startedAt/accumulatedSeconds.
  */
-function getEffectiveElapsed(pom: { status: string; elapsed: number; startedAt?: string; accumulatedSeconds?: number }): number {
+function getEffectiveElapsed(pom: { status: string; elapsed: number; startedAt?: string | null | undefined; accumulatedSeconds?: number | null | undefined }): number {
   if (pom.status === 'running' && pom.startedAt) {
     const accumulated = pom.accumulatedSeconds || 0;
     const sinceStart = Math.floor((Date.now() - new Date(pom.startedAt).getTime()) / 1000);

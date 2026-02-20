@@ -2,13 +2,14 @@
  * Reminders Page — Manage birthdays, appointments, events
  * Separate from Tasks. Shows in Today view alongside tasks.
  * R keyboard shortcut opens the new reminder dialog.
+ * Supports create, edit, acknowledge, and delete.
  */
 import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import type { Reminder } from '@/lib/types';
-import { Plus, Bell, Cake, Calendar, Star, Trash2, Check, AlertCircle, Clock } from 'lucide-react';
+import { Plus, Bell, Cake, Calendar, Star, Trash2, Check, AlertCircle, Clock, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -40,7 +41,7 @@ function formatTime(time: string): string {
   return `${h12}:${m.toString().padStart(2, '0')} ${ampm}`;
 }
 
-function getStatusLabel(daysUntil: number, acknowledged?: boolean): { label: string; color: string } {
+function getStatusLabel(daysUntil: number, acknowledged?: boolean | null): { label: string; color: string } {
   if (acknowledged) return { label: 'Acknowledged', color: 'text-warm-sage' };
   if (daysUntil < 0) return { label: `${Math.abs(daysUntil)}d overdue`, color: 'text-red-500' };
   if (daysUntil === 0) return { label: 'Today', color: 'text-warm-amber' };
@@ -53,6 +54,7 @@ type FilterView = 'all' | 'upcoming' | 'past';
 export default function RemindersPage() {
   const { state, dispatch } = useApp();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [filter, setFilter] = useState<FilterView>('all');
 
   // Form state
@@ -70,7 +72,7 @@ export default function RemindersPage() {
       if (e.key === 'r' || e.key === 'R') {
         if (!e.ctrlKey && !e.metaKey && !e.altKey) {
           e.preventDefault();
-          setDialogOpen(true);
+          openCreateDialog();
         }
       }
     }
@@ -87,7 +89,6 @@ export default function RemindersPage() {
     } else if (filter === 'past') {
       items = items.filter(r => r.acknowledged || getDaysUntil(r.date) < 0);
     }
-    // Sort: overdue first, then by date ascending
     items.sort((a, b) => {
       const dA = getDaysUntil(a.date);
       const dB = getDaysUntil(b.date);
@@ -105,6 +106,40 @@ export default function RemindersPage() {
     upcoming: reminders.filter(r => !r.acknowledged && getDaysUntil(r.date) > 0 && getDaysUntil(r.date) <= 5).length,
   }), [reminders]);
 
+  function resetForm() {
+    setTitle('');
+    setDescription('');
+    setDate('');
+    setTime('');
+    setRecurrence('none');
+    setCategory('other');
+  }
+
+  function openCreateDialog() {
+    setEditingReminder(null);
+    resetForm();
+    setDialogOpen(true);
+  }
+
+  function openEditDialog(reminder: Reminder) {
+    setEditingReminder(reminder);
+    setTitle(reminder.title);
+    setDescription(reminder.description || '');
+    setDate(reminder.date);
+    setTime(reminder.time || '');
+    setRecurrence(reminder.recurrence);
+    setCategory(reminder.category);
+    setDialogOpen(true);
+  }
+
+  function handleDialogClose(open: boolean) {
+    if (!open) {
+      setEditingReminder(null);
+      resetForm();
+    }
+    setDialogOpen(open);
+  }
+
   function handleAdd() {
     if (!title.trim() || !date) return;
     dispatch({
@@ -118,12 +153,26 @@ export default function RemindersPage() {
         category,
       },
     });
-    setTitle('');
-    setDescription('');
-    setDate('');
-    setTime('');
-    setRecurrence('none');
-    setCategory('other');
+    resetForm();
+    setDialogOpen(false);
+  }
+
+  function handleUpdate() {
+    if (!editingReminder || !title.trim() || !date) return;
+    dispatch({
+      type: 'UPDATE_REMINDER',
+      payload: {
+        id: editingReminder.id,
+        title: title.trim(),
+        description: description.trim() || undefined,
+        date,
+        time: time || undefined,
+        recurrence,
+        category,
+      },
+    });
+    setEditingReminder(null);
+    resetForm();
     setDialogOpen(false);
   }
 
@@ -135,80 +184,88 @@ export default function RemindersPage() {
           <h2 className="font-serif text-2xl lg:text-3xl text-foreground">Reminders</h2>
           <p className="text-sm text-muted-foreground mt-1">Birthdays, appointments, and events · Press <kbd className="px-1 py-0.5 rounded bg-warm-sand/50 text-[10px] font-mono border border-border">R</kbd> to add</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-warm-sage hover:bg-warm-sage/90 text-white gap-2">
-              <Plus className="w-4 h-4" /> New Reminder
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-card max-w-md">
-            <DialogHeader>
-              <DialogTitle className="font-serif text-xl">New Reminder</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                Add a birthday, appointment, or event to remember
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 mt-2">
-              <Input
-                placeholder="Reminder title..."
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                className="bg-background"
-                autoFocus
-              />
-              <Input
-                placeholder="Description (optional)"
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                className="bg-background"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Date</label>
-                  <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-background" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
-                    Time <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span>
-                  </label>
-                  <Input type="time" value={time} onChange={e => setTime(e.target.value)} className="bg-background" />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Category</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {(Object.keys(CATEGORY_CONFIG) as Reminder['category'][]).map(c => {
-                    const cfg = CATEGORY_CONFIG[c];
-                    return (
-                      <button key={c} type="button" onClick={() => setCategory(c)}
-                        className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 flex flex-col items-center gap-1
-                          ${category === c ? `${cfg.bg} ${cfg.color} border-current shadow-sm scale-[1.02]` : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
-                        <cfg.icon className="w-4 h-4" />
-                        {cfg.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Repeats</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {RECURRENCE_OPTIONS.map(opt => (
-                    <button key={opt.value} type="button" onClick={() => setRecurrence(opt.value)}
-                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
-                        ${recurrence === opt.value ? 'bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]' : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <Button onClick={handleAdd} disabled={!title.trim() || !date} className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white">
-                Add Reminder
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={openCreateDialog} className="bg-warm-sage hover:bg-warm-sage/90 text-white gap-2">
+          <Plus className="w-4 h-4" /> New Reminder
+        </Button>
       </div>
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+        <DialogContent className="bg-card max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl">
+              {editingReminder ? 'Edit Reminder' : 'New Reminder'}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {editingReminder
+                ? 'Update the reminder details below'
+                : 'Add a birthday, appointment, or event to remember'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <Input
+              placeholder="Reminder title..."
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              className="bg-background"
+              autoFocus
+            />
+            <Input
+              placeholder="Description (optional)"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              className="bg-background"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Date</label>
+                <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-background" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                  Time <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span>
+                </label>
+                <Input type="time" value={time} onChange={e => setTime(e.target.value)} className="bg-background" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Category</label>
+              <div className="grid grid-cols-4 gap-2">
+                {(Object.keys(CATEGORY_CONFIG) as Reminder['category'][]).map(c => {
+                  const cfg = CATEGORY_CONFIG[c];
+                  return (
+                    <button key={c} type="button" onClick={() => setCategory(c)}
+                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 flex flex-col items-center gap-1
+                        ${category === c ? `${cfg.bg} ${cfg.color} border-current shadow-sm scale-[1.02]` : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
+                      <cfg.icon className="w-4 h-4" />
+                      {cfg.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Repeats</label>
+              <div className="grid grid-cols-4 gap-2">
+                {RECURRENCE_OPTIONS.map(opt => (
+                  <button key={opt.value} type="button" onClick={() => setRecurrence(opt.value)}
+                    className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
+                      ${recurrence === opt.value ? 'bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]' : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Button
+              onClick={editingReminder ? handleUpdate : handleAdd}
+              disabled={!title.trim() || !date}
+              className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white"
+            >
+              {editingReminder ? 'Save Changes' : 'Add Reminder'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Quick stats */}
       {reminders.length > 0 && (
@@ -259,7 +316,7 @@ export default function RemindersPage() {
               : 'Try a different filter.'}
           </p>
           {reminders.length === 0 && (
-            <Button onClick={() => setDialogOpen(true)} variant="outline" className="gap-2">
+            <Button onClick={openCreateDialog} variant="outline" className="gap-2">
               <Plus className="w-4 h-4" /> Add Your First Reminder
             </Button>
           )}
@@ -317,6 +374,13 @@ export default function RemindersPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => openEditDialog(reminder)}
+                        title="Edit reminder"
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-warm-blue hover:bg-warm-blue-light transition-colors"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
                       {!reminder.acknowledged && (
                         <button
                           onClick={() => dispatch({ type: 'ACK_REMINDER', payload: reminder.id })}

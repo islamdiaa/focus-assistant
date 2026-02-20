@@ -74,7 +74,7 @@ function updateTodayStats(stats: DailyStats[], update: Partial<DailyStats>): Dai
   return [...stats, { date: today, tasksCompleted: 0, focusMinutes: 0, pomodorosCompleted: 0, ...update }];
 }
 
-function computeNextDate(freq: RecurrenceFrequency, from: Date, task?: { recurrenceDayOfMonth?: number; recurrenceStartMonth?: number }): string | undefined {
+function computeNextDate(freq: RecurrenceFrequency, from: Date, task?: { recurrenceDayOfMonth?: number | null; recurrenceStartMonth?: number | null }): string | undefined {
   const d = new Date(from);
   switch (freq) {
     case 'daily':

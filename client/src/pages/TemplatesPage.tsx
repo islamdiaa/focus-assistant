@@ -27,11 +27,11 @@ const PRIORITY_COLORS: Record<Priority, string> = {
 
 interface TemplateTaskDraft {
   title: string;
-  description?: string;
+  description?: string | null;
   priority: Priority;
-  category?: Category;
-  energy?: EnergyLevel;
-  subtasks?: Array<{ title: string }>;
+  category?: Category | null;
+  energy?: EnergyLevel | null;
+  subtasks?: Array<{ title: string }> | null;
 }
 
 export default function TemplatesPage() {

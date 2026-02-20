@@ -6,6 +6,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.8.2] - 2026-02-20
+
+### Fixed
+- **Focus Mode ghost overlay** — exiting Focus Mode left timer circle, play/reset buttons, and task selector visible on top of the main layout; replaced `AnimatePresence` wrapper with direct conditional rendering to ensure clean unmount
+- **TimerPage TypeScript error** — `getEffectiveElapsed` function signature didn't accept `null` for `startedAt` and `accumulatedSeconds`, causing TS2345 when called with Zod-inferred types that include `null`
+- **Version string mismatch** — Settings page showed v1.8.0 instead of current version
+
+### Added
+- **Edit Reminder** — click the pencil icon on any reminder to edit its title, description, date, time, category, and recurrence in a pre-filled dialog; uses existing `UPDATE_REMINDER` reducer action
+- **Inline Matrix Task Editing** — click the pencil icon on any task in the Eisenhower Matrix to edit title, priority, and due date inline without leaving the view; priority badges now shown on task cards
+- **v182-audit.test.ts** — 4 tests covering pomodoro serialization with null/undefined `startedAt`, linked tasks round-trip, and reminders round-trip
+- **v182-features.test.ts** — 8 tests covering edit reminder round-trip (title, recurrence, optional fields) and inline matrix task editing round-trip (title, priority, dueDate, quadrant preservation)
+
+### Changed
+- Test count increased from 104 to 116 across 13 test files
+
+---
+
 ## [1.8.1] - 2026-02-20
 
 ### Added

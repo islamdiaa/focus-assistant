@@ -6,6 +6,10 @@
  * 
  * RULE: When adding a new field, add it to the Zod schema here.
  *       The TS type is auto-inferred. No other file needs a schema update.
+ * 
+ * RULE: Optional fields MUST use .nullable().optional() because the client
+ *       sends `null` for empty optional fields (not `undefined`).
+ *       Using just .optional() causes Zod to reject `null` values with a 400 error.
  */
 import { z } from 'zod';
 
@@ -33,26 +37,26 @@ export const subtaskSchema = z.object({
 export const taskSchema = z.object({
   id: z.string(),
   title: z.string(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   priority: prioritySchema,
   status: taskStatusSchema,
-  dueDate: z.string().optional(),
-  category: categorySchema.optional(),
-  energy: energySchema.optional(),
+  dueDate: z.string().nullable().optional(),
+  category: categorySchema.nullable().optional(),
+  energy: energySchema.nullable().optional(),
   quadrant: quadrantSchema,
   createdAt: z.string(),
-  completedAt: z.string().optional(),
-  recurrence: recurrenceSchema.optional(),
-  recurrenceParentId: z.string().optional(),
-  recurrenceNextDate: z.string().optional(),
-  recurrenceDayOfMonth: z.number().optional(),
-  recurrenceStartMonth: z.number().optional(),
-  subtasks: z.array(subtaskSchema).optional(),
+  completedAt: z.string().nullable().optional(),
+  recurrence: recurrenceSchema.nullable().optional(),
+  recurrenceParentId: z.string().nullable().optional(),
+  recurrenceNextDate: z.string().nullable().optional(),
+  recurrenceDayOfMonth: z.number().nullable().optional(),
+  recurrenceStartMonth: z.number().nullable().optional(),
+  subtasks: z.array(subtaskSchema).nullable().optional(),
 });
 
 export const pomodoroLinkSchema = z.object({
   taskId: z.string(),
-  subtaskId: z.string().optional(),
+  subtaskId: z.string().nullable().optional(),
 });
 
 export const pomodoroSchema = z.object({
@@ -62,11 +66,11 @@ export const pomodoroSchema = z.object({
   elapsed: z.number(),
   status: z.enum(['idle', 'running', 'paused', 'completed']),
   createdAt: z.string(),
-  completedAt: z.string().optional(),
-  startedAt: z.string().optional(),
-  accumulatedSeconds: z.number().optional(),
-  linkedTaskId: z.string().optional(),
-  linkedTasks: z.array(pomodoroLinkSchema).optional(),
+  completedAt: z.string().nullable().optional(),
+  startedAt: z.string().nullable().optional(),
+  accumulatedSeconds: z.number().nullable().optional(),
+  linkedTaskId: z.string().nullable().optional(),
+  linkedTasks: z.array(pomodoroLinkSchema).nullable().optional(),
 });
 
 export const timerSettingsSchema = z.object({
@@ -85,17 +89,17 @@ export const dailyStatsSchema = z.object({
 
 export const templateTaskSchema = z.object({
   title: z.string(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   priority: prioritySchema,
-  category: categorySchema.optional(),
-  energy: energySchema.optional(),
-  subtasks: z.array(z.object({ title: z.string() })).optional(),
+  category: categorySchema.nullable().optional(),
+  energy: energySchema.nullable().optional(),
+  subtasks: z.array(z.object({ title: z.string() })).nullable().optional(),
 });
 
 export const taskTemplateSchema = z.object({
   id: z.string(),
   name: z.string(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   tasks: z.array(templateTaskSchema),
   createdAt: z.string(),
 });
@@ -103,13 +107,13 @@ export const taskTemplateSchema = z.object({
 export const reminderSchema = z.object({
   id: z.string(),
   title: z.string(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   date: z.string(),
-  time: z.string().optional(), // HH:mm format, undefined = all-day (e.g., birthdays)
+  time: z.string().nullable().optional(), // HH:mm format, null/undefined = all-day (e.g., birthdays)
   recurrence: reminderRecurrenceSchema,
   category: reminderCategorySchema,
-  acknowledged: z.boolean().optional(),
-  acknowledgedAt: z.string().optional(),
+  acknowledged: z.boolean().nullable().optional(),
+  acknowledgedAt: z.string().nullable().optional(),
   createdAt: z.string(),
 });
 
@@ -117,20 +121,20 @@ export const readingItemSchema = z.object({
   id: z.string(),
   url: z.string(),
   title: z.string(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   tags: z.array(z.string()),
   status: readingStatusSchema,
-  notes: z.string().optional(),
-  imageUrl: z.string().optional(),
-  domain: z.string().optional(),
+  notes: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  domain: z.string().nullable().optional(),
   createdAt: z.string(),
-  readAt: z.string().optional(),
+  readAt: z.string().nullable().optional(),
 });
 
 export const appPreferencesSchema = z.object({
-  notificationSound: notificationSoundSchema.optional(),
-  obsidianVaultPath: z.string().optional(),
-  obsidianAutoSync: z.boolean().optional(),
+  notificationSound: notificationSoundSchema.nullable().optional(),
+  obsidianVaultPath: z.string().nullable().optional(),
+  obsidianAutoSync: z.boolean().nullable().optional(),
 });
 
 /**
@@ -143,16 +147,16 @@ export const appStateSchema = z.object({
   settings: timerSettingsSchema,
   dailyStats: z.array(dailyStatsSchema),
   currentStreak: z.number(),
-  templates: z.array(taskTemplateSchema).optional(),
-  preferences: appPreferencesSchema.optional(),
-  readingList: z.array(readingItemSchema).optional(),
-  reminders: z.array(reminderSchema).optional(),
+  templates: z.array(taskTemplateSchema).nullable().optional(),
+  preferences: appPreferencesSchema.nullable().optional(),
+  readingList: z.array(readingItemSchema).nullable().optional(),
+  reminders: z.array(reminderSchema).nullable().optional(),
 }).strict();
 
 export const storageConfigSchema = z.object({
   mode: z.enum(['local', 'file', 'sheets']),
-  sheetsId: z.string().optional(),
-  sheetsApiKey: z.string().optional(),
+  sheetsId: z.string().nullable().optional(),
+  sheetsApiKey: z.string().nullable().optional(),
 });
 
 // ---- Inferred TypeScript Types ----

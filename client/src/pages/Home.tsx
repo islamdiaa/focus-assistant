@@ -144,18 +144,9 @@ export default function Home() {
   return (
     <>
       {/* Focus Mode Overlay */}
-      <AnimatePresence>
-        {focusMode && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <FocusModePage onExit={() => setFocusMode(false)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {focusMode && (
+        <FocusModePage onExit={() => setFocusMode(false)} />
+      )}
 
       {/* Main Layout */}
       <div className={`flex min-h-screen bg-background ${focusMode ? 'hidden' : ''}`}>

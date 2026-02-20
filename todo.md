@@ -153,3 +153,25 @@
 # Bug Fix — AppProvider missing
 
 - [x] Fix: Home component uses useApp() but is not wrapped in AppProvider — HMR invalidation crash (dev-only)
+
+# V1.8.2 — Full Code & Functionality Audit
+
+## Audit Findings
+- [x] Layer 1: Types, Zod schemas, serialization audit
+- [x] Layer 2: Reducer actions and state mutations audit
+- [x] Layer 3: UI components — all pages, forms, views, data bindings audit
+- [x] Layer 4: API endpoints and server-side logic audit
+- [x] Fix: Focus Mode exit ghost overlay (AnimatePresence not unmounting)
+- [x] Fix: TimerPage getEffectiveElapsed null type mismatch
+- [x] Fix: Version string v1.8.0 → v1.8.2 in SettingsPage
+- [x] Add v182-audit.test.ts (4 tests)
+- [x] Version bump to 1.8.2
+- [x] CHANGELOG update
+- [x] Docs update (architecture.md, claude.md, agent.md)
+
+# V1.8.2 — Feature Additions
+
+- [x] Edit reminder — allow editing existing reminders (title, date, time, category, recurrence) via dialog
+- [x] Inline task editing from Matrix view — edit task title, priority, due date directly from Eisenhower matrix
+- [x] Tests for edit reminder and matrix inline editing (8 tests in v182-features.test.ts)
+- [x] Push latest code to GitHub via checkpoint
