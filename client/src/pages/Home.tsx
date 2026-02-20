@@ -62,6 +62,7 @@ export default function Home() {
   // Expose triggers for keyboard shortcuts in child components
   const [newTaskTrigger, setNewTaskTrigger] = useState(0);
   const [searchTrigger, setSearchTrigger] = useState(0);
+  const [reminderTrigger, setReminderTrigger] = useState(0);
 
   const subtitle = useMemo(() => MOTIVATIONAL[Math.floor(Math.random() * MOTIVATIONAL.length)], []);
 
@@ -126,6 +127,15 @@ export default function Home() {
       return;
     }
 
+    // R: New reminder (on tasks or reminders page)
+    if (e.key === 'r' || e.key === 'R') {
+      if (activePage === 'tasks' || activePage === 'reminders') {
+        e.preventDefault();
+        setReminderTrigger(t => t + 1);
+      }
+      return;
+    }
+
     // /: Focus search (only on tasks page)
     if (e.key === '/') {
       if (activePage === 'tasks') {
@@ -134,7 +144,7 @@ export default function Home() {
       }
       return;
     }
-  }, [activePage, undo, redo, focusMode]);
+  }, [activePage, undo, redo, focusMode, setReminderTrigger]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -208,12 +218,12 @@ export default function Home() {
           {/* Page content */}
           <main className="flex-1 overflow-y-auto">
             {activePage === 'planner' && <DailyPlannerPage />}
-            {activePage === 'tasks' && <TasksPage newTaskTrigger={newTaskTrigger} searchTrigger={searchTrigger} />}
+            {activePage === 'tasks' && <TasksPage newTaskTrigger={newTaskTrigger} searchTrigger={searchTrigger} reminderTrigger={reminderTrigger} />}
             {activePage === 'timer' && <TimerPage />}
             {activePage === 'matrix' && <MatrixPage />}
             {activePage === 'stats' && <StatsPage />}
             {activePage === 'reading' && <ReadLaterPage />}
-            {activePage === 'reminders' && <RemindersPage />}
+            {activePage === 'reminders' && <RemindersPage reminderTrigger={reminderTrigger} />}
             {activePage === 'templates' && <TemplatesPage />}
             {activePage === 'review' && <WeeklyReviewPage />}
             {activePage === 'settings' && <SettingsPage />}

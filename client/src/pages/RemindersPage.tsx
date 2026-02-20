@@ -7,7 +7,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import type { Reminder } from '@/lib/types';
-import { Plus, Bell, Cake, Calendar, Star, Trash2, Check, AlertCircle, Clock, Pencil } from 'lucide-react';
+import { Plus, Bell, Cake, Calendar, Star, Trash2, Check, AlertCircle, Clock, Pencil, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -51,7 +51,11 @@ function getStatusLabel(daysUntil: number, acknowledged?: boolean | null): { lab
 
 type FilterView = 'all' | 'upcoming' | 'past';
 
-export default function RemindersPage() {
+interface RemindersPageProps {
+  reminderTrigger?: number;
+}
+
+export default function RemindersPage({ reminderTrigger = 0 }: RemindersPageProps) {
   const { state, dispatch } = useApp();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
@@ -65,20 +69,10 @@ export default function RemindersPage() {
   const [recurrence, setRecurrence] = useState<Reminder['recurrence']>('none');
   const [category, setCategory] = useState<Reminder['category']>('other');
 
-  // R keyboard shortcut to open new reminder dialog
+  // R keyboard shortcut trigger from parent
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
-      if (e.key === 'r' || e.key === 'R') {
-        if (!e.ctrlKey && !e.metaKey && !e.altKey) {
-          e.preventDefault();
-          openCreateDialog();
-        }
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+    if (reminderTrigger > 0) openCreateDialog();
+  }, [reminderTrigger]);
 
   const reminders = state.reminders || [];
 
@@ -381,13 +375,21 @@ export default function RemindersPage() {
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
-                      {!reminder.acknowledged && (
+                      {!reminder.acknowledged ? (
                         <button
                           onClick={() => dispatch({ type: 'ACK_REMINDER', payload: reminder.id })}
                           title={reminder.recurrence !== 'none' ? 'Acknowledge & advance to next' : 'Acknowledge'}
                           className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
                         >
                           <Check className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => dispatch({ type: 'UNACK_REMINDER', payload: reminder.id })}
+                          title="Undo acknowledge"
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light transition-colors"
+                        >
+                          <Undo2 className="w-3.5 h-3.5" />
                         </button>
                       )}
                       <button

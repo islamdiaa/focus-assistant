@@ -37,6 +37,7 @@ type Action =
   | { type: 'UPDATE_REMINDER'; payload: Partial<Reminder> & { id: string } }
   | { type: 'DELETE_REMINDER'; payload: string }
   | { type: 'ACK_REMINDER'; payload: string }
+  | { type: 'UNACK_REMINDER'; payload: string }
   | { type: 'UNDO' }
   | { type: 'REDO' };
 
@@ -487,6 +488,19 @@ function appReducer(state: AppState, action: Action): AppState {
         reminders: (state.reminders || []).map(r =>
           r.id === action.payload
             ? { ...r, date: d.toISOString().split('T')[0], acknowledged: false, acknowledgedAt: undefined }
+            : r
+        ),
+      };
+    }
+
+    case 'UNACK_REMINDER': {
+      const reminder = (state.reminders || []).find(r => r.id === action.payload);
+      if (!reminder) return state;
+      return {
+        ...state,
+        reminders: (state.reminders || []).map(r =>
+          r.id === action.payload
+            ? { ...r, acknowledged: false, acknowledgedAt: undefined }
             : r
         ),
       };

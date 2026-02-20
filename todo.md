@@ -176,3 +176,6 @@
 - [x] Tests for edit reminder and matrix inline editing (8 tests in v182-features.test.ts)
 - [x] Push latest code to GitHub via checkpoint
 - [x] Fix Dockerfile ARM64 QEMU build crash (illegal instruction in native packages)
+- [x] Undo-acknowledge reminder — make acknowledged status reversible/editable
+- [x] Make priority view the default in Tasks page
+- [x] Add reminder creation from Tasks page with R shortcut

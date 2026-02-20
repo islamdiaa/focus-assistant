@@ -9,7 +9,8 @@
  */
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check, Pencil, X, Save, Search, Repeat, GripVertical, ChevronDown, ChevronRight, ListChecks } from 'lucide-react';
+import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check, Pencil, X, Save, Search, Repeat, GripVertical, ChevronDown, ChevronRight, ListChecks, Bell, Cake, Star } from 'lucide-react';
+import type { Reminder } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface TasksPageProps {
   newTaskTrigger?: number;
   searchTrigger?: number;
+  reminderTrigger?: number;
 }
 
 const PRIORITY_COLORS: Record<Priority, string> = {
@@ -431,10 +433,10 @@ function SortableTaskCard({
 }
 
 // ---- Main Page ----
-export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: TasksPageProps) {
+export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0, reminderTrigger = 0 }: TasksPageProps) {
   const { state, dispatch } = useApp();
   const [filter, setFilter] = useState<Filter>('all');
-  const [sort, setSort] = useState<Sort>('manual');
+  const [sort, setSort] = useState<Sort>('priority');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -462,6 +464,64 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
   useEffect(() => {
     if (searchTrigger > 0) searchInputRef.current?.focus();
   }, [searchTrigger]);
+
+  // Reminder dialog state
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [remTitle, setRemTitle] = useState('');
+  const [remDescription, setRemDescription] = useState('');
+  const [remDate, setRemDate] = useState('');
+  const [remTime, setRemTime] = useState('');
+  const [remRecurrence, setRemRecurrence] = useState<Reminder['recurrence']>('none');
+  const [remCategory, setRemCategory] = useState<Reminder['category']>('other');
+
+  const REMINDER_CATEGORIES: Record<Reminder['category'], { icon: typeof Bell; label: string; color: string; bg: string }> = {
+    birthday: { icon: Cake, label: 'Birthday', color: 'text-pink-500', bg: 'bg-pink-50' },
+    appointment: { icon: Calendar, label: 'Appointment', color: 'text-warm-blue', bg: 'bg-warm-blue-light' },
+    event: { icon: Star, label: 'Event', color: 'text-warm-amber', bg: 'bg-warm-amber-light' },
+    other: { icon: Bell, label: 'Other', color: 'text-warm-sage', bg: 'bg-warm-sage-light' },
+  };
+
+  const REMINDER_RECURRENCE: { value: Reminder['recurrence']; label: string }[] = [
+    { value: 'none', label: 'One-time' },
+    { value: 'yearly', label: 'Yearly' },
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'weekly', label: 'Weekly' },
+  ];
+
+  // Keyboard shortcut: R opens reminder dialog
+  useEffect(() => {
+    if (reminderTrigger > 0) {
+      setRemTitle('');
+      setRemDescription('');
+      setRemDate('');
+      setRemTime('');
+      setRemRecurrence('none');
+      setRemCategory('other');
+      setReminderDialogOpen(true);
+    }
+  }, [reminderTrigger]);
+
+  function handleAddReminder() {
+    if (!remTitle.trim() || !remDate) return;
+    dispatch({
+      type: 'ADD_REMINDER',
+      payload: {
+        title: remTitle.trim(),
+        description: remDescription.trim() || undefined,
+        date: remDate,
+        time: remTime || undefined,
+        recurrence: remRecurrence,
+        category: remCategory,
+      },
+    });
+    setRemTitle('');
+    setRemDescription('');
+    setRemDate('');
+    setRemTime('');
+    setRemRecurrence('none');
+    setRemCategory('other');
+    setReminderDialogOpen(false);
+  }
 
   const isDragDisabled = sort !== 'manual' || !!searchQuery.trim();
 
@@ -565,7 +625,11 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
           <h2 className="font-serif text-2xl lg:text-3xl text-foreground">My Tasks</h2>
           <p className="text-sm text-muted-foreground mt-1">{todayCount} task{todayCount !== 1 ? 's' : ''} to tackle today</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setReminderDialogOpen(true)} variant="outline" className="gap-2 border-warm-amber/30 text-warm-amber hover:bg-warm-amber-light">
+            <Bell className="w-4 h-4" /> <span className="hidden sm:inline">Reminder</span>
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-warm-sage hover:bg-warm-sage/90 text-white gap-2">
               <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Task</span><span className="sm:hidden">Add</span>
@@ -698,6 +762,60 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
           </DialogContent>
         </Dialog>
       </div>
+      </div>
+
+      {/* Reminder Dialog */}
+      <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
+        <DialogContent className="bg-card max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl">New Reminder</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">Add a birthday, appointment, or event to remember</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <Input placeholder="Reminder title..." value={remTitle} onChange={e => setRemTitle(e.target.value)} className="bg-background" autoFocus />
+            <Input placeholder="Description (optional)" value={remDescription} onChange={e => setRemDescription(e.target.value)} className="bg-background" />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Date</label>
+                <Input type="date" value={remDate} onChange={e => setRemDate(e.target.value)} className="bg-background" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Time <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span></label>
+                <Input type="time" value={remTime} onChange={e => setRemTime(e.target.value)} className="bg-background" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Category</label>
+              <div className="grid grid-cols-4 gap-2">
+                {(Object.keys(REMINDER_CATEGORIES) as Reminder['category'][]).map(c => {
+                  const cfg = REMINDER_CATEGORIES[c];
+                  return (
+                    <button key={c} type="button" onClick={() => setRemCategory(c)}
+                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 flex flex-col items-center gap-1
+                        ${remCategory === c ? `${cfg.bg} ${cfg.color} border-current shadow-sm scale-[1.02]` : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
+                      <cfg.icon className="w-4 h-4" />
+                      {cfg.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Repeats</label>
+              <div className="grid grid-cols-4 gap-2">
+                {REMINDER_RECURRENCE.map(opt => (
+                  <button key={opt.value} type="button" onClick={() => setRemRecurrence(opt.value)}
+                    className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
+                      ${remRecurrence === opt.value ? 'bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]' : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Button onClick={handleAddReminder} disabled={!remTitle.trim() || !remDate} className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white">Add Reminder</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Search Bar */}
       <div className="relative mb-4">
@@ -793,9 +911,9 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
         <p className="text-xs text-muted-foreground/60">
           <kbd className="px-1.5 py-0.5 bg-warm-sand/50 rounded text-[10px] font-mono">N</kbd> new task
           <span className="mx-2">·</span>
-          <kbd className="px-1.5 py-0.5 bg-warm-sand/50 rounded text-[10px] font-mono">/</kbd> search
+          <kbd className="px-1.5 py-0.5 bg-warm-sand/50 rounded text-[10px] font-mono">R</kbd> new reminder
           <span className="mx-2">·</span>
-          <kbd className="px-1.5 py-0.5 bg-warm-sand/50 rounded text-[10px] font-mono">1-5</kbd> switch pages
+          <kbd className="px-1.5 py-0.5 bg-warm-sand/50 rounded text-[10px] font-mono">/</kbd> search
           <span className="mx-2">·</span>
           <kbd className="px-1.5 py-0.5 bg-warm-sand/50 rounded text-[10px] font-mono">Ctrl+Z</kbd> undo
         </p>
