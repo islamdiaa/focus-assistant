@@ -52,3 +52,16 @@
 - [x] Push to GitHub as V1.1
 - [x] CI/CD push Docker image to GHCR on every push to main
 - [x] Update Docker guide with Watchtower auto-update setup for Unraid
+
+# V1.2 Release
+
+- [x] 1. Subtasks — parent/child task relationships with progress bars
+- [x] 2. Weekly Review page — end-of-week summary with carry-over and next week planning
+- [x] 3. Obsidian vault sync — auto-export MD file to configurable folder path
+- [x] 4. Task templates — save/load reusable task sets
+- [x] 5. Focus Mode — full-screen distraction-free view with current task + timer
+- [x] 6. Daily Planner view — "Today" page with due tasks, focus blocks, timeline
+- [x] 7. Framer Motion animations — page transitions, card enter/exit
+- [x] 8. Notification sound options — multiple chime choices for timer completion
+- [x] 9. Data integrity check — verify/fix MD file structure from Settings
+- [x] 10. Motivational quote box on Daily Planner — curated quotes from authors/books, changes on refresh

@@ -10,6 +10,12 @@
 - **Sessions Before Long Break:** 4
 - **Current Streak:** 0 days
 
+## Preferences
+
+- **Notification Sound:** gentle-chime
+- **Obsidian Vault Path:** 
+- **Obsidian Auto Sync:** false
+
 ## Tasks
 
 _No tasks yet._

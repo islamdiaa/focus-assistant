@@ -4,18 +4,20 @@
  * Category, Energy, Recurrence, button-group Priority
  * Inline edit on task cards with pencil icon
  * Drag-and-drop reordering via dnd-kit
+ * V1.2: Subtasks with progress bars, inline add/toggle/delete
  * Keyboard shortcuts: N=new task, /=focus search
  */
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check, Pencil, X, Save, Search, Repeat, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check, Pencil, X, Save, Search, Repeat, GripVertical, ChevronDown, ChevronRight, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { Task, Priority, Category, EnergyLevel, RecurrenceFrequency } from '@/lib/types';
+import type { Task, Priority, Category, EnergyLevel, RecurrenceFrequency, Subtask } from '@/lib/types';
 import { DragDropProvider } from '@dnd-kit/react';
 import { useSortable } from '@dnd-kit/react/sortable';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TasksPageProps {
   newTaskTrigger?: number;
@@ -65,6 +67,114 @@ type Sort = 'newest' | 'priority' | 'dueDate' | 'manual';
 const PRIORITY_ORDER: Record<Priority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
 
 const EMPTY_TASKS_IMG = 'https://private-us-east-1.manuscdn.com/sessionFile/PlXiEUsi6v4VD1JuecPpX3/sandbox/k4s8ZO93y8NMD02oOYn6TD-img-1_1771447504000_na1fn_ZW1wdHktdGFza3M.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvUGxYaUVVc2k2djRWRDFKdWVjUHBYMy9zYW5kYm94L2s0czhaTzkzeThOTUQwMm9PWW42VEQtaW1nLTFfMTc3MTQ0NzUwNDAwMF9uYTFmbl9aVzF3ZEhrdGRHRnphM00ucG5nP3gtb3NzLXByb2Nlc3M9aW1hZ2UvcmVzaXplLHdfMTkyMCxoXzE5MjAvZm9ybWF0LHdlYnAvcXVhbGl0eSxxXzgwIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=amTtVIynHBRmIEVQIldvf4-bXMes21S3AX6LLFog5bRL60efcFgUSN3AJ2WmE-HkJPU90jm95LEtxx6105fZKASdQIJuW-o~kYZ43Cueotk~TRv77zsOIaMJg5D3EScTFkU8g1xCMfqaXF1sAzyiP2qRlcRH0HnCtWgS3HcJ1qap46LqW8k2FMkYkC0oTFTQ5FU1NzfHgFl185ayg5i1Xdo0veHJKTyXMGu-S~-w3s423z~GlaEiQ6t1CQyGASCVhshStkv6gNCDwT83Gq604ZbHt8kjenbxl0U327xOWsQvm~9m4J6gX64kQjnHplxs31yis8U4zWkJOKk4oeY6uQ__';
+
+// ---- Subtask Progress Bar ----
+function SubtaskProgress({ subtasks }: { subtasks: Subtask[] }) {
+  if (!subtasks || subtasks.length === 0) return null;
+  const done = subtasks.filter(s => s.done).length;
+  const total = subtasks.length;
+  const pct = Math.round((done / total) * 100);
+  return (
+    <div className="flex items-center gap-2 mt-1.5">
+      <div className="flex-1 h-1.5 bg-warm-sand/50 rounded-full overflow-hidden">
+        <motion.div
+          className="h-full bg-warm-sage rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        />
+      </div>
+      <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">{done}/{total}</span>
+    </div>
+  );
+}
+
+// ---- Inline Subtask List ----
+function SubtaskList({ task, dispatch }: { task: Task; dispatch: (action: any) => void }) {
+  const [newSubtask, setNewSubtask] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handleAdd() {
+    if (!newSubtask.trim()) return;
+    dispatch({ type: 'ADD_SUBTASK', payload: { taskId: task.id, title: newSubtask.trim() } });
+    setNewSubtask('');
+    inputRef.current?.focus();
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border/50 space-y-1.5">
+      <div className="flex items-center gap-1.5 mb-2">
+        <ListChecks className="w-3.5 h-3.5 text-warm-sage" />
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Subtasks</span>
+      </div>
+      <AnimatePresence mode="popLayout">
+        {(task.subtasks || []).map(sub => (
+          <motion.div
+            key={sub.id}
+            layout
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center gap-2 group/sub"
+          >
+            <button
+              onClick={() => dispatch({ type: 'TOGGLE_SUBTASK', payload: { taskId: task.id, subtaskId: sub.id } })}
+              className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all
+                ${sub.done ? 'bg-warm-sage border-warm-sage' : 'border-border hover:border-warm-sage'}`}
+            >
+              {sub.done && <Check className="w-2.5 h-2.5 text-white" />}
+            </button>
+            {editingId === sub.id ? (
+              <div className="flex-1 flex gap-1">
+                <Input
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      dispatch({ type: 'UPDATE_SUBTASK', payload: { taskId: task.id, subtaskId: sub.id, title: editTitle.trim() } });
+                      setEditingId(null);
+                    }
+                    if (e.key === 'Escape') setEditingId(null);
+                  }}
+                  className="h-6 text-xs bg-background"
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <span
+                className={`flex-1 text-xs cursor-pointer ${sub.done ? 'line-through text-muted-foreground' : 'text-foreground'}`}
+                onDoubleClick={() => { setEditingId(sub.id); setEditTitle(sub.title); }}
+              >
+                {sub.title}
+              </span>
+            )}
+            <button
+              onClick={() => dispatch({ type: 'DELETE_SUBTASK', payload: { taskId: task.id, subtaskId: sub.id } })}
+              className="p-0.5 rounded text-muted-foreground/40 hover:text-warm-terracotta opacity-0 group-hover/sub:opacity-100 transition-opacity"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+      <div className="flex gap-1.5 mt-1">
+        <Input
+          ref={inputRef}
+          value={newSubtask}
+          onChange={e => setNewSubtask(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleAdd()}
+          placeholder="Add subtask..."
+          className="h-7 text-xs bg-background flex-1"
+        />
+        <Button onClick={handleAdd} size="sm" variant="ghost" className="h-7 px-2 text-warm-sage hover:bg-warm-sage-light">
+          <Plus className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 // ---- Inline Edit Form ----
 function InlineEditForm({ task, onSave, onCancel }: { task: Task; onSave: (updates: Partial<Task>) => void; onCancel: () => void }) {
@@ -182,10 +292,17 @@ function SortableTaskCard({
   isDragDisabled: boolean;
 }) {
   const { ref, isDragSource } = useSortable({ id: task.id, index, disabled: isDragDisabled });
+  const [subtasksOpen, setSubtasksOpen] = useState(false);
+  const hasSubtasks = task.subtasks && task.subtasks.length > 0;
 
   return (
-    <div
+    <motion.div
       ref={ref}
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.2 }}
       className={`group bg-card rounded-xl border border-border p-4 transition-all duration-200 hover:shadow-md
         ${task.status === 'done' ? 'opacity-60' : ''}
         ${editingId === task.id ? 'ring-2 ring-warm-sage/30 shadow-md' : ''}
@@ -246,10 +363,21 @@ function SortableTaskCard({
               </span>
             )}
           </div>
+          {/* Subtask progress bar (always visible if subtasks exist) */}
+          {hasSubtasks && <SubtaskProgress subtasks={task.subtasks!} />}
         </div>
 
         {/* Action Icons */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Subtask toggle */}
+          <button
+            onClick={() => setSubtasksOpen(!subtasksOpen)}
+            className={`p-1.5 rounded-md transition-colors ${
+              subtasksOpen ? 'text-warm-sage bg-warm-sage-light' : 'text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light'}`}
+            title="Subtasks"
+          >
+            <ListChecks className="w-4 h-4" />
+          </button>
           <button
             onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: task.id })}
             className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
@@ -275,6 +403,20 @@ function SortableTaskCard({
         </div>
       </div>
 
+      {/* Subtask list (expandable) */}
+      <AnimatePresence>
+        {subtasksOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <SubtaskList task={task} dispatch={dispatch} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Inline Edit Form */}
       {editingId === task.id && (
         <InlineEditForm
@@ -283,7 +425,7 @@ function SortableTaskCard({
           onCancel={() => setEditingId(null)}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -305,6 +447,8 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
   const [newEnergy, setNewEnergy] = useState<EnergyLevel | ''>('');
   const [newDueDate, setNewDueDate] = useState('');
   const [newRecurrence, setNewRecurrence] = useState<RecurrenceFrequency>('none');
+  const [newSubtasks, setNewSubtasks] = useState<string[]>([]);
+  const [newSubtaskInput, setNewSubtaskInput] = useState('');
 
   // Keyboard shortcut: N opens dialog
   useEffect(() => {
@@ -316,14 +460,11 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
     if (searchTrigger > 0) searchInputRef.current?.focus();
   }, [searchTrigger]);
 
-  // drag-and-drop state
-
   const isDragDisabled = sort !== 'manual' || !!searchQuery.trim();
 
   const filteredTasks = useMemo(() => {
     let tasks = [...state.tasks];
 
-    // Search filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       tasks = tasks.filter(t =>
@@ -342,7 +483,6 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
       if (!b.dueDate) return -1;
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     });
-    // 'manual' keeps the order from state.tasks
 
     return tasks;
   }, [state.tasks, filter, sort, searchQuery]);
@@ -370,6 +510,7 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
         category: newCategory || undefined,
         energy: newEnergy || undefined,
         recurrence: newRecurrence !== 'none' ? newRecurrence : undefined,
+        subtasks: newSubtasks.length > 0 ? newSubtasks.map(s => ({ title: s })) : undefined,
       },
     });
     setNewTitle('');
@@ -379,6 +520,8 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
     setNewEnergy('');
     setNewDueDate('');
     setNewRecurrence('none');
+    setNewSubtasks([]);
+    setNewSubtaskInput('');
     setDialogOpen(false);
   }
 
@@ -399,6 +542,12 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
     const [moved] = reordered.splice(oldIndex, 1);
     reordered.splice(newIndex, 0, moved);
     dispatch({ type: 'REORDER_TASKS', payload: reordered.map(t => t.id) });
+  }
+
+  function addNewSubtask() {
+    if (!newSubtaskInput.trim()) return;
+    setNewSubtasks([...newSubtasks, newSubtaskInput.trim()]);
+    setNewSubtaskInput('');
   }
 
   return (
@@ -483,6 +632,32 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Due Date (optional)</label>
                 <Input type="date" value={newDueDate} onChange={e => setNewDueDate(e.target.value)} className="bg-background" />
               </div>
+              {/* Subtasks section in new task dialog */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Subtasks (optional)</label>
+                {newSubtasks.map((s, i) => (
+                  <div key={i} className="flex items-center gap-2 mb-1.5">
+                    <div className="w-4 h-4 rounded border-2 border-border shrink-0" />
+                    <span className="text-sm flex-1">{s}</span>
+                    <button onClick={() => setNewSubtasks(newSubtasks.filter((_, j) => j !== i))}
+                      className="p-0.5 text-muted-foreground hover:text-warm-terracotta">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+                <div className="flex gap-1.5">
+                  <Input
+                    value={newSubtaskInput}
+                    onChange={e => setNewSubtaskInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addNewSubtask())}
+                    placeholder="Add a subtask..."
+                    className="bg-background text-sm"
+                  />
+                  <Button onClick={addNewSubtask} size="sm" variant="outline" className="shrink-0">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
               <Button onClick={handleAddTask} className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white font-medium py-2.5">
                 Create Task
               </Button>
@@ -562,18 +737,20 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
                   <GripVertical className="w-3.5 h-3.5" /> Drag tasks to reorder
                 </p>
               )}
-              {filteredTasks.map((task, idx) => (
-                <SortableTaskCard
-                  key={task.id}
-                  task={task}
-                  index={idx}
-                  editingId={editingId}
-                  setEditingId={setEditingId}
-                  dispatch={dispatch}
-                  handleInlineSave={handleInlineSave}
-                  isDragDisabled={isDragDisabled}
-                />
-              ))}
+              <AnimatePresence mode="popLayout">
+                {filteredTasks.map((task, idx) => (
+                  <SortableTaskCard
+                    key={task.id}
+                    task={task}
+                    index={idx}
+                    editingId={editingId}
+                    setEditingId={setEditingId}
+                    dispatch={dispatch}
+                    handleInlineSave={handleInlineSave}
+                    isDragDisabled={isDragDisabled}
+                  />
+                ))}
+              </AnimatePresence>
             </div>
         </DragDropProvider>
       )}

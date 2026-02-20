@@ -2,26 +2,32 @@
  * Home — Main layout with sidebar navigation
  * Desktop: fixed sidebar + content
  * Mobile: hamburger menu + full-width content
+ * V1.2: Added Daily Planner, Templates, Weekly Review, Focus Mode
  * 
  * Keyboard shortcuts:
  * - Ctrl/Cmd+Z: Undo
  * - Ctrl/Cmd+Shift+Z: Redo
- * - 1-5: Switch pages (when no input focused)
+ * - 1-8: Switch pages (when no input focused)
  * - N: Open new task dialog (when on tasks page, no input focused)
  * - /: Focus search (when on tasks page, no input focused)
- * - Esc: Close sidebar on mobile
+ * - F: Enter Focus Mode
+ * - Esc: Close sidebar on mobile / Exit focus mode
  */
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import Sidebar from '@/components/Sidebar';
+import { useAuth } from '@/_core/hooks/useAuth';
+import Sidebar, { type Page } from '@/components/Sidebar';
 import TasksPage from './TasksPage';
 import TimerPage from './TimerPage';
 import MatrixPage from './MatrixPage';
 import StatsPage from './StatsPage';
 import SettingsPage from './SettingsPage';
+import DailyPlannerPage from './DailyPlannerPage';
+import TemplatesPage from './TemplatesPage';
+import WeeklyReviewPage from './WeeklyReviewPage';
+import FocusModePage from './FocusModePage';
 import { useApp } from '@/contexts/AppContext';
 import { Smile, Clock, Menu, Undo2, Redo2 } from 'lucide-react';
-
-type Page = 'tasks' | 'timer' | 'matrix' | 'stats' | 'settings';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const MOTIVATIONAL = [
   'Your brain is powerful!',
@@ -32,19 +38,25 @@ const MOTIVATIONAL = [
 ];
 
 const PAGE_MAP: Record<string, Page> = {
-  '1': 'tasks',
-  '2': 'timer',
-  '3': 'matrix',
-  '4': 'stats',
-  '5': 'settings',
+  '1': 'planner',
+  '2': 'tasks',
+  '3': 'timer',
+  '4': 'matrix',
+  '5': 'stats',
+  '6': 'templates',
+  '7': 'review',
+  '8': 'settings',
 };
 
 export default function Home() {
-  const [activePage, setActivePage] = useState<Page>('tasks');
+  let { user, loading, error, isAuthenticated, logout } = useAuth();
+
+  const [activePage, setActivePage] = useState<Page>('planner');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
   const { state, canUndo, canRedo, undo, redo } = useApp();
 
-  // Expose setActivePage and page for keyboard shortcuts in child components
+  // Expose triggers for keyboard shortcuts in child components
   const [newTaskTrigger, setNewTaskTrigger] = useState(0);
   const [searchTrigger, setSearchTrigger] = useState(0);
 
@@ -73,10 +85,29 @@ export default function Home() {
       return;
     }
 
+    // Esc: Exit focus mode or close sidebar
+    if (e.key === 'Escape') {
+      if (focusMode) {
+        setFocusMode(false);
+        return;
+      }
+      setSidebarOpen(false);
+      return;
+    }
+
     // Skip remaining shortcuts if typing in an input
     if (isInput) return;
 
-    // Page switching: 1-5
+    // F: Enter focus mode
+    if (e.key === 'f' || e.key === 'F') {
+      if (!focusMode) {
+        e.preventDefault();
+        setFocusMode(true);
+      }
+      return;
+    }
+
+    // Page switching: 1-8
     if (PAGE_MAP[e.key]) {
       e.preventDefault();
       setActivePage(PAGE_MAP[e.key]);
@@ -100,13 +131,7 @@ export default function Home() {
       }
       return;
     }
-
-    // Esc: Close mobile sidebar
-    if (e.key === 'Escape') {
-      setSidebarOpen(false);
-      return;
-    }
-  }, [activePage, undo, redo]);
+  }, [activePage, undo, redo, focusMode]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -114,70 +139,91 @@ export default function Home() {
   }, [handleKeyDown]);
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar
-        activePage={activePage}
-        onNavigate={setActivePage}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+    <>
+      {/* Focus Mode Overlay */}
+      <AnimatePresence>
+        {focusMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <FocusModePage onExit={() => setFocusMode(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            {/* Hamburger - mobile only */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-1.5 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="font-serif text-base lg:text-lg text-foreground leading-tight">Your Focus Assistant</h1>
-              <p className="text-xs text-muted-foreground -mt-0.5 hidden sm:block">{subtitle}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 lg:gap-3">
-            {/* Undo/Redo buttons */}
-            <div className="flex items-center gap-0.5">
-              <button
-                onClick={undo}
-                disabled={!canUndo}
-                title="Undo (Ctrl+Z)"
-                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <Undo2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={redo}
-                disabled={!canRedo}
-                title="Redo (Ctrl+Shift+Z)"
-                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <Redo2 className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex items-center gap-1.5 bg-warm-sage-light px-2.5 lg:px-3 py-1.5 rounded-full border border-warm-sage/20">
-              <Smile className="w-3.5 h-3.5 text-warm-sage" />
-              <span className="text-xs font-medium text-warm-charcoal">{completedToday}</span>
-            </div>
-            <div className="flex items-center gap-1.5 bg-warm-blue-light px-2.5 lg:px-3 py-1.5 rounded-full border border-warm-blue/20">
-              <Clock className="w-3.5 h-3.5 text-warm-blue" />
-              <span className="text-xs font-medium text-warm-charcoal">{focusToday}m</span>
-            </div>
-          </div>
-        </header>
+      {/* Main Layout */}
+      <div className={`flex min-h-screen bg-background ${focusMode ? 'hidden' : ''}`}>
+        <Sidebar
+          activePage={activePage}
+          onNavigate={setActivePage}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onFocusMode={() => setFocusMode(true)}
+        />
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
-          {activePage === 'tasks' && <TasksPage newTaskTrigger={newTaskTrigger} searchTrigger={searchTrigger} />}
-          {activePage === 'timer' && <TimerPage />}
-          {activePage === 'matrix' && <MatrixPage />}
-          {activePage === 'stats' && <StatsPage />}
-          {activePage === 'settings' && <SettingsPage />}
-        </main>
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Top bar */}
+          <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10">
+            <div className="flex items-center gap-3">
+              {/* Hamburger - mobile only */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-1.5 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="font-serif text-base lg:text-lg text-foreground leading-tight">Your Focus Assistant</h1>
+                <p className="text-xs text-muted-foreground -mt-0.5 hidden sm:block">{subtitle}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 lg:gap-3">
+              {/* Undo/Redo buttons */}
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={undo}
+                  disabled={!canUndo}
+                  title="Undo (Ctrl+Z)"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Undo2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={redo}
+                  disabled={!canRedo}
+                  title="Redo (Ctrl+Shift+Z)"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Redo2 className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex items-center gap-1.5 bg-warm-sage-light px-2.5 lg:px-3 py-1.5 rounded-full border border-warm-sage/20">
+                <Smile className="w-3.5 h-3.5 text-warm-sage" />
+                <span className="text-xs font-medium text-warm-charcoal">{completedToday}</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-warm-blue-light px-2.5 lg:px-3 py-1.5 rounded-full border border-warm-blue/20">
+                <Clock className="w-3.5 h-3.5 text-warm-blue" />
+                <span className="text-xs font-medium text-warm-charcoal">{focusToday}m</span>
+              </div>
+            </div>
+          </header>
+
+          {/* Page content */}
+          <main className="flex-1 overflow-y-auto">
+            {activePage === 'planner' && <DailyPlannerPage />}
+            {activePage === 'tasks' && <TasksPage newTaskTrigger={newTaskTrigger} searchTrigger={searchTrigger} />}
+            {activePage === 'timer' && <TimerPage />}
+            {activePage === 'matrix' && <MatrixPage />}
+            {activePage === 'stats' && <StatsPage />}
+            {activePage === 'templates' && <TemplatesPage />}
+            {activePage === 'review' && <WeeklyReviewPage />}
+            {activePage === 'settings' && <SettingsPage />}
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

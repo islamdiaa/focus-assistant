@@ -219,3 +219,19 @@ export async function exportData(format: 'md' | 'json'): Promise<string> {
   if (format === 'md') return exportAsMarkdown();
   return exportAsJson();
 }
+
+// ---- Data integrity check ----
+
+export async function runIntegrityCheck(): Promise<{ ok: boolean; issues: string[]; fixed: string[] }> {
+  try {
+    const res = await fetch('/api/trpc/data.integrityCheck', {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (!res.ok) return { ok: false, issues: ['Server error'], fixed: [] };
+    const json = await res.json();
+    return json?.result?.data?.json ?? { ok: false, issues: ['Unknown error'], fixed: [] };
+  } catch {
+    return { ok: false, issues: ['Network error'], fixed: [] };
+  }
+}

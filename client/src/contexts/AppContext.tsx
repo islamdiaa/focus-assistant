@@ -1,18 +1,22 @@
 import { createContext, useContext, useReducer, useEffect, useCallback, useRef, useState, type ReactNode } from 'react';
 import { nanoid } from 'nanoid';
-import type { Task, Pomodoro, TimerSettings, DailyStats, AppState, Priority, QuadrantType, Category, EnergyLevel, RecurrenceFrequency } from '@/lib/types';
-import { DEFAULT_SETTINGS } from '@/lib/types';
+import type { Task, Pomodoro, TimerSettings, DailyStats, AppState, Priority, QuadrantType, Category, EnergyLevel, RecurrenceFrequency, Subtask, TaskTemplate, AppPreferences } from '@/lib/types';
+import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from '@/lib/types';
 import { loadState, saveState, pollTimestamp } from '@/lib/sheets';
 
 // ---- Actions ----
 type Action =
   | { type: 'LOAD_STATE'; payload: AppState }
-  | { type: 'ADD_TASK'; payload: { title: string; description?: string; priority: Priority; dueDate?: string; category?: Category; energy?: EnergyLevel; recurrence?: RecurrenceFrequency } }
+  | { type: 'ADD_TASK'; payload: { title: string; description?: string; priority: Priority; dueDate?: string; category?: Category; energy?: EnergyLevel; recurrence?: RecurrenceFrequency; subtasks?: Array<{ title: string }> } }
   | { type: 'UPDATE_TASK'; payload: Partial<Task> & { id: string } }
   | { type: 'DELETE_TASK'; payload: string }
   | { type: 'TOGGLE_TASK'; payload: string }
   | { type: 'MOVE_TASK_QUADRANT'; payload: { id: string; quadrant: QuadrantType } }
-  | { type: 'ADD_POMODORO'; payload: { title: string; duration: number } }
+  | { type: 'ADD_SUBTASK'; payload: { taskId: string; title: string } }
+  | { type: 'TOGGLE_SUBTASK'; payload: { taskId: string; subtaskId: string } }
+  | { type: 'DELETE_SUBTASK'; payload: { taskId: string; subtaskId: string } }
+  | { type: 'UPDATE_SUBTASK'; payload: { taskId: string; subtaskId: string; title: string } }
+  | { type: 'ADD_POMODORO'; payload: { title: string; duration: number; linkedTaskId?: string } }
   | { type: 'UPDATE_POMODORO'; payload: Partial<Pomodoro> & { id: string } }
   | { type: 'DELETE_POMODORO'; payload: string }
   | { type: 'TICK_POMODORO'; payload: string }
@@ -21,6 +25,10 @@ type Action =
   | { type: 'UPDATE_DAILY_STATS'; payload: Partial<DailyStats> }
   | { type: 'SET_STREAK'; payload: number }
   | { type: 'REORDER_TASKS'; payload: string[] }
+  | { type: 'ADD_TEMPLATE'; payload: TaskTemplate }
+  | { type: 'DELETE_TEMPLATE'; payload: string }
+  | { type: 'APPLY_TEMPLATE'; payload: string }
+  | { type: 'UPDATE_PREFERENCES'; payload: Partial<AppPreferences> }
   | { type: 'UNDO' }
   | { type: 'REDO' };
 
@@ -30,6 +38,8 @@ const initialState: AppState = {
   settings: { ...DEFAULT_SETTINGS },
   dailyStats: [],
   currentStreak: 0,
+  templates: [],
+  preferences: { ...DEFAULT_PREFERENCES },
 };
 
 function getToday(): string {
@@ -55,7 +65,6 @@ function updateTodayStats(stats: DailyStats[], update: Partial<DailyStats>): Dai
   return [...stats, { date: today, tasksCompleted: 0, focusMinutes: 0, pomodorosCompleted: 0, ...update }];
 }
 
-// Compute next recurrence date
 function computeNextDate(freq: RecurrenceFrequency, from: Date): string | undefined {
   const d = new Date(from);
   switch (freq) {
@@ -78,7 +87,6 @@ function computeNextDate(freq: RecurrenceFrequency, from: Date): string | undefi
   }
 }
 
-// ---- Undo/Redo state wrapper ----
 interface UndoableState {
   current: AppState;
   past: AppState[];
@@ -86,16 +94,23 @@ interface UndoableState {
 }
 
 const MAX_HISTORY = 50;
-
-// Actions that should NOT create undo history (high-frequency or non-user-initiated)
 const NON_UNDOABLE_ACTIONS = new Set(['LOAD_STATE', 'TICK_POMODORO', 'UNDO', 'REDO', 'UPDATE_DAILY_STATS', 'SET_STREAK']);
 
 function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'LOAD_STATE':
-      return action.payload;
+      return {
+        ...action.payload,
+        templates: action.payload.templates || [],
+        preferences: { ...DEFAULT_PREFERENCES, ...action.payload.preferences },
+      };
 
     case 'ADD_TASK': {
+      const subtasks: Subtask[] = (action.payload.subtasks || []).map(s => ({
+        id: nanoid(),
+        title: s.title,
+        done: false,
+      }));
       const task: Task = {
         id: nanoid(),
         title: action.payload.title,
@@ -111,6 +126,7 @@ function appReducer(state: AppState, action: Action): AppState {
         recurrenceNextDate: action.payload.recurrence && action.payload.recurrence !== 'none'
           ? computeNextDate(action.payload.recurrence, new Date())
           : undefined,
+        subtasks: subtasks.length > 0 ? subtasks : undefined,
       };
       return { ...state, tasks: [task, ...state.tasks] };
     }
@@ -133,11 +149,19 @@ function appReducer(state: AppState, action: Action): AppState {
 
       let tasks = state.tasks.map(t =>
         t.id === action.payload
-          ? { ...t, status: newStatus as Task['status'], completedAt: newStatus === 'done' ? new Date().toISOString() : undefined }
+          ? {
+              ...t,
+              status: newStatus as Task['status'],
+              completedAt: newStatus === 'done' ? new Date().toISOString() : undefined,
+              subtasks: newStatus === 'done' && t.subtasks
+                ? t.subtasks.map(s => ({ ...s, done: true }))
+                : newStatus === 'active' && t.subtasks
+                  ? t.subtasks.map(s => ({ ...s, done: false }))
+                  : t.subtasks,
+            }
           : t
       );
 
-      // If completing a recurring task, spawn the next occurrence
       if (newStatus === 'done' && task.recurrence && task.recurrence !== 'none') {
         const nextDate = computeNextDate(task.recurrence, new Date());
         const newTask: Task = {
@@ -154,6 +178,7 @@ function appReducer(state: AppState, action: Action): AppState {
           recurrence: task.recurrence,
           recurrenceParentId: task.id,
           recurrenceNextDate: nextDate,
+          subtasks: task.subtasks?.map(s => ({ id: nanoid(), title: s.title, done: false })),
         };
         tasks = [newTask, ...tasks];
       }
@@ -175,6 +200,60 @@ function appReducer(state: AppState, action: Action): AppState {
         ),
       };
 
+    case 'ADD_SUBTASK': {
+      return {
+        ...state,
+        tasks: state.tasks.map(t => {
+          if (t.id !== action.payload.taskId) return t;
+          const newSubtask: Subtask = { id: nanoid(), title: action.payload.title, done: false };
+          return { ...t, subtasks: [...(t.subtasks || []), newSubtask] };
+        }),
+      };
+    }
+
+    case 'TOGGLE_SUBTASK': {
+      return {
+        ...state,
+        tasks: state.tasks.map(t => {
+          if (t.id !== action.payload.taskId) return t;
+          return {
+            ...t,
+            subtasks: (t.subtasks || []).map(s =>
+              s.id === action.payload.subtaskId ? { ...s, done: !s.done } : s
+            ),
+          };
+        }),
+      };
+    }
+
+    case 'DELETE_SUBTASK': {
+      return {
+        ...state,
+        tasks: state.tasks.map(t => {
+          if (t.id !== action.payload.taskId) return t;
+          return {
+            ...t,
+            subtasks: (t.subtasks || []).filter(s => s.id !== action.payload.subtaskId),
+          };
+        }),
+      };
+    }
+
+    case 'UPDATE_SUBTASK': {
+      return {
+        ...state,
+        tasks: state.tasks.map(t => {
+          if (t.id !== action.payload.taskId) return t;
+          return {
+            ...t,
+            subtasks: (t.subtasks || []).map(s =>
+              s.id === action.payload.subtaskId ? { ...s, title: action.payload.title } : s
+            ),
+          };
+        }),
+      };
+    }
+
     case 'ADD_POMODORO': {
       const pom: Pomodoro = {
         id: nanoid(),
@@ -183,6 +262,7 @@ function appReducer(state: AppState, action: Action): AppState {
         elapsed: 0,
         status: 'idle',
         createdAt: new Date().toISOString(),
+        linkedTaskId: action.payload.linkedTaskId,
       };
       return { ...state, pomodoros: [pom, ...state.pomodoros] };
     }
@@ -237,9 +317,42 @@ function appReducer(state: AppState, action: Action): AppState {
       const orderedIds = action.payload;
       const taskMap = new Map(state.tasks.map(t => [t.id, t]));
       const reordered = orderedIds.map(id => taskMap.get(id)).filter(Boolean) as Task[];
-      // Append any tasks not in the ordered list (safety)
       const remaining = state.tasks.filter(t => !orderedIds.includes(t.id));
       return { ...state, tasks: [...reordered, ...remaining] };
+    }
+
+    case 'ADD_TEMPLATE': {
+      const templates = [...(state.templates || []), action.payload];
+      return { ...state, templates };
+    }
+
+    case 'DELETE_TEMPLATE': {
+      return { ...state, templates: (state.templates || []).filter(t => t.id !== action.payload) };
+    }
+
+    case 'APPLY_TEMPLATE': {
+      const template = (state.templates || []).find(t => t.id === action.payload);
+      if (!template) return state;
+      const newTasks: Task[] = template.tasks.map(t => ({
+        id: nanoid(),
+        title: t.title,
+        description: t.description,
+        priority: t.priority,
+        status: 'active' as const,
+        category: t.category,
+        energy: t.energy,
+        quadrant: 'unassigned' as const,
+        createdAt: new Date().toISOString(),
+        subtasks: t.subtasks?.map(s => ({ id: nanoid(), title: s.title, done: false })),
+      }));
+      return { ...state, tasks: [...newTasks, ...state.tasks] };
+    }
+
+    case 'UPDATE_PREFERENCES': {
+      return {
+        ...state,
+        preferences: { ...(state.preferences || DEFAULT_PREFERENCES), ...action.payload },
+      };
     }
 
     default:
@@ -271,7 +384,6 @@ function undoableReducer(state: UndoableState, action: Action): UndoableState {
   const newCurrent = appReducer(state.current, action);
   if (newCurrent === state.current) return state;
 
-  // Non-undoable actions don't create history
   if (NON_UNDOABLE_ACTIONS.has(action.type)) {
     return { ...state, current: newCurrent };
   }
@@ -279,11 +391,10 @@ function undoableReducer(state: UndoableState, action: Action): UndoableState {
   return {
     current: newCurrent,
     past: [...state.past, state.current].slice(-MAX_HISTORY),
-    future: [], // Clear redo stack on new action
+    future: [],
   };
 }
 
-// ---- Context ----
 interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<Action>;
@@ -297,7 +408,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType>(null as unknown as AppContextType);
 
-const POLL_INTERVAL = 5000; // 5 seconds
+const POLL_INTERVAL = 5000;
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [undoState, rawDispatch] = useReducer(undoableReducer, {
@@ -313,43 +424,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   stateRef.current = state;
 
-  // Wrapped dispatch that works with the undoable reducer
   const dispatch = useCallback((action: Action) => {
     rawDispatch(action);
   }, []);
 
-  // Load state on mount
   useEffect(() => {
     if (loadedRef.current) return;
     loadedRef.current = true;
     loadState().then(loaded => {
       dispatch({ type: 'LOAD_STATE', payload: loaded });
-      // Set initial timestamp
       pollTimestamp().then(ts => { lastTimestampRef.current = ts; }).catch(() => {});
     });
   }, [dispatch]);
 
-  // Auto-save on state change (debounced)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
     if (!loadedRef.current) return;
     clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
       saveState(stateRef.current).then(() => {
-        // Update our timestamp after save so polling doesn't trigger reload
         pollTimestamp().then(ts => { lastTimestampRef.current = ts; }).catch(() => {});
       });
     }, 500);
     return () => clearTimeout(saveTimeoutRef.current);
   }, [state]);
 
-  // Multi-tab polling: check for external changes every 5 seconds
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
         const serverTs = await pollTimestamp();
         if (serverTs > 0 && lastTimestampRef.current > 0 && serverTs > lastTimestampRef.current + 1000) {
-          // File was modified externally — reload
           const loaded = await loadState();
           dispatch({ type: 'LOAD_STATE', payload: loaded });
           lastTimestampRef.current = serverTs;

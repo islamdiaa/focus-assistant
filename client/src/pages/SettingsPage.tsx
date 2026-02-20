@@ -1,10 +1,7 @@
 /**
  * Settings Page — Warm Productivity design
  * Timer presets, custom sliders, storage mode toggle, Google Sheets config
- * 
- * Storage is now server-backed:
- * - Local Markdown File (.md) — default, server reads/writes to data/ directory
- * - Google Sheets — optional, toggle to enable (server proxies all API calls)
+ * V1.2: Notification sounds, Obsidian vault sync, data integrity check
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/contexts/AppContext';
@@ -15,13 +12,14 @@ import { Switch } from '@/components/ui/switch';
 import {
   Save, RotateCcw, Cloud, CloudOff, Timer, Link2,
   FileText, HardDrive, Unplug, Download, Upload, Sun, Moon,
+  Bell, Volume2, VolumeX, FolderSync, ShieldCheck, Loader2,
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
-  getStorageConfig, setStorageConfig, exportData,
+  getStorageConfig, setStorageConfig, exportData, runIntegrityCheck,
 } from '@/lib/sheets';
-import { DEFAULT_SETTINGS } from '@/lib/types';
-import type { TimerSettings, StorageMode, StorageConfig } from '@/lib/types';
+import { DEFAULT_SETTINGS, NOTIFICATION_SOUNDS } from '@/lib/types';
+import type { TimerSettings, StorageMode, StorageConfig, NotificationSound } from '@/lib/types';
 import { toast } from 'sonner';
 
 interface Preset {
@@ -46,6 +44,18 @@ export default function SettingsPage() {
   const [mode, setMode] = useState<StorageMode>('file');
   const [configLoaded, setConfigLoaded] = useState(false);
 
+  // Notification sound
+  const currentSound = state.preferences?.notificationSound || 'gentle-chime';
+
+  // Obsidian sync
+  const obsidianPath = state.preferences?.obsidianVaultPath || '';
+  const obsidianAutoSync = state.preferences?.obsidianAutoSync || false;
+  const [obsidianInput, setObsidianInput] = useState(obsidianPath);
+
+  // Integrity check
+  const [integrityResult, setIntegrityResult] = useState<{ ok: boolean; issues: string[]; fixed: string[] } | null>(null);
+  const [integrityLoading, setIntegrityLoading] = useState(false);
+
   // Load storage config from server on mount
   useEffect(() => {
     getStorageConfig().then(config => {
@@ -55,6 +65,10 @@ export default function SettingsPage() {
       setConfigLoaded(true);
     });
   }, []);
+
+  useEffect(() => {
+    setObsidianInput(state.preferences?.obsidianVaultPath || '');
+  }, [state.preferences?.obsidianVaultPath]);
 
   function applyPreset(preset: Preset) {
     setSettings({ ...preset.settings });
@@ -71,12 +85,51 @@ export default function SettingsPage() {
     toast.info('Reset to defaults');
   }
 
+  function handleSoundChange(sound: NotificationSound) {
+    dispatch({ type: 'UPDATE_PREFERENCES', payload: { notificationSound: sound } });
+    toast.success(`Notification sound: ${NOTIFICATION_SOUNDS.find(s => s.id === sound)?.label || sound}`);
+  }
+
+  function handleSaveObsidian() {
+    dispatch({
+      type: 'UPDATE_PREFERENCES',
+      payload: { obsidianVaultPath: obsidianInput.trim() },
+    });
+    toast.success('Obsidian vault path saved');
+  }
+
+  function handleToggleObsidianAutoSync(checked: boolean) {
+    dispatch({
+      type: 'UPDATE_PREFERENCES',
+      payload: { obsidianAutoSync: checked },
+    });
+  }
+
+  async function handleIntegrityCheck() {
+    setIntegrityLoading(true);
+    try {
+      const result = await runIntegrityCheck();
+      setIntegrityResult(result);
+      if (result.ok) {
+        toast.success('Data integrity check passed!');
+      } else {
+        toast.warning(`Found ${result.issues.length} issue(s)`);
+      }
+      if (result.fixed.length > 0) {
+        await reloadState();
+      }
+    } catch {
+      toast.error('Integrity check failed');
+    } finally {
+      setIntegrityLoading(false);
+    }
+  }
+
   // ---- Storage mode handlers ----
 
   const handleSwitchToSheets = useCallback(async (checked: boolean) => {
     if (checked) {
       setMode('sheets');
-      // Don't save config yet — wait for user to enter credentials
       toast.info('Switched to Google Sheets mode. Configure your Sheet below.');
     } else {
       setMode('file');
@@ -139,7 +192,6 @@ export default function SettingsPage() {
       if (!file) return;
       try {
         const text = await file.text();
-        // POST to server import endpoint
         const res = await fetch('/api/trpc/data.importData', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -167,6 +219,39 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground mt-1">Customize your focus experience</p>
       </div>
 
+      {/* ========== NOTIFICATION SOUNDS ========== */}
+      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Bell className="w-4 h-4 text-warm-amber" />
+          <h3 className="font-semibold text-sm text-foreground">Notification Sound</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Choose the sound that plays when a Pomodoro timer completes.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {NOTIFICATION_SOUNDS.map(sound => (
+            <button
+              key={sound.id}
+              onClick={() => handleSoundChange(sound.id)}
+              className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all duration-200
+                ${currentSound === sound.id
+                  ? 'bg-warm-amber-light border-warm-amber/40 shadow-sm'
+                  : 'bg-background border-border hover:border-warm-amber/20'}`}
+            >
+              <div className="flex items-center gap-2 mb-0.5">
+                {sound.id === 'none' ? (
+                  <VolumeX className="w-3.5 h-3.5 text-muted-foreground" />
+                ) : (
+                  <Volume2 className="w-3.5 h-3.5 text-warm-amber" />
+                )}
+                <span className="text-sm font-medium text-foreground">{sound.label}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">{sound.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ========== DATA STORAGE ========== */}
       <div className="bg-card rounded-2xl border border-border p-6 mb-6">
         <div className="flex items-center gap-2 mb-2">
@@ -174,7 +259,7 @@ export default function SettingsPage() {
           <h3 className="font-semibold text-sm text-foreground">Data Storage</h3>
         </div>
         <p className="text-xs text-muted-foreground mb-5">
-          Choose where your data lives. Local Markdown file is the default — your data is stored on the server in a readable <code className="bg-warm-sand/60 px-1 py-0.5 rounded">.md</code> file. Mount the <code className="bg-warm-sand/60 px-1 py-0.5 rounded">/app/data</code> directory as a Docker volume to persist it.
+          Choose where your data lives. Local Markdown file is the default — your data is stored on the server in a readable <code className="bg-warm-sand/60 px-1 py-0.5 rounded">.md</code> file.
         </p>
 
         {/* Current status badge */}
@@ -206,7 +291,7 @@ export default function SettingsPage() {
             )}
           </div>
           <p className="text-xs text-muted-foreground mb-3">
-            Data is saved as a human-readable <code className="bg-warm-sand/60 px-1 py-0.5 rounded">focus-assist-data.md</code> file in the server's <code className="bg-warm-sand/60 px-1 py-0.5 rounded">data/</code> directory. Auto-saves on every change.
+            Data is saved as a human-readable <code className="bg-warm-sand/60 px-1 py-0.5 rounded">focus-assist-data.md</code> file. Auto-saves on every change.
           </p>
           {(mode === 'file' || mode === 'local') && (
             <div className="flex items-center gap-2 bg-warm-sage-light/50 rounded-lg p-3">
@@ -240,7 +325,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mb-3">
-            Sync to a Google Sheet for cross-device access. When enabled, the local Markdown file is ignored.
+            Sync to a Google Sheet for cross-device access.
           </p>
 
           {mode === 'sheets' && (
@@ -285,6 +370,47 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* ========== OBSIDIAN VAULT SYNC ========== */}
+      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <FolderSync className="w-4 h-4 text-warm-lavender" />
+          <h3 className="font-semibold text-sm text-foreground">Obsidian Vault Sync</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Export your tasks and focus data to an Obsidian vault. Set the vault path and enable auto-sync to keep your notes updated.
+          The server will write a <code className="bg-warm-sand/60 px-1 py-0.5 rounded">FocusAssist.md</code> file to the specified directory.
+        </p>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Vault Path</label>
+            <div className="flex gap-2">
+              <Input
+                value={obsidianInput}
+                onChange={e => setObsidianInput(e.target.value)}
+                placeholder="/path/to/obsidian/vault"
+                className="bg-background text-sm flex-1"
+              />
+              <Button onClick={handleSaveObsidian} size="sm" className="bg-warm-lavender hover:bg-warm-lavender/90 text-white gap-1.5 shrink-0">
+                <Save className="w-3.5 h-3.5" /> Save
+              </Button>
+            </div>
+            {obsidianPath && (
+              <p className="text-xs text-warm-lavender mt-1.5">Current: {obsidianPath}</p>
+            )}
+          </div>
+          <div className="flex items-center justify-between bg-background rounded-xl border border-border p-4">
+            <div>
+              <p className="text-sm font-medium text-foreground">Auto-Sync</p>
+              <p className="text-xs text-muted-foreground">Automatically export on every data change</p>
+            </div>
+            <Switch
+              checked={obsidianAutoSync}
+              onCheckedChange={handleToggleObsidianAutoSync}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* ========== APPEARANCE ========== */}
       <div className="bg-card rounded-2xl border border-border p-6 mb-6">
         <div className="flex items-center gap-2 mb-2">
@@ -292,7 +418,7 @@ export default function SettingsPage() {
           <h3 className="font-semibold text-sm text-foreground">Appearance</h3>
         </div>
         <p className="text-xs text-muted-foreground mb-4">
-          Switch between light and dark themes. Your preference is saved locally.
+          Switch between light and dark themes.
         </p>
         <div className="flex items-center justify-between bg-background rounded-xl border border-border p-4">
           <div className="flex items-center gap-3">
@@ -449,20 +575,73 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* ========== DATA INTEGRITY CHECK ========== */}
+      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <ShieldCheck className="w-4 h-4 text-warm-blue" />
+          <h3 className="font-semibold text-sm text-foreground">Data Integrity Check</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Scan your data for inconsistencies (orphaned references, missing fields, duplicate IDs) and auto-fix what can be repaired.
+        </p>
+        <Button
+          onClick={handleIntegrityCheck}
+          variant="outline"
+          className="gap-2 text-xs"
+          disabled={integrityLoading}
+        >
+          {integrityLoading ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <ShieldCheck className="w-3.5 h-3.5" />
+          )}
+          Run Check
+        </Button>
+        {integrityResult && (
+          <div className={`mt-4 rounded-xl border p-4 ${
+            integrityResult.ok
+              ? 'border-warm-sage/40 bg-warm-sage-light/20'
+              : 'border-warm-terracotta/40 bg-warm-terracotta-light/20'
+          }`}>
+            <p className={`text-sm font-medium ${integrityResult.ok ? 'text-warm-sage' : 'text-warm-terracotta'}`}>
+              {integrityResult.ok ? '✓ All checks passed' : `⚠ Found ${integrityResult.issues.length} issue(s)`}
+            </p>
+            {integrityResult.issues.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {integrityResult.issues.map((issue, i) => (
+                  <li key={i} className="text-xs text-muted-foreground">• {issue}</li>
+                ))}
+              </ul>
+            )}
+            {integrityResult.fixed.length > 0 && (
+              <div className="mt-2">
+                <p className="text-xs font-medium text-warm-sage">Auto-fixed:</p>
+                <ul className="mt-1 space-y-0.5">
+                  {integrityResult.fixed.map((fix, i) => (
+                    <li key={i} className="text-xs text-muted-foreground">✓ {fix}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* ========== ABOUT ========== */}
       <div className="bg-warm-sand/50 rounded-2xl border border-border p-6">
         <h3 className="font-serif text-lg text-foreground mb-2">About Your Focus Assistant</h3>
         <p className="text-xs text-muted-foreground leading-relaxed mb-4">
           Built with ADHD-friendly design principles in mind. This app uses color-coding, chunky interactive elements,
-          and satisfying feedback to help you stay focused and motivated. Your data is stored as a Markdown file on the server
-          — mount the data directory as a Docker volume for persistence. Optionally sync to Google Sheets for cloud access.
+          and satisfying feedback to help you stay focused and motivated.
         </p>
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">v2.0</span>
+          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">v2.1</span>
           <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">ADHD-Friendly</span>
-          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">Docker Ready</span>
+          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">Subtasks</span>
+          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">Focus Mode</span>
           <span className="text-xs px-3 py-1 rounded-full bg-warm-sage-light border border-warm-sage/20 text-warm-sage font-medium">Local .md File</span>
           <span className="text-xs px-3 py-1 rounded-full bg-warm-blue-light border border-warm-blue/20 text-warm-blue font-medium">Google Sheets Sync</span>
+          <span className="text-xs px-3 py-1 rounded-full bg-warm-lavender/10 border border-warm-lavender/20 text-warm-lavender font-medium">Obsidian Sync</span>
         </div>
       </div>
     </div>

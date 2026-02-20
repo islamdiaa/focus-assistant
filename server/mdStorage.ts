@@ -3,11 +3,13 @@
  * 
  * Reads/writes app state to a local .md file on the server filesystem.
  * The file path defaults to ./data/focus-assist-data.md (Docker volume mount point).
+ * 
+ * V1.2: Added subtasks (JSON in column), templates section, preferences section
  */
 import fs from 'fs/promises';
 import path from 'path';
-import type { Task, Pomodoro, AppState } from '../shared/appTypes';
-import { DEFAULT_SETTINGS } from '../shared/appTypes';
+import type { Task, Pomodoro, AppState, TaskTemplate, AppPreferences } from '../shared/appTypes';
+import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from '../shared/appTypes';
 
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
 const DATA_FILE = path.join(DATA_DIR, 'focus-assist-data.md');
@@ -44,16 +46,29 @@ export function stateToMarkdown(state: AppState): string {
   lines.push(`- **Current Streak:** ${state.currentStreak} days`);
   lines.push('');
 
+  // Preferences
+  if (state.preferences) {
+    lines.push('## Preferences');
+    lines.push('');
+    lines.push(`- **Notification Sound:** ${state.preferences.notificationSound || 'gentle-chime'}`);
+    lines.push(`- **Obsidian Vault Path:** ${state.preferences.obsidianVaultPath || ''}`);
+    lines.push(`- **Obsidian Auto Sync:** ${state.preferences.obsidianAutoSync ? 'true' : 'false'}`);
+    lines.push('');
+  }
+
   // Tasks
   lines.push('## Tasks');
   lines.push('');
   if (state.tasks.length === 0) {
     lines.push('_No tasks yet._');
   } else {
-    lines.push('| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate |');
-    lines.push('|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|');
+    lines.push('| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate | Subtasks |');
+    lines.push('|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|----------|');
     for (const t of state.tasks) {
-      lines.push(`| ${t.id} | ${escapeField(t.title)} | ${escapeField(t.description || '')} | ${t.priority} | ${t.status} | ${t.dueDate || ''} | ${t.category || ''} | ${t.energy || ''} | ${t.quadrant} | ${t.createdAt} | ${t.completedAt || ''} | ${t.recurrence || ''} | ${t.recurrenceParentId || ''} | ${t.recurrenceNextDate || ''} |`);
+      const subtasksJson = t.subtasks && t.subtasks.length > 0
+        ? escapeField(JSON.stringify(t.subtasks))
+        : '';
+      lines.push(`| ${t.id} | ${escapeField(t.title)} | ${escapeField(t.description || '')} | ${t.priority} | ${t.status} | ${t.dueDate || ''} | ${t.category || ''} | ${t.energy || ''} | ${t.quadrant} | ${t.createdAt} | ${t.completedAt || ''} | ${t.recurrence || ''} | ${t.recurrenceParentId || ''} | ${t.recurrenceNextDate || ''} | ${subtasksJson} |`);
     }
   }
   lines.push('');
@@ -64,10 +79,10 @@ export function stateToMarkdown(state: AppState): string {
   if (state.pomodoros.length === 0) {
     lines.push('_No pomodoros yet._');
   } else {
-    lines.push('| ID | Title | Duration | Elapsed | Status | Created | Completed | StartedAt | AccumulatedSeconds |');
-    lines.push('|----|-------|----------|---------|--------|---------|-----------|-----------|---------------------|');
+    lines.push('| ID | Title | Duration | Elapsed | Status | Created | Completed | StartedAt | AccumulatedSeconds | LinkedTaskId |');
+    lines.push('|----|-------|----------|---------|--------|---------|-----------|-----------|---------------------|--------------|');
     for (const p of state.pomodoros) {
-      lines.push(`| ${p.id} | ${escapeField(p.title)} | ${p.duration} | ${p.elapsed} | ${p.status} | ${p.createdAt} | ${p.completedAt || ''} | ${p.startedAt || ''} | ${p.accumulatedSeconds ?? ''} |`);
+      lines.push(`| ${p.id} | ${escapeField(p.title)} | ${p.duration} | ${p.elapsed} | ${p.status} | ${p.createdAt} | ${p.completedAt || ''} | ${p.startedAt || ''} | ${p.accumulatedSeconds ?? ''} | ${p.linkedTaskId || ''} |`);
     }
   }
   lines.push('');
@@ -85,6 +100,19 @@ export function stateToMarkdown(state: AppState): string {
     }
   }
   lines.push('');
+
+  // Templates
+  if (state.templates && state.templates.length > 0) {
+    lines.push('## Templates');
+    lines.push('');
+    lines.push('| ID | Name | Description | Tasks | Created |');
+    lines.push('|----|------|-------------|-------|---------|');
+    for (const tmpl of state.templates) {
+      const tasksJson = escapeField(JSON.stringify(tmpl.tasks));
+      lines.push(`| ${tmpl.id} | ${escapeField(tmpl.name)} | ${escapeField(tmpl.description || '')} | ${tasksJson} | ${tmpl.createdAt} |`);
+    }
+    lines.push('');
+  }
 
   return lines.join('\n');
 }
@@ -123,6 +151,8 @@ export function markdownToState(md: string): AppState {
     settings: { ...DEFAULT_SETTINGS },
     dailyStats: [],
     currentStreak: 0,
+    templates: [],
+    preferences: { ...DEFAULT_PREFERENCES },
   };
 
   const sections = md.split(/^## /m);
@@ -145,11 +175,27 @@ export function markdownToState(md: string): AppState {
       }
     }
 
+    if (title === 'preferences') {
+      for (const line of sectionLines) {
+        const match = line.match(/\*\*(.+?):\*\*\s*(.*)/);
+        if (!match) continue;
+        const key = match[1].trim().toLowerCase();
+        const val = match[2].trim();
+        if (key === 'notification sound') state.preferences!.notificationSound = (val as any) || 'gentle-chime';
+        if (key === 'obsidian vault path') state.preferences!.obsidianVaultPath = val || '';
+        if (key === 'obsidian auto sync') state.preferences!.obsidianAutoSync = val === 'true';
+      }
+    }
+
     if (title === 'tasks') {
       const rows = parseMarkdownTable(sectionLines);
       for (let i = 1; i < rows.length; i++) {
         const r = rows[i];
         if (!r[0]) continue;
+        let subtasks = undefined;
+        if (r[14]) {
+          try { subtasks = JSON.parse(r[14]); } catch { /* ignore parse errors */ }
+        }
         state.tasks.push({
           id: r[0],
           title: r[1] || '',
@@ -165,6 +211,7 @@ export function markdownToState(md: string): AppState {
           recurrence: (r[11] as Task['recurrence']) || undefined,
           recurrenceParentId: r[12] || undefined,
           recurrenceNextDate: r[13] || undefined,
+          subtasks,
         });
       }
     }
@@ -184,6 +231,7 @@ export function markdownToState(md: string): AppState {
           completedAt: r[6] || undefined,
           startedAt: r[7] || undefined,
           accumulatedSeconds: r[8] ? parseInt(r[8]) : undefined,
+          linkedTaskId: r[9] || undefined,
         });
       }
     }
@@ -198,6 +246,25 @@ export function markdownToState(md: string): AppState {
           tasksCompleted: parseInt(r[1]) || 0,
           focusMinutes: parseInt(r[2]) || 0,
           pomodorosCompleted: parseInt(r[3]) || 0,
+        });
+      }
+    }
+
+    if (title === 'templates') {
+      const rows = parseMarkdownTable(sectionLines);
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r[0]) continue;
+        let tasks: TaskTemplate['tasks'] = [];
+        if (r[3]) {
+          try { tasks = JSON.parse(r[3]); } catch { /* ignore */ }
+        }
+        state.templates!.push({
+          id: r[0],
+          name: r[1] || '',
+          description: r[2] || undefined,
+          tasks,
+          createdAt: r[4] || new Date().toISOString(),
         });
       }
     }
@@ -267,5 +334,108 @@ export async function getMdFileTimestamp(): Promise<number> {
     return stat.mtimeMs;
   } catch {
     return 0;
+  }
+}
+
+/** Data integrity check — verify and fix MD file structure */
+export async function checkDataIntegrity(): Promise<{ ok: boolean; issues: string[]; fixed: string[] }> {
+  const issues: string[] = [];
+  const fixed: string[] = [];
+
+  try {
+    const text = await fs.readFile(DATA_FILE, 'utf-8');
+    if (!text.trim()) {
+      return { ok: true, issues: ['File is empty — no data to check'], fixed: [] };
+    }
+
+    const state = markdownToState(text);
+
+    // Check for duplicate task IDs
+    const taskIds = new Set<string>();
+    for (const t of state.tasks) {
+      if (taskIds.has(t.id)) {
+        issues.push(`Duplicate task ID: ${t.id}`);
+      }
+      taskIds.add(t.id);
+    }
+
+    // Check for duplicate pomodoro IDs
+    const pomIds = new Set<string>();
+    for (const p of state.pomodoros) {
+      if (pomIds.has(p.id)) {
+        issues.push(`Duplicate pomodoro ID: ${p.id}`);
+      }
+      pomIds.add(p.id);
+    }
+
+    // Check for invalid task statuses
+    for (const t of state.tasks) {
+      if (!['active', 'done'].includes(t.status)) {
+        issues.push(`Task "${t.title}" has invalid status: ${t.status}`);
+        t.status = 'active';
+        fixed.push(`Fixed task "${t.title}" status to "active"`);
+      }
+      if (!['low', 'medium', 'high', 'urgent'].includes(t.priority)) {
+        issues.push(`Task "${t.title}" has invalid priority: ${t.priority}`);
+        t.priority = 'medium';
+        fixed.push(`Fixed task "${t.title}" priority to "medium"`);
+      }
+    }
+
+    // Check for invalid pomodoro statuses
+    for (const p of state.pomodoros) {
+      if (!['idle', 'running', 'paused', 'completed'].includes(p.status)) {
+        issues.push(`Pomodoro "${p.title}" has invalid status: ${p.status}`);
+        p.status = 'idle';
+        fixed.push(`Fixed pomodoro "${p.title}" status to "idle"`);
+      }
+    }
+
+    // Check daily stats for duplicate dates
+    const statDates = new Set<string>();
+    const dedupedStats = [];
+    for (const s of state.dailyStats) {
+      if (statDates.has(s.date)) {
+        issues.push(`Duplicate daily stats for date: ${s.date}`);
+        fixed.push(`Removed duplicate stats for ${s.date}`);
+      } else {
+        statDates.add(s.date);
+        dedupedStats.push(s);
+      }
+    }
+    state.dailyStats = dedupedStats;
+
+    // Check subtask integrity
+    for (const t of state.tasks) {
+      if (t.subtasks) {
+        const subtaskIds = new Set<string>();
+        for (const s of t.subtasks) {
+          if (!s.id || !s.title) {
+            issues.push(`Task "${t.title}" has malformed subtask`);
+          }
+          if (s.id && subtaskIds.has(s.id)) {
+            issues.push(`Task "${t.title}" has duplicate subtask ID: ${s.id}`);
+          }
+          if (s.id) subtaskIds.add(s.id);
+        }
+      }
+    }
+
+    // If fixes were applied, re-save
+    if (fixed.length > 0) {
+      await saveToMdFile(state);
+    }
+
+    return {
+      ok: issues.length === 0,
+      issues: issues.length === 0 ? ['All data looks good!'] : issues,
+      fixed,
+    };
+  } catch (e: any) {
+    return {
+      ok: false,
+      issues: [`Failed to read data file: ${e.message}`],
+      fixed: [],
+    };
   }
 }

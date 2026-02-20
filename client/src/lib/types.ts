@@ -4,6 +4,13 @@ export type QuadrantType = 'do-first' | 'schedule' | 'delegate' | 'eliminate' | 
 export type Category = 'work' | 'personal' | 'health' | 'learning' | 'errands' | 'other';
 export type EnergyLevel = 'low' | 'medium' | 'high';
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'weekdays' | 'none';
+export type NotificationSound = 'gentle-chime' | 'bell' | 'singing-bowl' | 'wood-block' | 'digital-beep' | 'none';
+
+export interface Subtask {
+  id: string;
+  title: string;
+  done: boolean;
+}
 
 export interface Task {
   id: string;
@@ -20,6 +27,7 @@ export interface Task {
   recurrence?: RecurrenceFrequency;
   recurrenceParentId?: string;
   recurrenceNextDate?: string;
+  subtasks?: Subtask[];
 }
 
 export interface Pomodoro {
@@ -32,6 +40,7 @@ export interface Pomodoro {
   completedAt?: string;
   startedAt?: string;
   accumulatedSeconds?: number;
+  linkedTaskId?: string;
 }
 
 export interface TimerSettings {
@@ -48,12 +57,35 @@ export interface DailyStats {
   pomodorosCompleted: number;
 }
 
+export interface TaskTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  tasks: Array<{
+    title: string;
+    description?: string;
+    priority: Priority;
+    category?: Category;
+    energy?: EnergyLevel;
+    subtasks?: Array<{ title: string }>;
+  }>;
+  createdAt: string;
+}
+
 export interface AppState {
   tasks: Task[];
   pomodoros: Pomodoro[];
   settings: TimerSettings;
   dailyStats: DailyStats[];
   currentStreak: number;
+  templates?: TaskTemplate[];
+  preferences?: AppPreferences;
+}
+
+export interface AppPreferences {
+  notificationSound?: NotificationSound;
+  obsidianVaultPath?: string;
+  obsidianAutoSync?: boolean;
 }
 
 export const DEFAULT_SETTINGS: TimerSettings = {
@@ -61,6 +93,12 @@ export const DEFAULT_SETTINGS: TimerSettings = {
   shortBreak: 5,
   longBreak: 15,
   sessionsBeforeLongBreak: 4,
+};
+
+export const DEFAULT_PREFERENCES: AppPreferences = {
+  notificationSound: 'gentle-chime',
+  obsidianVaultPath: '',
+  obsidianAutoSync: false,
 };
 
 export type StorageMode = 'local' | 'file' | 'sheets';
@@ -82,4 +120,13 @@ export const DAILY_TIPS = [
   "Review your priorities daily. What matters most right now?",
   "Done is better than perfect. Ship it, then iterate.",
   "Your energy matters more than your time. Protect it wisely.",
+];
+
+export const NOTIFICATION_SOUNDS: { id: NotificationSound; label: string; description: string }[] = [
+  { id: 'gentle-chime', label: 'Gentle Chime', description: 'Soft two-tone chime (default)' },
+  { id: 'bell', label: 'Bell', description: 'Classic bell ring' },
+  { id: 'singing-bowl', label: 'Singing Bowl', description: 'Warm resonant tone' },
+  { id: 'wood-block', label: 'Wood Block', description: 'Crisp percussive tap' },
+  { id: 'digital-beep', label: 'Digital Beep', description: 'Modern electronic beep' },
+  { id: 'none', label: 'Silent', description: 'No sound (notification only)' },
 ];

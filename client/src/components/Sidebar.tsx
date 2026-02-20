@@ -2,35 +2,43 @@
  * Sidebar — Warm Productivity design
  * Desktop: fixed left rail with icon + label navigation + daily tip
  * Mobile: hidden by default, opens as overlay via hamburger button
+ * V1.2: Added Daily Planner, Templates, Weekly Review, Focus Mode
  */
-import { CheckSquare, Timer, LayoutGrid, BarChart3, Settings, Sparkles, X } from 'lucide-react';
+import { CheckSquare, Timer, LayoutGrid, BarChart3, Settings, Sparkles, X, Sun, FileText, CalendarCheck, Crosshair } from 'lucide-react';
 import { DAILY_TIPS } from '@/lib/types';
 import { useMemo } from 'react';
 
-type Page = 'tasks' | 'timer' | 'matrix' | 'stats' | 'settings';
+export type Page = 'planner' | 'tasks' | 'timer' | 'matrix' | 'stats' | 'templates' | 'review' | 'settings';
 
 interface SidebarProps {
   activePage: Page;
   onNavigate: (page: Page) => void;
   isOpen: boolean;
   onClose: () => void;
+  onFocusMode?: () => void;
 }
 
-const NAV_ITEMS: { id: Page; label: string; icon: typeof CheckSquare }[] = [
+const NAV_ITEMS: { id: Page; label: string; icon: typeof CheckSquare; section?: string }[] = [
+  { id: 'planner', label: 'Today', icon: Sun },
   { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'timer', label: 'Focus Timer', icon: Timer },
   { id: 'matrix', label: 'Matrix', icon: LayoutGrid },
   { id: 'stats', label: 'Stats', icon: BarChart3 },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'templates', label: 'Templates', icon: FileText, section: 'Tools' },
+  { id: 'review', label: 'Weekly Review', icon: CalendarCheck },
+  { id: 'settings', label: 'Settings', icon: Settings, section: 'System' },
 ];
 
-export default function Sidebar({ activePage, onNavigate, isOpen, onClose }: SidebarProps) {
+export default function Sidebar({ activePage, onNavigate, isOpen, onClose, onFocusMode }: SidebarProps) {
   const tip = useMemo(() => DAILY_TIPS[Math.floor(Math.random() * DAILY_TIPS.length)], []);
 
   function handleNav(page: Page) {
     onNavigate(page);
     onClose();
   }
+
+  // Group items by section
+  let lastSection: string | undefined;
 
   return (
     <>
@@ -69,25 +77,46 @@ export default function Sidebar({ activePage, onNavigate, isOpen, onClose }: Sid
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map(item => {
             const Icon = item.icon;
             const isActive = activePage === item.id;
+            const showSection = item.section && item.section !== lastSection;
+            if (item.section) lastSection = item.section;
+
             return (
-              <button
-                key={item.id}
-                onClick={() => handleNav(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                  ${isActive
-                    ? 'bg-warm-sage/15 text-warm-charcoal'
-                    : 'text-muted-foreground hover:bg-warm-sand/50 hover:text-foreground'
-                  }`}
-              >
-                <Icon className={`w-[18px] h-[18px] ${isActive ? 'text-warm-sage' : ''}`} />
-                {item.label}
-              </button>
+              <div key={item.id}>
+                {showSection && (
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-3 pt-4 pb-1">{item.section}</p>
+                )}
+                <button
+                  onClick={() => handleNav(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                    ${isActive
+                      ? 'bg-warm-sage/15 text-warm-charcoal'
+                      : 'text-muted-foreground hover:bg-warm-sand/50 hover:text-foreground'
+                    }`}
+                >
+                  <Icon className={`w-[18px] h-[18px] ${isActive ? 'text-warm-sage' : ''}`} />
+                  {item.label}
+                </button>
+              </div>
             );
           })}
+
+          {/* Focus Mode button */}
+          {onFocusMode && (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-3 pt-4 pb-1">Quick Actions</p>
+              <button
+                onClick={() => { onFocusMode(); onClose(); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-warm-sage hover:bg-warm-sage/10"
+              >
+                <Crosshair className="w-[18px] h-[18px]" />
+                Focus Mode
+              </button>
+            </div>
+          )}
         </nav>
 
         {/* Daily Tip */}
