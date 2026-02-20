@@ -1,0 +1,9 @@
+node_modules
+dist
+client/dist
+.manus-logs
+.git
+*.md
+!README.md
+.env*
+data/

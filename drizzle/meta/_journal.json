@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1771550771228,
+      "tag": "0000_loose_metal_master",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,3 +1,7 @@
+/**
+ * Shared types for FocusAssist — used by both server and client
+ */
+
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskStatus = 'active' | 'done';
 export type QuadrantType = 'do-first' | 'schedule' | 'delegate' | 'eliminate' | 'unassigned';

@@ -1,103 +1,19 @@
 /**
- * Storage Layer — Unified interface for all backends
+ * Storage Layer — Server-backed via tRPC
  * 
- * Three storage modes:
- * 1. "local" (default) — localStorage only, always active as fallback
- * 2. "file" — Local Markdown file via File System Access API + localStorage
- * 3. "sheets" — Google Sheets cloud sync + localStorage
+ * The server handles all persistence (MD file or Google Sheets).
+ * The client just calls load/save via tRPC and keeps localStorage as a fast cache.
  * 
- * When "sheets" is active, the MD file is ignored.
- * When "file" is active, Google Sheets is ignored.
- * localStorage always acts as the base layer.
+ * This module provides the same loadState/saveState API used by AppContext,
+ * but now routes through the server instead of directly accessing files or sheets.
  */
 
-import type { Task, Pomodoro, TimerSettings, DailyStats, AppState } from './types';
+import type { AppState, StorageConfig, StorageMode } from './types';
 import { DEFAULT_SETTINGS } from './types';
-import {
-  isFileSystemSupported,
-  hasFileHandle,
-  loadFromFile,
-  saveToFile,
-  pickFile,
-  disconnectFile,
-  getFileName,
-} from './md-storage';
-
-export type StorageMode = 'local' | 'file' | 'sheets';
 
 const STORAGE_KEY = 'focus-assist-data';
-const MODE_KEY = 'focus-assist-storage-mode';
 
-// ---- Storage mode ----
-
-export function getStorageMode(): StorageMode {
-  const saved = localStorage.getItem(MODE_KEY);
-  if (saved === 'sheets' || saved === 'file') return saved;
-  return 'local';
-}
-
-export function setStorageMode(mode: StorageMode) {
-  localStorage.setItem(MODE_KEY, mode);
-}
-
-// ---- Re-export file helpers ----
-export { isFileSystemSupported, hasFileHandle, pickFile, disconnectFile, getFileName };
-
-// ---- Google Sheets config ----
-
-let SHEET_ID = localStorage.getItem('focus-assist-sheet-id') || '';
-let API_KEY = localStorage.getItem('focus-assist-api-key') || '';
-
-export function setSheetConfig(sheetId: string, apiKey: string) {
-  SHEET_ID = sheetId;
-  API_KEY = apiKey;
-  localStorage.setItem('focus-assist-sheet-id', sheetId);
-  localStorage.setItem('focus-assist-api-key', apiKey);
-}
-
-export function getSheetConfig() {
-  return { sheetId: SHEET_ID, apiKey: API_KEY };
-}
-
-export function isSheetConfigured(): boolean {
-  return !!(SHEET_ID && API_KEY);
-}
-
-// ---- Google Sheets API helpers ----
-
-const SHEETS_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
-
-async function readSheet(sheetName: string): Promise<string[][]> {
-  if (!isSheetConfigured()) return [];
-  try {
-    const url = `${SHEETS_BASE}/${SHEET_ID}/values/${encodeURIComponent(sheetName)}?key=${API_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Sheet read failed: ${res.status}`);
-    const data = await res.json();
-    return data.values || [];
-  } catch (e) {
-    console.warn(`Failed to read sheet "${sheetName}":`, e);
-    return [];
-  }
-}
-
-async function writeSheet(sheetName: string, values: string[][]): Promise<boolean> {
-  if (!isSheetConfigured()) return false;
-  try {
-    const url = `${SHEETS_BASE}/${SHEET_ID}/values/${encodeURIComponent(sheetName)}?valueInputOption=RAW&key=${API_KEY}`;
-    const res = await fetch(url, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values }),
-    });
-    return res.ok;
-  } catch (e) {
-    console.warn(`Failed to write sheet "${sheetName}":`, e);
-    return false;
-  }
-}
-
-// ---- Local storage ----
+// ---- Local cache (localStorage) ----
 
 function loadLocal(): AppState {
   try {
@@ -117,170 +33,136 @@ function saveLocal(state: AppState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-// ---- Sheets row converters ----
+// ---- Server API calls (raw fetch, no tRPC dependency) ----
 
-function tasksToRows(tasks: Task[]): string[][] {
-  const header = ['id', 'title', 'description', 'priority', 'status', 'dueDate', 'category', 'energy', 'quadrant', 'createdAt', 'completedAt'];
-  return [header, ...tasks.map(t => [
-    t.id, t.title, t.description || '', t.priority, t.status,
-    t.dueDate || '', t.category || '', t.energy || '', t.quadrant, t.createdAt, t.completedAt || '',
-  ])];
-}
-
-function rowsToTasks(rows: string[][]): Task[] {
-  if (rows.length < 2) return [];
-  return rows.slice(1).map(r => ({
-    id: r[0] || '',
-    title: r[1] || '',
-    description: r[2] || undefined,
-    priority: (r[3] as Task['priority']) || 'medium',
-    status: (r[4] as Task['status']) || 'active',
-    dueDate: r[5] || undefined,
-    category: (r[6] as Task['category']) || undefined,
-    energy: (r[7] as Task['energy']) || undefined,
-    quadrant: (r[8] as Task['quadrant']) || 'unassigned',
-    createdAt: r[9] || new Date().toISOString(),
-    completedAt: r[10] || undefined,
-  })).filter(t => t.id);
-}
-
-function pomodorosToRows(pomodoros: Pomodoro[]): string[][] {
-  const header = ['id', 'title', 'duration', 'elapsed', 'status', 'createdAt', 'completedAt'];
-  return [header, ...pomodoros.map(p => [
-    p.id, p.title, String(p.duration), String(p.elapsed), p.status,
-    p.createdAt, p.completedAt || '',
-  ])];
-}
-
-function rowsToPomodoros(rows: string[][]): Pomodoro[] {
-  if (rows.length < 2) return [];
-  return rows.slice(1).map(r => ({
-    id: r[0] || '',
-    title: r[1] || '',
-    duration: parseInt(r[2]) || 25,
-    elapsed: parseInt(r[3]) || 0,
-    status: (r[4] as Pomodoro['status']) || 'idle',
-    createdAt: r[5] || new Date().toISOString(),
-    completedAt: r[6] || undefined,
-  })).filter(p => p.id);
-}
-
-function statsToRows(stats: DailyStats[]): string[][] {
-  const header = ['date', 'tasksCompleted', 'focusMinutes', 'pomodorosCompleted'];
-  return [header, ...stats.map(s => [
-    s.date, String(s.tasksCompleted), String(s.focusMinutes), String(s.pomodorosCompleted),
-  ])];
-}
-
-function rowsToStats(rows: string[][]): DailyStats[] {
-  if (rows.length < 2) return [];
-  return rows.slice(1).map(r => ({
-    date: r[0] || '',
-    tasksCompleted: parseInt(r[1]) || 0,
-    focusMinutes: parseInt(r[2]) || 0,
-    pomodorosCompleted: parseInt(r[3]) || 0,
-  })).filter(s => s.date);
-}
-
-function settingsToRows(settings: TimerSettings, streak: number): string[][] {
-  return [
-    ['key', 'value'],
-    ['focusDuration', String(settings.focusDuration)],
-    ['shortBreak', String(settings.shortBreak)],
-    ['longBreak', String(settings.longBreak)],
-    ['sessionsBeforeLongBreak', String(settings.sessionsBeforeLongBreak)],
-    ['currentStreak', String(streak)],
-  ];
-}
-
-function rowsToSettings(rows: string[][]): { settings: TimerSettings; streak: number } {
-  const map: Record<string, string> = {};
-  if (rows.length >= 2) {
-    rows.slice(1).forEach(r => { if (r[0]) map[r[0]] = r[1] || ''; });
+async function serverLoad(): Promise<AppState | null> {
+  try {
+    const res = await fetch('/api/trpc/data.load', {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    // tRPC wraps in { result: { data: { json: ... } } }
+    return json?.result?.data?.json ?? null;
+  } catch (e) {
+    console.warn('Failed to load from server:', e);
+    return null;
   }
-  return {
-    settings: {
-      focusDuration: parseInt(map.focusDuration) || DEFAULT_SETTINGS.focusDuration,
-      shortBreak: parseInt(map.shortBreak) || DEFAULT_SETTINGS.shortBreak,
-      longBreak: parseInt(map.longBreak) || DEFAULT_SETTINGS.longBreak,
-      sessionsBeforeLongBreak: parseInt(map.sessionsBeforeLongBreak) || DEFAULT_SETTINGS.sessionsBeforeLongBreak,
-    },
-    streak: parseInt(map.currentStreak) || 0,
-  };
 }
 
-// ---- Public API ----
+async function serverSave(state: AppState): Promise<boolean> {
+  try {
+    const res = await fetch('/api/trpc/data.save', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ json: state }),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('Failed to save to server:', e);
+    return false;
+  }
+}
+
+async function serverGetConfig(): Promise<StorageConfig | null> {
+  try {
+    const res = await fetch('/api/trpc/data.getConfig', {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.result?.data?.json ?? null;
+  } catch (e) {
+    console.warn('Failed to get config from server:', e);
+    return null;
+  }
+}
+
+async function serverSetConfig(config: StorageConfig): Promise<boolean> {
+  try {
+    const res = await fetch('/api/trpc/data.setConfig', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ json: config }),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('Failed to set config on server:', e);
+    return false;
+  }
+}
+
+// ---- Public API (same interface as before) ----
 
 export async function loadState(): Promise<AppState> {
-  const local = loadLocal();
-  const mode = getStorageMode();
-
-  // File mode
-  if (mode === 'file' && hasFileHandle()) {
-    try {
-      const fileState = await loadFromFile();
-      if (fileState) {
-        saveLocal(fileState); // keep localStorage in sync
-        return fileState;
-      }
-    } catch {
-      // fall through to local
-    }
-    return local;
+  // Try server first
+  const serverState = await serverLoad();
+  if (serverState) {
+    saveLocal(serverState); // cache locally
+    return serverState;
   }
-
-  // Sheets mode
-  if (mode === 'sheets' && isSheetConfigured()) {
-    try {
-      const [taskRows, pomRows, settingsRows, statsRows] = await Promise.all([
-        readSheet('Tasks'),
-        readSheet('Pomodoros'),
-        readSheet('Settings'),
-        readSheet('DailyStats'),
-      ]);
-
-      const tasks = taskRows.length > 1 ? rowsToTasks(taskRows) : local.tasks;
-      const pomodoros = pomRows.length > 1 ? rowsToPomodoros(pomRows) : local.pomodoros;
-      const { settings, streak } = settingsRows.length > 1
-        ? rowsToSettings(settingsRows)
-        : { settings: local.settings, streak: local.currentStreak };
-      const dailyStats = statsRows.length > 1 ? rowsToStats(statsRows) : local.dailyStats;
-
-      const state: AppState = { tasks, pomodoros, settings, dailyStats, currentStreak: streak };
-      saveLocal(state);
-      return state;
-    } catch {
-      return local;
-    }
-  }
-
-  // Default: local only
-  return local;
+  // Fallback to localStorage cache
+  return loadLocal();
 }
 
 export async function saveState(state: AppState): Promise<void> {
-  // Always save to localStorage
+  // Always cache locally
   saveLocal(state);
+  // Save to server
+  await serverSave(state);
+}
 
-  const mode = getStorageMode();
+// ---- Config API ----
 
-  // File mode
-  if (mode === 'file' && hasFileHandle()) {
-    await saveToFile(state);
-    return;
-  }
+export async function getStorageConfig(): Promise<StorageConfig> {
+  const config = await serverGetConfig();
+  return config || { mode: 'file' };
+}
 
-  // Sheets mode
-  if (mode === 'sheets' && isSheetConfigured()) {
-    try {
-      await Promise.all([
-        writeSheet('Tasks', tasksToRows(state.tasks)),
-        writeSheet('Pomodoros', pomodorosToRows(state.pomodoros)),
-        writeSheet('Settings', settingsToRows(state.settings, state.currentStreak)),
-        writeSheet('DailyStats', statsToRows(state.dailyStats)),
-      ]);
-    } catch (e) {
-      console.warn('Failed to sync to Google Sheets:', e);
-    }
-  }
+export async function setStorageConfig(config: StorageConfig): Promise<boolean> {
+  return serverSetConfig(config);
+}
+
+// ---- Legacy exports for backward compatibility ----
+
+export type { StorageMode };
+
+export function getStorageMode(): StorageMode {
+  // This is now just a local cache hint; real mode is on server
+  const saved = localStorage.getItem('focus-assist-storage-mode');
+  if (saved === 'sheets' || saved === 'file') return saved;
+  return 'file';
+}
+
+export function setStorageMode(mode: StorageMode) {
+  localStorage.setItem('focus-assist-storage-mode', mode);
+}
+
+// File system API stubs (no longer needed, server handles files)
+export function isFileSystemSupported(): boolean { return false; }
+export function hasFileHandle(): boolean { return false; }
+export async function pickFile(): Promise<boolean> { return false; }
+export function disconnectFile(): void {}
+export function getFileName(): string | null { return null; }
+
+// Google Sheets config (now managed server-side)
+export function setSheetConfig(sheetId: string, apiKey: string) {
+  localStorage.setItem('focus-assist-sheet-id', sheetId);
+  localStorage.setItem('focus-assist-api-key', apiKey);
+}
+
+export function getSheetConfig() {
+  return {
+    sheetId: localStorage.getItem('focus-assist-sheet-id') || '',
+    apiKey: localStorage.getItem('focus-assist-api-key') || '',
+  };
+}
+
+export function isSheetConfigured(): boolean {
+  const { sheetId, apiKey } = getSheetConfig();
+  return !!(sheetId && apiKey);
 }

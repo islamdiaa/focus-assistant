@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  focus-assist:
+    build: .
+    container_name: focus-assist
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persistent data — your .md file and config live here
+      - focus-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATA_DIR=/app/data
+      # Optional: Set a JWT secret for session cookies (auto-generated if not set)
+      # - JWT_SECRET=your-secret-here
+
+volumes:
+  focus-data:
+    driver: local
