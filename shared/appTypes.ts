@@ -105,6 +105,7 @@ export const reminderSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   date: z.string(),
+  time: z.string().optional(), // HH:mm format, undefined = all-day (e.g., birthdays)
   recurrence: reminderRecurrenceSchema,
   category: reminderCategorySchema,
   acknowledged: z.boolean().optional(),

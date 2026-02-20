@@ -1,11 +1,12 @@
 /**
  * Reminders Page — Manage birthdays, appointments, events
  * Separate from Tasks. Shows in Today view alongside tasks.
+ * R keyboard shortcut opens the new reminder dialog.
  */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import type { Reminder } from '@/lib/types';
-import { Plus, Bell, Cake, Calendar, Star, Trash2, Check, AlertCircle } from 'lucide-react';
+import { Plus, Bell, Cake, Calendar, Star, Trash2, Check, AlertCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,13 @@ function getDaysUntil(dateStr: string): number {
   return Math.floor((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+function formatTime(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${m.toString().padStart(2, '0')} ${ampm}`;
+}
+
 function getStatusLabel(daysUntil: number, acknowledged?: boolean): { label: string; color: string } {
   if (acknowledged) return { label: 'Acknowledged', color: 'text-warm-sage' };
   if (daysUntil < 0) return { label: `${Math.abs(daysUntil)}d overdue`, color: 'text-red-500' };
@@ -51,8 +59,24 @@ export default function RemindersPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
   const [recurrence, setRecurrence] = useState<Reminder['recurrence']>('none');
   const [category, setCategory] = useState<Reminder['category']>('other');
+
+  // R keyboard shortcut to open new reminder dialog
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+      if (e.key === 'r' || e.key === 'R') {
+        if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          setDialogOpen(true);
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const reminders = state.reminders || [];
 
@@ -85,11 +109,19 @@ export default function RemindersPage() {
     if (!title.trim() || !date) return;
     dispatch({
       type: 'ADD_REMINDER',
-      payload: { title: title.trim(), description: description.trim() || undefined, date, recurrence, category },
+      payload: {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        date,
+        time: time || undefined,
+        recurrence,
+        category,
+      },
     });
     setTitle('');
     setDescription('');
     setDate('');
+    setTime('');
     setRecurrence('none');
     setCategory('other');
     setDialogOpen(false);
@@ -101,7 +133,7 @@ export default function RemindersPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-serif text-2xl lg:text-3xl text-foreground">Reminders</h2>
-          <p className="text-sm text-muted-foreground mt-1">Birthdays, appointments, and events</p>
+          <p className="text-sm text-muted-foreground mt-1">Birthdays, appointments, and events · Press <kbd className="px-1 py-0.5 rounded bg-warm-sand/50 text-[10px] font-mono border border-border">R</kbd> to add</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -130,9 +162,17 @@ export default function RemindersPage() {
                 onChange={e => setDescription(e.target.value)}
                 className="bg-background"
               />
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Date</label>
-                <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-background" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Date</label>
+                  <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-background" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                    Time <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span>
+                  </label>
+                  <Input type="time" value={time} onChange={e => setTime(e.target.value)} className="bg-background" />
+                </div>
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Category</label>
@@ -263,6 +303,12 @@ export default function RemindersPage() {
                         <span className="text-[10px] text-muted-foreground">
                           {new Date(reminder.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
+                        {reminder.time && (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                            <Clock className="w-2.5 h-2.5" />
+                            {formatTime(reminder.time)}
+                          </span>
+                        )}
                         {reminder.recurrence !== 'none' && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-warm-blue-light/50 text-warm-blue">
                             {reminder.recurrence}

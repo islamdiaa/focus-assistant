@@ -121,10 +121,10 @@ export function stateToMarkdown(state: AppState): string {
   if (state.reminders && state.reminders.length > 0) {
     lines.push('## Reminders');
     lines.push('');
-    lines.push('| ID | Title | Description | Date | Recurrence | Category | Acknowledged | AcknowledgedAt | Created |');
-    lines.push('|----|-------|-------------|------|------------|----------|--------------|----------------|---------|');
+    lines.push('| ID | Title | Description | Date | Time | Recurrence | Category | Acknowledged | AcknowledgedAt | Created |');
+    lines.push('|----|-------|-------------|------|------|------------|----------|--------------|----------------|---------|');
     for (const r of state.reminders) {
-      lines.push(`| ${r.id} | ${escapeField(r.title)} | ${escapeField(r.description || '')} | ${r.date} | ${r.recurrence} | ${r.category} | ${r.acknowledged === true ? 'true' : r.acknowledged === false ? 'false' : ''} | ${r.acknowledgedAt || ''} | ${r.createdAt} |`);
+      lines.push(`| ${r.id} | ${escapeField(r.title)} | ${escapeField(r.description || '')} | ${r.date} | ${r.time || ''} | ${r.recurrence} | ${r.category} | ${r.acknowledged === true ? 'true' : r.acknowledged === false ? 'false' : ''} | ${r.acknowledgedAt || ''} | ${r.createdAt} |`);
     }
     lines.push('');
   }
@@ -318,11 +318,12 @@ export function markdownToState(md: string): AppState {
           title: r[1] || '',
           description: r[2] || undefined,
           date: r[3] || '',
-          recurrence: (r[4] as Reminder['recurrence']) || 'none',
-          category: (r[5] as Reminder['category']) || 'other',
-          acknowledged: r[6] === 'true' ? true : r[6] === 'false' ? false : undefined,
-          acknowledgedAt: r[7] || undefined,
-          createdAt: r[8] || new Date().toISOString(),
+          time: r[4] || undefined,
+          recurrence: (r[5] as Reminder['recurrence']) || 'none',
+          category: (r[6] as Reminder['category']) || 'other',
+          acknowledged: r[7] === 'true' ? true : r[7] === 'false' ? false : undefined,
+          acknowledgedAt: r[8] || undefined,
+          createdAt: r[9] || new Date().toISOString(),
         });
       }
     }

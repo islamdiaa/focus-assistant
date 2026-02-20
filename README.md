@@ -1,41 +1,52 @@
 # FocusAssist
 
-A warm, ADHD-friendly productivity app with task management, Pomodoro timers, Eisenhower Matrix, and statistics tracking. Runs as a single Docker container with data stored in a human-readable Markdown file.
+A warm, ADHD-friendly productivity app with task management, Pomodoro timers, Eisenhower Matrix, reminders, and statistics tracking. Runs as a single Docker container with data stored in a human-readable Markdown file.
+
+## Screenshots
+
+| Today View | Tasks |
+|:---:|:---:|
+| ![Today](https://files.manuscdn.com/user_upload_by_module/session_file/310519663318830806/rCJUBSCRCTAumHhN.png) | ![Tasks](https://files.manuscdn.com/user_upload_by_module/session_file/310519663318830806/tFSWUijcDpdIaafI.png) |
 
 ## Features
 
 | Feature | Description |
 |---------|-------------|
-| **Tasks** | Create, edit, delete tasks with priority, category, energy level, due dates. Filter by status, sort by date/priority. Inline editing on cards. |
-| **Focus Timer** | Multiple Pomodoro timers with circular progress. Configurable focus/break durations. |
+| **Today View** | Daily planner with motivational quotes, stats summary, due tasks, and reminders (overdue, today, upcoming 5 days). |
+| **Tasks** | Create, edit, delete tasks with priority, category, energy level, due dates, subtasks. Filter by status, sort by date/priority. Inline editing on cards. Recurring tasks (daily, weekly, monthly, quarterly). |
+| **Focus Timer** | Multiple Pomodoro timers with circular progress. Configurable focus/break durations. Link multiple tasks or subtasks to a session. |
 | **Eisenhower Matrix** | Drag tasks into Do First / Schedule / Delegate / Eliminate quadrants. |
+| **Reminders** | Birthdays, appointments, events with optional time-of-day. Recurring support (yearly, monthly, etc.). Acknowledge to dismiss or advance to next occurrence. |
+| **Read Later** | Save articles/links for later reading with status tracking (unread, reading, done). |
+| **Templates** | Save and reuse task templates for repeating workflows. |
+| **Weekly Review** | Guided reflection with accomplishments, challenges, and next-week planning. |
 | **Stats** | Daily streak, completed tasks, focus minutes, weekly charts, all-time statistics. |
-| **Settings** | Timer presets (Classic/Short/Deep/Gentle), custom sliders, storage backend toggle. |
+| **Settings** | Timer presets (Classic/Short/Deep/Gentle), custom sliders, focus mode, keyboard shortcuts. |
 
 ## Quick Start
 
 ### Docker (Recommended)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/FocusAssistant.git
-cd FocusAssistant
-docker compose up -d
-```
-
-Open `http://localhost:1992` in your browser.
-
-### Docker Run (Manual)
-
-```bash
-docker build -t focus-assist .
+docker pull islamdiaa/focus-assistant:latest
 docker run -d \
-  --name focus-assist \
+  --name focus-assistant \
   --restart unless-stopped \
   -p 1992:1992 \
   -v focus-data:/app/data \
   -e NODE_ENV=production \
   -e PORT=1992 \
-  focus-assist
+  islamdiaa/focus-assistant:latest
+```
+
+Open `http://localhost:1992` in your browser.
+
+### Docker Compose
+
+```bash
+git clone https://github.com/islamdiaa/FocusAssistant.git
+cd FocusAssistant
+docker compose up -d
 ```
 
 ### Development (Local)
@@ -70,6 +81,18 @@ Toggle Google Sheets sync in Settings → Data Storage. You'll need:
 
 When Sheets mode is active, the local Markdown file is ignored.
 
+## CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration and deployment:
+
+```
+Code push → CI tests → Docker build → Docker Hub → Watchtower → Auto-update
+```
+
+- **Test job:** TypeScript type-checking + Vitest (104+ tests)
+- **Docker job:** Multi-arch build (amd64/arm64), pushes to Docker Hub + GHCR
+- **Versioning:** Semver tags on GitHub releases (e.g., `v1.8.1` → Docker tag `1.8.1`)
+
 ## Unraid Deployment
 
 See [DOCKER-GUIDE.md](./DOCKER-GUIDE.md) for detailed Unraid deployment instructions, including:
@@ -96,19 +119,12 @@ environment:
   - PORT=YOUR_PORT
 ```
 
-And update `Dockerfile`:
-
-```dockerfile
-EXPOSE YOUR_PORT
-ENV PORT=YOUR_PORT
-```
-
 ## Project Structure
 
 ```
 client/src/           # React 19 frontend (Tailwind CSS 4 + shadcn/ui)
 server/               # Express 4 backend (tRPC 11 API)
-shared/               # Shared TypeScript types
+shared/               # Shared TypeScript types (Zod-first schemas)
 data/                 # Persistent data (Docker volume mount point)
 drizzle/              # Database schema (auth only)
 ```
@@ -120,9 +136,11 @@ For detailed architecture documentation, see [architecture.md](./architecture.md
 - **Frontend:** React 19, TypeScript, Tailwind CSS 4, shadcn/ui
 - **Backend:** Express 4, tRPC 11, Node.js 22
 - **Storage:** Local Markdown file or Google Sheets
+- **Validation:** Zod (single source of truth for types + runtime validation)
 - **Build:** Vite 7 (client), esbuild (server)
-- **Tests:** Vitest
-- **Container:** Docker (Node 22 Alpine)
+- **Tests:** Vitest (104+ tests including schema integrity + persistence round-trips)
+- **CI/CD:** GitHub Actions → Docker Hub + GHCR
+- **Container:** Docker (Node 22 Alpine, multi-arch amd64/arm64)
 
 ## Scripts
 
@@ -145,6 +163,16 @@ This repo includes guidance files for AI coding assistants:
 ## Design
 
 The UI follows a "Warm Scandinavian" design language with DM Serif Display + DM Sans typography, earth-tone colors (cream, sand, terracotta, sage green), and watercolor illustrations. Designed to be calm, focused, and ADHD-friendly.
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `N` | New task |
+| `R` | New reminder |
+| `F` | Toggle focus mode |
+| `Ctrl+Z` | Undo |
+| `Ctrl+Shift+Z` | Redo |
 
 ## License
 

@@ -124,10 +124,10 @@
 - [x] Task-linked pomodoros — select multiple tasks or subtasks when starting a timer, track focus time per task
 - [x] Quarterly recurring tasks — repeat every 3 months from a specific start date (e.g., 16th Feb/May/Aug/Nov)
 - [x] Reminders system — birthdays, appointments; upcoming view (within 5 days) + today highlight on Today page
-- [ ] Playwright E2E tests — critical flows (task CRUD, timer, settings, read later, templates, weekly review)
-- [ ] README screenshots — capture key pages and add to README.md
-- [ ] Update architecture.md, claude.md, agent.md with V1.8.x changes
-- [ ] Version bump to 1.8.1, CHANGELOG update
+- [ ] Playwright E2E tests — deferred to next version
+- [x] README screenshots — capture key pages and add to README.md
+- [x] Update architecture.md, claude.md, agent.md with V1.8.x changes
+- [x] Version bump to 1.8.1, CHANGELOG update
 
 # Bug Fix — Task persistence
 
@@ -142,3 +142,10 @@
 - [x] Add integration test for save endpoint to catch schema drift
 - [x] Add full persistence round-trip tests for all key mutations (add/toggle/edit task, subtasks, pomodoros with linked tasks, reminders, reading items, quarterly tasks, etc.)
 - [x] Add .strict() or .passthrough() to prevent silent field stripping
+
+# Reminder Time of Day
+
+- [x] Add optional time field to reminders (HH:mm format, null for all-day like birthdays)
+- [x] Show time in overdue/today/upcoming views
+- [x] Update Zod schema, MD serialization, and round-trip tests
+- [x] Add R keyboard shortcut to open new reminder dialog (like N for new task)

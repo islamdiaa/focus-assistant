@@ -6,6 +6,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.8.1] - 2026-02-20
+
+### Added
+- **Task-linked pomodoros** — select multiple tasks and/or subtasks when starting a focus session; linked tasks displayed on timer card and in stats
+- **Quarterly recurring tasks** — new recurrence frequency with configurable day-of-month and start month (e.g., 16th of Feb/May/Aug/Nov)
+- **Reminders system** — separate sidebar tab for managing birthdays, appointments, and events with optional time-of-day; recurring support (yearly, monthly, weekly); acknowledge to dismiss or advance to next occurrence
+- **Reminders in Today view** — overdue, today, and upcoming (5-day lookahead) sections with distinct visual treatment and time display
+- **`R` keyboard shortcut** — opens new reminder dialog from any page
+- **Schema integrity tests** — 32 new tests covering Zod schema drift detection and full persistence round-trips for every entity type (tasks, subtasks, pomodoros, reminders, reading items, templates, preferences, daily stats)
+- **README screenshots** — Today and Tasks page screenshots added to README
+
+### Changed
+- **Architecture: Zod-first single source of truth** — all type definitions now live as Zod schemas in `shared/appTypes.ts` with inferred TypeScript types; eliminated duplicate Zod schema from `dataRouter.ts` and duplicate type file `client/src/lib/types.ts`
+- **Strict Zod validation** — `appStateSchema.strict()` now rejects unknown fields with errors instead of silently stripping them
+- **CI/CD pipeline** — now pushes to both Docker Hub (`islamdiaa/focus-assistant`) and GHCR; supports semver tags from GitHub Releases (e.g., `v1.8.1` → Docker tags `1.8.1` + `1.8`)
+- Sidebar navigation expanded with Reminders under "Knowledge" section
+- Test count increased from 58 to 104+ across 12 test files
+- Updated architecture.md, claude.md, agent.md with V1.8.1 changes
+
+### Fixed
+- **Critical persistence bug** — state changes (marking tasks done, adding reminders, etc.) were silently stripped by outdated Zod validation schema on save, causing data loss on refresh
+- **`acknowledged: false` serialization** — boolean `false` values were lost during MD serialization round-trip
+
+---
+
 ## [1.8.0] - 2026-02-20
 
 ### Added

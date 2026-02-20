@@ -55,6 +55,13 @@ const QUOTES: { text: string; author: string; source?: string }[] = [
   { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
 ];
 
+function formatReminderTime(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${m.toString().padStart(2, '0')} ${ampm}`;
+}
+
 function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' {
   const h = new Date().getHours();
   if (h < 12) return 'morning';
@@ -298,7 +305,7 @@ export default function DailyPlannerPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{r.title}</p>
-                    <p className="text-[10px] text-red-500">{daysOverdue}d overdue • {new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                    <p className="text-[10px] text-red-500">{daysOverdue}d overdue • {new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}{r.time ? ` at ${formatReminderTime(r.time)}` : ''}</p>
                   </div>
                   <button onClick={() => dispatch({ type: 'ACK_REMINDER', payload: r.id })}
                     className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors" title="Acknowledge">
@@ -331,7 +338,7 @@ export default function DailyPlannerPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{r.title}</p>
                     {r.description && <p className="text-[10px] text-muted-foreground">{r.description}</p>}
-                    <p className="text-[10px] text-warm-amber font-medium">Today{r.recurrence !== 'none' ? ` • ${r.recurrence}` : ''}</p>
+                    <p className="text-[10px] text-warm-amber font-medium">Today{r.time ? ` at ${formatReminderTime(r.time)}` : ''}{r.recurrence !== 'none' ? ` • ${r.recurrence}` : ''}</p>
                   </div>
                   <button onClick={() => dispatch({ type: 'ACK_REMINDER', payload: r.id })}
                     className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors" title="Acknowledge">
@@ -364,7 +371,7 @@ export default function DailyPlannerPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{r.title}</p>
-                    <p className="text-[10px] text-warm-blue">In {daysUntil}d • {new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                    <p className="text-[10px] text-warm-blue">In {daysUntil}d • {new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}{r.time ? ` at ${formatReminderTime(r.time)}` : ''}</p>
                   </div>
                 </motion.div>
               );

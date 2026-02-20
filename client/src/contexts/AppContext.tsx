@@ -33,7 +33,7 @@ type Action =
   | { type: 'UPDATE_READING_ITEM'; payload: Partial<ReadingItem> & { id: string } }
   | { type: 'DELETE_READING_ITEM'; payload: string }
   | { type: 'MARK_READING_STATUS'; payload: { id: string; status: ReadingStatus } }
-  | { type: 'ADD_REMINDER'; payload: { title: string; description?: string; date: string; recurrence: Reminder['recurrence']; category: Reminder['category'] } }
+  | { type: 'ADD_REMINDER'; payload: { title: string; description?: string; date: string; time?: string; recurrence: Reminder['recurrence']; category: Reminder['category'] } }
   | { type: 'UPDATE_REMINDER'; payload: Partial<Reminder> & { id: string } }
   | { type: 'DELETE_REMINDER'; payload: string }
   | { type: 'ACK_REMINDER'; payload: string }
@@ -442,6 +442,7 @@ function appReducer(state: AppState, action: Action): AppState {
         title: action.payload.title,
         description: action.payload.description,
         date: action.payload.date,
+        time: action.payload.time,
         recurrence: action.payload.recurrence,
         category: action.payload.category,
         createdAt: new Date().toISOString(),
