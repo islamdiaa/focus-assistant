@@ -58,6 +58,7 @@ const RECURRENCE_CONFIG: Record<RecurrenceFrequency, { label: string; short: str
   daily: { label: 'Daily', short: 'Daily' },
   weekly: { label: 'Weekly', short: 'Weekly' },
   monthly: { label: 'Monthly', short: 'Monthly' },
+  quarterly: { label: 'Quarterly', short: 'Quarterly' },
   weekdays: { label: 'Weekdays', short: 'Weekdays' },
 };
 
@@ -447,6 +448,8 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
   const [newEnergy, setNewEnergy] = useState<EnergyLevel | ''>('');
   const [newDueDate, setNewDueDate] = useState('');
   const [newRecurrence, setNewRecurrence] = useState<RecurrenceFrequency>('none');
+  const [newQuarterlyDay, setNewQuarterlyDay] = useState(16);
+  const [newQuarterlyStartMonth, setNewQuarterlyStartMonth] = useState(2); // Feb
   const [newSubtasks, setNewSubtasks] = useState<string[]>([]);
   const [newSubtaskInput, setNewSubtaskInput] = useState('');
 
@@ -510,6 +513,8 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
         category: newCategory || undefined,
         energy: newEnergy || undefined,
         recurrence: newRecurrence !== 'none' ? newRecurrence : undefined,
+        recurrenceDayOfMonth: newRecurrence === 'quarterly' ? newQuarterlyDay : undefined,
+        recurrenceStartMonth: newRecurrence === 'quarterly' ? newQuarterlyStartMonth : undefined,
         subtasks: newSubtasks.length > 0 ? newSubtasks.map(s => ({ title: s })) : undefined,
       },
     });
@@ -520,6 +525,8 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
     setNewEnergy('');
     setNewDueDate('');
     setNewRecurrence('none');
+    setNewQuarterlyDay(16);
+    setNewQuarterlyStartMonth(2);
     setNewSubtasks([]);
     setNewSubtaskInput('');
     setDialogOpen(false);
@@ -618,7 +625,7 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Repeat</label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                   {(Object.keys(RECURRENCE_CONFIG) as RecurrenceFrequency[]).map(r => (
                     <button key={r} type="button" onClick={() => setNewRecurrence(r)}
                       className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
@@ -627,6 +634,32 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: Tas
                     </button>
                   ))}
                 </div>
+                {newRecurrence === 'quarterly' && (
+                  <div className="mt-3 p-3 bg-warm-blue-light/30 rounded-lg border border-warm-blue/20 space-y-2">
+                    <p className="text-xs text-warm-blue font-medium">Quarterly schedule: repeats every 3 months</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <label className="text-[10px] text-muted-foreground mb-0.5 block">Day of month</label>
+                        <Input type="number" min={1} max={28} value={newQuarterlyDay}
+                          onChange={e => setNewQuarterlyDay(parseInt(e.target.value) || 16)}
+                          className="bg-background h-8 text-xs" />
+                      </div>
+                      <div className="flex-1">
+                        <label className="text-[10px] text-muted-foreground mb-0.5 block">Starting month</label>
+                        <select value={newQuarterlyStartMonth}
+                          onChange={e => setNewQuarterlyStartMonth(parseInt(e.target.value))}
+                          className="w-full h-8 rounded-md border border-border bg-background text-xs px-2">
+                          {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
+                            <option key={i} value={i + 1}>{m}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Runs on the {newQuarterlyDay}th of {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][newQuarterlyStartMonth - 1]}, {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][(newQuarterlyStartMonth + 2) % 12]}, {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][(newQuarterlyStartMonth + 5) % 12]}, {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][(newQuarterlyStartMonth + 8) % 12]}
+                    </p>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Due Date (optional)</label>

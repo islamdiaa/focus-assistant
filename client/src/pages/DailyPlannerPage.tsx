@@ -4,9 +4,9 @@
  */
 import { useMemo, useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { CheckCircle2, Circle, Clock, Sun, Sunset, Moon, Target, Zap, Calendar, ChevronRight, Check, ListChecks, Quote, BookOpen, ExternalLink, Globe } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Sun, Sunset, Moon, Target, Zap, Calendar, ChevronRight, Check, ListChecks, Quote, BookOpen, ExternalLink, Globe, Bell, Cake, Star, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { Task, EnergyLevel } from '@/lib/types';
+import type { Task, EnergyLevel, Reminder } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ENERGY_EMOJI: Record<EnergyLevel, string> = { low: '🔋', medium: '⚡', high: '🔥' };
@@ -181,6 +181,39 @@ export default function DailyPlannerPage() {
     );
   }, [state.tasks, today]);
 
+  // Reminders: overdue, today, upcoming (5 days)
+  const reminders = state.reminders || [];
+  const overdueReminders = useMemo(() => {
+    return reminders.filter(r => !r.acknowledged && r.date < today)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [reminders, today]);
+
+  const todayReminders = useMemo(() => {
+    return reminders.filter(r => !r.acknowledged && r.date === today);
+  }, [reminders, today]);
+
+  const upcomingReminders = useMemo(() => {
+    const fiveDaysLater = new Date();
+    fiveDaysLater.setDate(fiveDaysLater.getDate() + 5);
+    const cutoff = fiveDaysLater.toISOString().split('T')[0];
+    return reminders.filter(r => !r.acknowledged && r.date > today && r.date <= cutoff)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [reminders, today]);
+
+  const REMINDER_CATEGORY_ICON: Record<Reminder['category'], typeof Bell> = {
+    birthday: Cake,
+    appointment: Calendar,
+    event: Star,
+    other: Bell,
+  };
+
+  const REMINDER_CATEGORY_COLOR: Record<Reminder['category'], { color: string; bg: string }> = {
+    birthday: { color: 'text-pink-500', bg: 'bg-pink-50' },
+    appointment: { color: 'text-warm-blue', bg: 'bg-warm-blue-light' },
+    event: { color: 'text-warm-amber', bg: 'bg-warm-amber-light' },
+    other: { color: 'text-warm-sage', bg: 'bg-warm-sage-light' },
+  };
+
   function toggleTask(id: string) {
     dispatch({ type: 'TOGGLE_TASK', payload: id });
   }
@@ -244,6 +277,101 @@ export default function DailyPlannerPage() {
           </motion.div>
         ))}
       </div>
+
+      {/* Overdue Reminders */}
+      {overdueReminders.length > 0 && (
+        <div className="bg-red-50/50 rounded-xl border border-red-200/50 p-5 mb-4">
+          <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-red-500" />
+            Overdue Reminders ({overdueReminders.length})
+          </h3>
+          <div className="space-y-2">
+            {overdueReminders.map(r => {
+              const Icon = REMINDER_CATEGORY_ICON[r.category];
+              const colors = REMINDER_CATEGORY_COLOR[r.category];
+              const daysOverdue = Math.floor((new Date(today).getTime() - new Date(r.date).getTime()) / 86400000);
+              return (
+                <motion.div key={r.id} layout initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-red-200/50 bg-white/50">
+                  <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center shrink-0`}>
+                    <Icon className={`w-4 h-4 ${colors.color}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{r.title}</p>
+                    <p className="text-[10px] text-red-500">{daysOverdue}d overdue • {new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                  </div>
+                  <button onClick={() => dispatch({ type: 'ACK_REMINDER', payload: r.id })}
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors" title="Acknowledge">
+                    <Check className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Today's Reminders */}
+      {todayReminders.length > 0 && (
+        <div className="bg-warm-amber-light/30 rounded-xl border border-warm-amber/20 p-5 mb-4">
+          <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+            <Bell className="w-5 h-5 text-warm-amber" />
+            Today's Reminders ({todayReminders.length})
+          </h3>
+          <div className="space-y-2">
+            {todayReminders.map(r => {
+              const Icon = REMINDER_CATEGORY_ICON[r.category];
+              const colors = REMINDER_CATEGORY_COLOR[r.category];
+              return (
+                <motion.div key={r.id} layout initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-warm-amber/20 bg-white/50">
+                  <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center shrink-0`}>
+                    <Icon className={`w-4 h-4 ${colors.color}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{r.title}</p>
+                    {r.description && <p className="text-[10px] text-muted-foreground">{r.description}</p>}
+                    <p className="text-[10px] text-warm-amber font-medium">Today{r.recurrence !== 'none' ? ` • ${r.recurrence}` : ''}</p>
+                  </div>
+                  <button onClick={() => dispatch({ type: 'ACK_REMINDER', payload: r.id })}
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors" title="Acknowledge">
+                    <Check className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Upcoming Reminders (5 days) */}
+      {upcomingReminders.length > 0 && (
+        <div className="bg-warm-blue-light/20 rounded-xl border border-warm-blue/10 p-5 mb-4">
+          <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-warm-blue" />
+            Upcoming Reminders ({upcomingReminders.length})
+          </h3>
+          <div className="space-y-2">
+            {upcomingReminders.map(r => {
+              const Icon = REMINDER_CATEGORY_ICON[r.category];
+              const colors = REMINDER_CATEGORY_COLOR[r.category];
+              const daysUntil = Math.floor((new Date(r.date).getTime() - new Date(today).getTime()) / 86400000);
+              return (
+                <motion.div key={r.id} layout initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-warm-blue/10 bg-white/50">
+                  <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center shrink-0`}>
+                    <Icon className={`w-4 h-4 ${colors.color}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{r.title}</p>
+                    <p className="text-[10px] text-warm-blue">In {daysUntil}d • {new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Due Today / Overdue */}
       <div className="bg-card rounded-xl border border-border p-5 mb-4">

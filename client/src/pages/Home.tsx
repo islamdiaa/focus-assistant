@@ -25,6 +25,7 @@ import DailyPlannerPage from './DailyPlannerPage';
 import TemplatesPage from './TemplatesPage';
 import WeeklyReviewPage from './WeeklyReviewPage';
 import ReadLaterPage from './ReadLaterPage';
+import RemindersPage from './RemindersPage';
 import FocusModePage from './FocusModePage';
 import { useApp } from '@/contexts/AppContext';
 import { Smile, Clock, Menu, Undo2, Redo2 } from 'lucide-react';
@@ -221,6 +222,7 @@ export default function Home() {
             {activePage === 'matrix' && <MatrixPage />}
             {activePage === 'stats' && <StatsPage />}
             {activePage === 'reading' && <ReadLaterPage />}
+            {activePage === 'reminders' && <RemindersPage />}
             {activePage === 'templates' && <TemplatesPage />}
             {activePage === 'review' && <WeeklyReviewPage />}
             {activePage === 'settings' && <SettingsPage />}

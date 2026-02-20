@@ -8,7 +8,7 @@
  */
 import fs from 'fs/promises';
 import path from 'path';
-import type { Task, Pomodoro, AppState, TaskTemplate, AppPreferences, ReadingItem } from '../shared/appTypes';
+import type { Task, Pomodoro, PomodoroLink, AppState, TaskTemplate, AppPreferences, ReadingItem, Reminder } from '../shared/appTypes';
 import { syncToObsidian } from './obsidianSync';
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from '../shared/appTypes';
 
@@ -63,13 +63,13 @@ export function stateToMarkdown(state: AppState): string {
   if (state.tasks.length === 0) {
     lines.push('_No tasks yet._');
   } else {
-    lines.push('| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate | Subtasks |');
-    lines.push('|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|----------|');
+    lines.push('| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate | Subtasks | RecurrenceDayOfMonth | RecurrenceStartMonth |');
+    lines.push('|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|----------|---------------------|----------------------|');
     for (const t of state.tasks) {
       const subtasksJson = t.subtasks && t.subtasks.length > 0
         ? escapeField(JSON.stringify(t.subtasks))
         : '';
-      lines.push(`| ${t.id} | ${escapeField(t.title)} | ${escapeField(t.description || '')} | ${t.priority} | ${t.status} | ${t.dueDate || ''} | ${t.category || ''} | ${t.energy || ''} | ${t.quadrant} | ${t.createdAt} | ${t.completedAt || ''} | ${t.recurrence || ''} | ${t.recurrenceParentId || ''} | ${t.recurrenceNextDate || ''} | ${subtasksJson} |`);
+      lines.push(`| ${t.id} | ${escapeField(t.title)} | ${escapeField(t.description || '')} | ${t.priority} | ${t.status} | ${t.dueDate || ''} | ${t.category || ''} | ${t.energy || ''} | ${t.quadrant} | ${t.createdAt} | ${t.completedAt || ''} | ${t.recurrence || ''} | ${t.recurrenceParentId || ''} | ${t.recurrenceNextDate || ''} | ${subtasksJson} | ${t.recurrenceDayOfMonth ?? ''} | ${t.recurrenceStartMonth ?? ''} |`);
     }
   }
   lines.push('');
@@ -80,10 +80,13 @@ export function stateToMarkdown(state: AppState): string {
   if (state.pomodoros.length === 0) {
     lines.push('_No pomodoros yet._');
   } else {
-    lines.push('| ID | Title | Duration | Elapsed | Status | Created | Completed | StartedAt | AccumulatedSeconds | LinkedTaskId |');
-    lines.push('|----|-------|----------|---------|--------|---------|-----------|-----------|---------------------|--------------|');
+    lines.push('| ID | Title | Duration | Elapsed | Status | Created | Completed | StartedAt | AccumulatedSeconds | LinkedTaskId | LinkedTasks |');
+    lines.push('|----|-------|----------|---------|--------|---------|-----------|-----------|---------------------|--------------|-------------|');
     for (const p of state.pomodoros) {
-      lines.push(`| ${p.id} | ${escapeField(p.title)} | ${p.duration} | ${p.elapsed} | ${p.status} | ${p.createdAt} | ${p.completedAt || ''} | ${p.startedAt || ''} | ${p.accumulatedSeconds ?? ''} | ${p.linkedTaskId || ''} |`);
+      const linkedTasksJson = p.linkedTasks && p.linkedTasks.length > 0
+        ? escapeField(JSON.stringify(p.linkedTasks))
+        : '';
+      lines.push(`| ${p.id} | ${escapeField(p.title)} | ${p.duration} | ${p.elapsed} | ${p.status} | ${p.createdAt} | ${p.completedAt || ''} | ${p.startedAt || ''} | ${p.accumulatedSeconds ?? ''} | ${p.linkedTaskId || ''} | ${linkedTasksJson} |`);
     }
   }
   lines.push('');
@@ -110,6 +113,18 @@ export function stateToMarkdown(state: AppState): string {
     lines.push('|----|-----|-------|-------------|------|--------|-------|----------|--------|---------|--------|');
     for (const r of state.readingList) {
       lines.push(`| ${r.id} | ${escapeField(r.url)} | ${escapeField(r.title)} | ${escapeField(r.description || '')} | ${escapeField(r.tags.join(','))} | ${r.status} | ${escapeField(r.notes || '')} | ${r.imageUrl || ''} | ${r.domain || ''} | ${r.createdAt} | ${r.readAt || ''} |`);
+    }
+    lines.push('');
+  }
+
+  // Reminders
+  if (state.reminders && state.reminders.length > 0) {
+    lines.push('## Reminders');
+    lines.push('');
+    lines.push('| ID | Title | Description | Date | Recurrence | Category | Acknowledged | AcknowledgedAt | Created |');
+    lines.push('|----|-------|-------------|------|------------|----------|--------------|----------------|---------|');
+    for (const r of state.reminders) {
+      lines.push(`| ${r.id} | ${escapeField(r.title)} | ${escapeField(r.description || '')} | ${r.date} | ${r.recurrence} | ${r.category} | ${r.acknowledged ? 'true' : ''} | ${r.acknowledgedAt || ''} | ${r.createdAt} |`);
     }
     lines.push('');
   }
@@ -225,6 +240,8 @@ export function markdownToState(md: string): AppState {
           recurrenceParentId: r[12] || undefined,
           recurrenceNextDate: r[13] || undefined,
           subtasks,
+          recurrenceDayOfMonth: r[15] ? parseInt(r[15]) : undefined,
+          recurrenceStartMonth: r[16] ? parseInt(r[16]) : undefined,
         });
       }
     }
@@ -234,6 +251,10 @@ export function markdownToState(md: string): AppState {
       for (let i = 1; i < rows.length; i++) {
         const r = rows[i];
         if (!r[0]) continue;
+        let linkedTasks: PomodoroLink[] | undefined = undefined;
+        if (r[10]) {
+          try { linkedTasks = JSON.parse(r[10]); } catch { /* ignore */ }
+        }
         state.pomodoros.push({
           id: r[0],
           title: r[1] || '',
@@ -245,6 +266,7 @@ export function markdownToState(md: string): AppState {
           startedAt: r[7] || undefined,
           accumulatedSeconds: r[8] ? parseInt(r[8]) : undefined,
           linkedTaskId: r[9] || undefined,
+          linkedTasks,
         });
       }
     }
@@ -281,6 +303,26 @@ export function markdownToState(md: string): AppState {
           domain: r[8] || undefined,
           createdAt: r[9] || new Date().toISOString(),
           readAt: r[10] || undefined,
+        });
+      }
+    }
+
+    if (title === 'reminders') {
+      state.reminders = [];
+      const rows = parseMarkdownTable(sectionLines);
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r[0]) continue;
+        state.reminders.push({
+          id: r[0],
+          title: r[1] || '',
+          description: r[2] || undefined,
+          date: r[3] || '',
+          recurrence: (r[4] as Reminder['recurrence']) || 'none',
+          category: (r[5] as Reminder['category']) || 'other',
+          acknowledged: r[6] === 'true' ? true : undefined,
+          acknowledgedAt: r[7] || undefined,
+          createdAt: r[8] || new Date().toISOString(),
         });
       }
     }

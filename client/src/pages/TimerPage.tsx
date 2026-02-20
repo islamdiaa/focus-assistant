@@ -3,10 +3,12 @@
  * Pomodoro timers with circular progress
  * Create multiple, start individually
  * Timer persistence: running timers resume after page refresh using startedAt timestamp
+ * V1.8.1: Task-linked pomodoros — select multiple tasks/subtasks when creating
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { Plus, Play, Pause, RotateCcw, Trash2, Info, Volume2 } from 'lucide-react';
+import type { PomodoroLink, Task } from '@/lib/types';
+import { Plus, Play, Pause, RotateCcw, Trash2, Info, Volume2, ChevronDown, ChevronRight, Check, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -88,15 +90,131 @@ function getEffectiveElapsed(pom: { status: string; elapsed: number; startedAt?:
   return pom.elapsed;
 }
 
+/** Helper to get a display label for linked tasks */
+function getLinkedTasksLabel(linkedTasks: PomodoroLink[], tasks: Task[]): string {
+  if (linkedTasks.length === 0) return '';
+  const labels = linkedTasks.map(link => {
+    const task = tasks.find(t => t.id === link.taskId);
+    if (!task) return '(deleted task)';
+    if (link.subtaskId) {
+      const subtask = task.subtasks?.find(s => s.id === link.subtaskId);
+      return subtask ? `${task.title} → ${subtask.title}` : task.title;
+    }
+    return task.title;
+  });
+  if (labels.length <= 2) return labels.join(', ');
+  return `${labels[0]} +${labels.length - 1} more`;
+}
+
+/** Task/subtask picker for the new pomodoro dialog */
+function TaskPicker({
+  tasks,
+  selectedLinks,
+  onToggle,
+}: {
+  tasks: Task[];
+  selectedLinks: PomodoroLink[];
+  onToggle: (link: PomodoroLink) => void;
+}) {
+  const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
+  const activeTasks = tasks.filter(t => t.status === 'active');
+
+  const isSelected = (taskId: string, subtaskId?: string) =>
+    selectedLinks.some(l => l.taskId === taskId && l.subtaskId === subtaskId);
+
+  const toggleExpand = (taskId: string) => {
+    setExpandedTasks(prev => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  };
+
+  if (activeTasks.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground py-2">No active tasks. Create tasks first to link them.</p>
+    );
+  }
+
+  return (
+    <div className="max-h-48 overflow-y-auto space-y-0.5 border border-border rounded-lg p-2 bg-background">
+      {activeTasks.map(task => {
+        const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+        const isExpanded = expandedTasks.has(task.id);
+        const taskSelected = isSelected(task.id);
+
+        return (
+          <div key={task.id}>
+            <div className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-warm-sand/30 transition-colors">
+              {hasSubtasks && (
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(task.id)}
+                  className="text-muted-foreground hover:text-foreground p-0.5"
+                >
+                  {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                </button>
+              )}
+              {!hasSubtasks && <div className="w-4.5" />}
+              <button
+                type="button"
+                onClick={() => onToggle({ taskId: task.id })}
+                className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all
+                  ${taskSelected ? 'bg-warm-sage border-warm-sage' : 'border-border hover:border-warm-sage'}`}
+              >
+                {taskSelected && <Check className="w-2.5 h-2.5 text-white" />}
+              </button>
+              <span className="text-sm text-foreground truncate flex-1">{task.title}</span>
+              {hasSubtasks && (
+                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                  <ListChecks className="w-3 h-3" /> {task.subtasks!.length}
+                </span>
+              )}
+            </div>
+            {hasSubtasks && isExpanded && (
+              <div className="ml-8 space-y-0.5">
+                {task.subtasks!.filter(s => !s.done).map(subtask => {
+                  const subSelected = isSelected(task.id, subtask.id);
+                  return (
+                    <div key={subtask.id} className="flex items-center gap-2 py-1 px-2 rounded-md hover:bg-warm-sand/20 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => onToggle({ taskId: task.id, subtaskId: subtask.id })}
+                        className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-all
+                          ${subSelected ? 'bg-warm-blue border-warm-blue' : 'border-border hover:border-warm-blue'}`}
+                      >
+                        {subSelected && <Check className="w-2 h-2 text-white" />}
+                      </button>
+                      <span className="text-xs text-muted-foreground truncate">{subtask.title}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function TimerPage() {
   const { state, dispatch } = useApp();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDuration, setNewDuration] = useState(state.settings.focusDuration);
+  const [selectedLinks, setSelectedLinks] = useState<PomodoroLink[]>([]);
   const [tick, setTick] = useState(0);
   const completedRef = useRef<Set<string>>(new Set());
 
   const activeCount = state.pomodoros.filter(p => p.status === 'running').length;
+
+  // Auto-generate title from selected tasks
+  const autoTitle = useMemo(() => {
+    if (selectedLinks.length === 0) return '';
+    return getLinkedTasksLabel(selectedLinks, state.tasks);
+  }, [selectedLinks, state.tasks]);
 
   // Single tick interval for all running timers
   useEffect(() => {
@@ -135,13 +253,31 @@ export default function TimerPage() {
     }
   }, []);
 
+  const handleToggleLink = useCallback((link: PomodoroLink) => {
+    setSelectedLinks(prev => {
+      const exists = prev.some(l => l.taskId === link.taskId && l.subtaskId === link.subtaskId);
+      if (exists) return prev.filter(l => !(l.taskId === link.taskId && l.subtaskId === link.subtaskId));
+      return [...prev, link];
+    });
+  }, []);
+
   const handleAdd = useCallback(() => {
-    if (!newTitle.trim()) return;
-    dispatch({ type: 'ADD_POMODORO', payload: { title: newTitle.trim(), duration: newDuration } });
+    const title = newTitle.trim() || autoTitle || 'Focus Session';
+    dispatch({
+      type: 'ADD_POMODORO',
+      payload: {
+        title,
+        duration: newDuration,
+        linkedTasks: selectedLinks.length > 0 ? selectedLinks : undefined,
+        // Keep legacy linkedTaskId for backward compat if single task selected
+        linkedTaskId: selectedLinks.length === 1 && !selectedLinks[0].subtaskId ? selectedLinks[0].taskId : undefined,
+      },
+    });
     setNewTitle('');
     setNewDuration(state.settings.focusDuration);
+    setSelectedLinks([]);
     setDialogOpen(false);
-  }, [newTitle, newDuration, dispatch, state.settings.focusDuration]);
+  }, [newTitle, autoTitle, newDuration, selectedLinks, dispatch, state.settings.focusDuration]);
 
   const togglePomodoro = useCallback((id: string) => {
     const pom = state.pomodoros.find(p => p.id === id);
@@ -187,22 +323,46 @@ export default function TimerPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-serif text-2xl lg:text-3xl text-foreground">Focus Timer</h2>
-          <p className="text-sm text-muted-foreground mt-1">Create multiple Pomodoros · Timers persist across refreshes</p>
+          <p className="text-sm text-muted-foreground mt-1">Link tasks to pomodoros · Track focus time per task</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            setSelectedLinks([]);
+            setNewTitle('');
+            setNewDuration(state.settings.focusDuration);
+          }
+        }}>
           <DialogTrigger asChild>
             <Button className="bg-warm-sage hover:bg-warm-sage/90 text-white gap-2">
               <Plus className="w-4 h-4" /> New Pomodoro
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-card">
+          <DialogContent className="bg-card max-w-md">
             <DialogHeader>
               <DialogTitle className="font-serif text-xl">New Pomodoro</DialogTitle>
-              <DialogDescription className="sr-only">Create a new pomodoro timer</DialogDescription>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Select tasks to focus on during this session
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 mt-2">
+              {/* Task/Subtask picker */}
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">Link Tasks (optional)</label>
+                <TaskPicker
+                  tasks={state.tasks}
+                  selectedLinks={selectedLinks}
+                  onToggle={handleToggleLink}
+                />
+                {selectedLinks.length > 0 && (
+                  <p className="text-xs text-warm-sage mt-1.5">
+                    {selectedLinks.length} item{selectedLinks.length > 1 ? 's' : ''} selected
+                  </p>
+                )}
+              </div>
+
               <Input
-                placeholder="What will you focus on?"
+                placeholder={autoTitle || "What will you focus on?"}
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleAdd()}
@@ -242,7 +402,7 @@ export default function TimerPage() {
         <div className="bg-card rounded-2xl border border-border p-12 text-center">
           <img src={EMPTY_TIMER_IMG} alt="No pomodoros" className="w-40 h-40 mx-auto mb-4 rounded-2xl object-cover opacity-90" />
           <h3 className="font-serif text-xl text-foreground mb-2">No Pomodoros yet</h3>
-          <p className="text-sm text-muted-foreground mb-4">Create your first Pomodoro with a specific goal.</p>
+          <p className="text-sm text-muted-foreground mb-4">Create your first Pomodoro and link it to your tasks.</p>
           <Button onClick={() => setDialogOpen(true)} variant="outline" className="gap-2">
             <Plus className="w-4 h-4" /> Create Your First Pomodoro
           </Button>
@@ -256,6 +416,11 @@ export default function TimerPage() {
             const progress = totalSeconds > 0 ? Math.min(1, elapsed / totalSeconds) : 0;
             const isCompleted = pom.status === 'completed';
             const isRunning = pom.status === 'running';
+            const linkedLabel = pom.linkedTasks && pom.linkedTasks.length > 0
+              ? getLinkedTasksLabel(pom.linkedTasks, state.tasks)
+              : pom.linkedTaskId
+                ? (state.tasks.find(t => t.id === pom.linkedTaskId)?.title || '')
+                : '';
 
             return (
               <div
@@ -267,6 +432,12 @@ export default function TimerPage() {
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-sm text-foreground truncate">{pom.title}</h4>
                     <p className="text-xs text-muted-foreground mt-0.5">{pom.duration} min</p>
+                    {linkedLabel && (
+                      <p className="text-[10px] text-warm-sage mt-1 truncate flex items-center gap-1">
+                        <ListChecks className="w-3 h-3 shrink-0" />
+                        {linkedLabel}
+                      </p>
+                    )}
                   </div>
                   <button
                     onClick={() => dispatch({ type: 'DELETE_POMODORO', payload: pom.id })}
@@ -321,9 +492,9 @@ export default function TimerPage() {
         <div>
           <h4 className="text-sm font-semibold text-foreground mb-1">How it works</h4>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Create a Pomodoro for each task or goal you want to focus on. Set the duration (default {state.settings.focusDuration}min),
-            then start each one when you're ready. Running timers persist across page refreshes — close the tab and come back later!
-            You'll hear a chime and get a browser notification when a timer completes.
+            Create a Pomodoro and link it to one or more tasks (or specific subtasks) you want to focus on.
+            Set the duration (default {state.settings.focusDuration}min), then start when you're ready.
+            Running timers persist across page refreshes. You'll hear a chime and get a browser notification when done.
           </p>
         </div>
       </div>

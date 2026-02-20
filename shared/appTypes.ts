@@ -7,7 +7,7 @@ export type TaskStatus = 'active' | 'done';
 export type QuadrantType = 'do-first' | 'schedule' | 'delegate' | 'eliminate' | 'unassigned';
 export type Category = 'work' | 'personal' | 'health' | 'learning' | 'errands' | 'other';
 export type EnergyLevel = 'low' | 'medium' | 'high';
-export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'weekdays' | 'none';
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'weekdays' | 'none';
 export type NotificationSound = 'gentle-chime' | 'bell' | 'singing-bowl' | 'wood-block' | 'digital-beep' | 'none';
 export type ReadingStatus = 'unread' | 'reading' | 'read';
 
@@ -53,8 +53,18 @@ export interface Task {
   recurrenceParentId?: string;
   /** For recurring tasks: next scheduled creation date (ISO string) */
   recurrenceNextDate?: string;
+  /** For quarterly recurrence: the day of month to recur on (e.g., 16) */
+  recurrenceDayOfMonth?: number;
+  /** For quarterly recurrence: starting month (1-12, e.g., 2 for Feb) */
+  recurrenceStartMonth?: number;
   /** Subtasks (checklist items within a task) */
   subtasks?: Subtask[];
+}
+
+/** A linked task or subtask reference for a pomodoro */
+export interface PomodoroLink {
+  taskId: string;
+  subtaskId?: string;
 }
 
 export interface Pomodoro {
@@ -69,8 +79,10 @@ export interface Pomodoro {
   startedAt?: string;
   /** Timer persistence: accumulated seconds before the current run */
   accumulatedSeconds?: number;
-  /** Optional: linked task ID for focus mode */
+  /** Optional: linked task ID for focus mode (legacy, single task) */
   linkedTaskId?: string;
+  /** Multiple linked tasks/subtasks for this pomodoro session */
+  linkedTasks?: PomodoroLink[];
 }
 
 export interface TimerSettings {
@@ -103,6 +115,24 @@ export interface TaskTemplate {
   createdAt: string;
 }
 
+/** A reminder — birthdays, appointments, recurring events */
+export interface Reminder {
+  id: string;
+  title: string;
+  description?: string;
+  /** ISO date string (YYYY-MM-DD) */
+  date: string;
+  /** Recurrence: 'none' for one-off, 'yearly' for birthdays, etc. */
+  recurrence: 'none' | 'yearly' | 'monthly' | 'weekly';
+  /** Category for visual grouping */
+  category: 'birthday' | 'appointment' | 'event' | 'other';
+  /** Whether this occurrence has been acknowledged */
+  acknowledged?: boolean;
+  /** Date when acknowledged (ISO string) */
+  acknowledgedAt?: string;
+  createdAt: string;
+}
+
 export interface AppState {
   tasks: Task[];
   pomodoros: Pomodoro[];
@@ -115,6 +145,8 @@ export interface AppState {
   preferences?: AppPreferences;
   /** Read Later pocket — saved links */
   readingList?: ReadingItem[];
+  /** Reminders — birthdays, appointments, events */
+  reminders?: Reminder[];
 }
 
 export interface AppPreferences {

@@ -3,7 +3,7 @@ export type TaskStatus = 'active' | 'done';
 export type QuadrantType = 'do-first' | 'schedule' | 'delegate' | 'eliminate' | 'unassigned';
 export type Category = 'work' | 'personal' | 'health' | 'learning' | 'errands' | 'other';
 export type EnergyLevel = 'low' | 'medium' | 'high';
-export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'weekdays' | 'none';
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'weekdays' | 'none';
 export type NotificationSound = 'gentle-chime' | 'bell' | 'singing-bowl' | 'wood-block' | 'digital-beep' | 'none';
 export type ReadingStatus = 'unread' | 'reading' | 'read';
 
@@ -42,7 +42,14 @@ export interface Task {
   recurrence?: RecurrenceFrequency;
   recurrenceParentId?: string;
   recurrenceNextDate?: string;
+  recurrenceDayOfMonth?: number;
+  recurrenceStartMonth?: number;
   subtasks?: Subtask[];
+}
+
+export interface PomodoroLink {
+  taskId: string;
+  subtaskId?: string;
 }
 
 export interface Pomodoro {
@@ -56,6 +63,7 @@ export interface Pomodoro {
   startedAt?: string;
   accumulatedSeconds?: number;
   linkedTaskId?: string;
+  linkedTasks?: PomodoroLink[];
 }
 
 export interface TimerSettings {
@@ -87,6 +95,18 @@ export interface TaskTemplate {
   createdAt: string;
 }
 
+export interface Reminder {
+  id: string;
+  title: string;
+  description?: string;
+  date: string;
+  recurrence: 'none' | 'yearly' | 'monthly' | 'weekly';
+  category: 'birthday' | 'appointment' | 'event' | 'other';
+  acknowledged?: boolean;
+  acknowledgedAt?: string;
+  createdAt: string;
+}
+
 export interface AppState {
   tasks: Task[];
   pomodoros: Pomodoro[];
@@ -96,6 +116,7 @@ export interface AppState {
   templates?: TaskTemplate[];
   preferences?: AppPreferences;
   readingList?: ReadingItem[];
+  reminders?: Reminder[];
 }
 
 export interface AppPreferences {

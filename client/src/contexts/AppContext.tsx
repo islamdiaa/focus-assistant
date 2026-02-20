@@ -1,13 +1,13 @@
 import { createContext, useContext, useReducer, useEffect, useCallback, useRef, useState, type ReactNode } from 'react';
 import { nanoid } from 'nanoid';
-import type { Task, Pomodoro, TimerSettings, DailyStats, AppState, Priority, QuadrantType, Category, EnergyLevel, RecurrenceFrequency, Subtask, TaskTemplate, AppPreferences, ReadingItem, ReadingStatus } from '@/lib/types';
+import type { Task, Pomodoro, PomodoroLink, TimerSettings, DailyStats, AppState, Priority, QuadrantType, Category, EnergyLevel, RecurrenceFrequency, Subtask, TaskTemplate, AppPreferences, ReadingItem, ReadingStatus, Reminder } from '@/lib/types';
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from '@/lib/types';
 import { loadState, saveState, pollTimestamp } from '@/lib/sheets';
 
 // ---- Actions ----
 type Action =
   | { type: 'LOAD_STATE'; payload: AppState }
-  | { type: 'ADD_TASK'; payload: { title: string; description?: string; priority: Priority; dueDate?: string; category?: Category; energy?: EnergyLevel; recurrence?: RecurrenceFrequency; subtasks?: Array<{ title: string }> } }
+  | { type: 'ADD_TASK'; payload: { title: string; description?: string; priority: Priority; dueDate?: string; category?: Category; energy?: EnergyLevel; recurrence?: RecurrenceFrequency; recurrenceDayOfMonth?: number; recurrenceStartMonth?: number; subtasks?: Array<{ title: string }> } }
   | { type: 'UPDATE_TASK'; payload: Partial<Task> & { id: string } }
   | { type: 'DELETE_TASK'; payload: string }
   | { type: 'TOGGLE_TASK'; payload: string }
@@ -16,7 +16,7 @@ type Action =
   | { type: 'TOGGLE_SUBTASK'; payload: { taskId: string; subtaskId: string } }
   | { type: 'DELETE_SUBTASK'; payload: { taskId: string; subtaskId: string } }
   | { type: 'UPDATE_SUBTASK'; payload: { taskId: string; subtaskId: string; title: string } }
-  | { type: 'ADD_POMODORO'; payload: { title: string; duration: number; linkedTaskId?: string } }
+  | { type: 'ADD_POMODORO'; payload: { title: string; duration: number; linkedTaskId?: string; linkedTasks?: PomodoroLink[] } }
   | { type: 'UPDATE_POMODORO'; payload: Partial<Pomodoro> & { id: string } }
   | { type: 'DELETE_POMODORO'; payload: string }
   | { type: 'TICK_POMODORO'; payload: string }
@@ -33,6 +33,10 @@ type Action =
   | { type: 'UPDATE_READING_ITEM'; payload: Partial<ReadingItem> & { id: string } }
   | { type: 'DELETE_READING_ITEM'; payload: string }
   | { type: 'MARK_READING_STATUS'; payload: { id: string; status: ReadingStatus } }
+  | { type: 'ADD_REMINDER'; payload: { title: string; description?: string; date: string; recurrence: Reminder['recurrence']; category: Reminder['category'] } }
+  | { type: 'UPDATE_REMINDER'; payload: Partial<Reminder> & { id: string } }
+  | { type: 'DELETE_REMINDER'; payload: string }
+  | { type: 'ACK_REMINDER'; payload: string }
   | { type: 'UNDO' }
   | { type: 'REDO' };
 
@@ -70,7 +74,7 @@ function updateTodayStats(stats: DailyStats[], update: Partial<DailyStats>): Dai
   return [...stats, { date: today, tasksCompleted: 0, focusMinutes: 0, pomodorosCompleted: 0, ...update }];
 }
 
-function computeNextDate(freq: RecurrenceFrequency, from: Date): string | undefined {
+function computeNextDate(freq: RecurrenceFrequency, from: Date, task?: { recurrenceDayOfMonth?: number; recurrenceStartMonth?: number }): string | undefined {
   const d = new Date(from);
   switch (freq) {
     case 'daily':
@@ -82,6 +86,26 @@ function computeNextDate(freq: RecurrenceFrequency, from: Date): string | undefi
     case 'monthly':
       d.setMonth(d.getMonth() + 1);
       return d.toISOString();
+    case 'quarterly': {
+      // Quarterly: advance to the next quarter month (every 3 months)
+      // Uses recurrenceStartMonth to determine the quarter cycle and recurrenceDayOfMonth for the day
+      const dayOfMonth = task?.recurrenceDayOfMonth || d.getDate();
+      const startMonth = task?.recurrenceStartMonth || (d.getMonth() + 1); // 1-indexed
+      // Quarter months based on start: e.g., start=2 → [2, 5, 8, 11]
+      const quarterMonths = [0, 3, 6, 9].map(offset => ((startMonth - 1 + offset) % 12) + 1);
+      const currentMonth = d.getMonth() + 1; // 1-indexed
+      const currentDay = d.getDate();
+      // Find the next quarter month after current date
+      let nextMonth = quarterMonths.find(m => m > currentMonth || (m === currentMonth && dayOfMonth > currentDay));
+      let nextYear = d.getFullYear();
+      if (!nextMonth) {
+        // Wrap to next year's first quarter month
+        nextMonth = quarterMonths[0];
+        nextYear += 1;
+      }
+      const next = new Date(nextYear, nextMonth - 1, dayOfMonth);
+      return next.toISOString();
+    }
     case 'weekdays': {
       d.setDate(d.getDate() + 1);
       while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
@@ -129,8 +153,13 @@ function appReducer(state: AppState, action: Action): AppState {
         quadrant: 'unassigned',
         createdAt: new Date().toISOString(),
         recurrence: action.payload.recurrence,
+        recurrenceDayOfMonth: action.payload.recurrenceDayOfMonth,
+        recurrenceStartMonth: action.payload.recurrenceStartMonth,
         recurrenceNextDate: action.payload.recurrence && action.payload.recurrence !== 'none'
-          ? computeNextDate(action.payload.recurrence, new Date())
+          ? computeNextDate(action.payload.recurrence, new Date(), {
+              recurrenceDayOfMonth: action.payload.recurrenceDayOfMonth,
+              recurrenceStartMonth: action.payload.recurrenceStartMonth,
+            })
           : undefined,
         subtasks: subtasks.length > 0 ? subtasks : undefined,
       };
@@ -169,7 +198,10 @@ function appReducer(state: AppState, action: Action): AppState {
       );
 
       if (newStatus === 'done' && task.recurrence && task.recurrence !== 'none') {
-        const nextDate = computeNextDate(task.recurrence, new Date());
+        const nextDate = computeNextDate(task.recurrence, new Date(), {
+          recurrenceDayOfMonth: task.recurrenceDayOfMonth,
+          recurrenceStartMonth: task.recurrenceStartMonth,
+        });
         const newTask: Task = {
           id: nanoid(),
           title: task.title,
@@ -182,6 +214,8 @@ function appReducer(state: AppState, action: Action): AppState {
           quadrant: task.quadrant,
           createdAt: new Date().toISOString(),
           recurrence: task.recurrence,
+          recurrenceDayOfMonth: task.recurrenceDayOfMonth,
+          recurrenceStartMonth: task.recurrenceStartMonth,
           recurrenceParentId: task.id,
           recurrenceNextDate: nextDate,
           subtasks: task.subtasks?.map(s => ({ id: nanoid(), title: s.title, done: false })),
@@ -269,6 +303,7 @@ function appReducer(state: AppState, action: Action): AppState {
         status: 'idle',
         createdAt: new Date().toISOString(),
         linkedTaskId: action.payload.linkedTaskId,
+        linkedTasks: action.payload.linkedTasks,
       };
       return { ...state, pomodoros: [pom, ...state.pomodoros] };
     }
@@ -396,6 +431,61 @@ function appReducer(state: AppState, action: Action): AppState {
         readingList: (state.readingList || []).map(r =>
           r.id === action.payload.id
             ? { ...r, status: action.payload.status, readAt: action.payload.status === 'read' ? new Date().toISOString() : r.readAt }
+            : r
+        ),
+      };
+    }
+
+    case 'ADD_REMINDER': {
+      const reminder: Reminder = {
+        id: nanoid(),
+        title: action.payload.title,
+        description: action.payload.description,
+        date: action.payload.date,
+        recurrence: action.payload.recurrence,
+        category: action.payload.category,
+        createdAt: new Date().toISOString(),
+      };
+      return { ...state, reminders: [reminder, ...(state.reminders || [])] };
+    }
+
+    case 'UPDATE_REMINDER': {
+      return {
+        ...state,
+        reminders: (state.reminders || []).map(r =>
+          r.id === action.payload.id ? { ...r, ...action.payload } : r
+        ),
+      };
+    }
+
+    case 'DELETE_REMINDER': {
+      return { ...state, reminders: (state.reminders || []).filter(r => r.id !== action.payload) };
+    }
+
+    case 'ACK_REMINDER': {
+      const reminder = (state.reminders || []).find(r => r.id === action.payload);
+      if (!reminder) return state;
+      if (reminder.recurrence === 'none') {
+        // One-off: mark acknowledged
+        return {
+          ...state,
+          reminders: (state.reminders || []).map(r =>
+            r.id === action.payload
+              ? { ...r, acknowledged: true, acknowledgedAt: new Date().toISOString() }
+              : r
+          ),
+        };
+      }
+      // Recurring: advance to next occurrence
+      const d = new Date(reminder.date);
+      if (reminder.recurrence === 'yearly') d.setFullYear(d.getFullYear() + 1);
+      else if (reminder.recurrence === 'monthly') d.setMonth(d.getMonth() + 1);
+      else if (reminder.recurrence === 'weekly') d.setDate(d.getDate() + 7);
+      return {
+        ...state,
+        reminders: (state.reminders || []).map(r =>
+          r.id === action.payload
+            ? { ...r, date: d.toISOString().split('T')[0], acknowledged: false, acknowledgedAt: undefined }
             : r
         ),
       };

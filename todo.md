@@ -118,3 +118,13 @@
 - [x] Update CI to push to Docker Hub (islamdiaa/focus-assistant) instead of only GHCR
 - [x] Add Docker Hub login step with secrets
 - [x] Keep GHCR push as secondary registry
+
+# V1.8.1 — Incremental Improvements
+
+- [x] Task-linked pomodoros — select multiple tasks or subtasks when starting a timer, track focus time per task
+- [x] Quarterly recurring tasks — repeat every 3 months from a specific start date (e.g., 16th Feb/May/Aug/Nov)
+- [x] Reminders system — birthdays, appointments; upcoming view (within 5 days) + today highlight on Today page
+- [ ] Playwright E2E tests — critical flows (task CRUD, timer, settings, read later, templates, weekly review)
+- [ ] README screenshots — capture key pages and add to README.md
+- [ ] Update architecture.md, claude.md, agent.md with V1.8.x changes
+- [ ] Version bump to 1.8.1, CHANGELOG update

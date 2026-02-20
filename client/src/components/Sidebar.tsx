@@ -4,11 +4,11 @@
  * Mobile: hidden by default, opens as overlay via hamburger button
  * V1.2: Added Daily Planner, Templates, Weekly Review, Focus Mode
  */
-import { CheckSquare, Timer, LayoutGrid, BarChart3, Settings, Sparkles, X, Sun, FileText, CalendarCheck, Crosshair, BookOpen } from 'lucide-react';
+import { CheckSquare, Timer, LayoutGrid, BarChart3, Settings, Sparkles, X, Sun, FileText, CalendarCheck, Crosshair, BookOpen, Bell } from 'lucide-react';
 import { DAILY_TIPS } from '@/lib/types';
 import { useMemo } from 'react';
 
-export type Page = 'planner' | 'tasks' | 'timer' | 'matrix' | 'stats' | 'reading' | 'templates' | 'review' | 'settings';
+export type Page = 'planner' | 'tasks' | 'timer' | 'matrix' | 'stats' | 'reading' | 'reminders' | 'templates' | 'review' | 'settings';
 
 interface SidebarProps {
   activePage: Page;
@@ -25,6 +25,7 @@ const NAV_ITEMS: { id: Page; label: string; icon: typeof CheckSquare; section?: 
   { id: 'matrix', label: 'Matrix', icon: LayoutGrid },
   { id: 'stats', label: 'Stats', icon: BarChart3 },
   { id: 'reading', label: 'Read Later', icon: BookOpen, section: 'Knowledge' },
+  { id: 'reminders', label: 'Reminders', icon: Bell },
   { id: 'templates', label: 'Templates', icon: FileText, section: 'Tools' },
   { id: 'review', label: 'Weekly Review', icon: CalendarCheck },
   { id: 'settings', label: 'Settings', icon: Settings, section: 'System' },
