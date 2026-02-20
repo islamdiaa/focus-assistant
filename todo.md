@@ -175,3 +175,4 @@
 - [x] Inline task editing from Matrix view — edit task title, priority, due date directly from Eisenhower matrix
 - [x] Tests for edit reminder and matrix inline editing (8 tests in v182-features.test.ts)
 - [x] Push latest code to GitHub via checkpoint
+- [x] Fix Dockerfile ARM64 QEMU build crash (illegal instruction in native packages)
