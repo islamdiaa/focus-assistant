@@ -149,3 +149,7 @@
 - [x] Show time in overdue/today/upcoming views
 - [x] Update Zod schema, MD serialization, and round-trip tests
 - [x] Add R keyboard shortcut to open new reminder dialog (like N for new task)
+
+# Bug Fix — AppProvider missing
+
+- [x] Fix: Home component uses useApp() but is not wrapped in AppProvider — HMR invalidation crash (dev-only)

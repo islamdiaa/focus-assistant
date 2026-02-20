@@ -543,7 +543,7 @@ interface AppContextType {
   redo: () => void;
 }
 
-const AppContext = createContext<AppContextType>(null as unknown as AppContextType);
+const AppContext = createContext<AppContextType | null>(null);
 
 const POLL_INTERVAL = 5000;
 
@@ -630,8 +630,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useApp() {
+export function useApp(): AppContextType {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useApp must be used within AppProvider');
+  if (!ctx) {
+    // During Vite HMR, the context can temporarily be null when modules are invalidated.
+    // Return a safe fallback instead of crashing — the component will re-render once HMR settles.
+    if (import.meta.hot) {
+      console.warn('[AppContext] Context unavailable during HMR, returning fallback state');
+      const noop = () => {};
+      return {
+        state: initialState,
+        dispatch: noop as any,
+        syncToCloud: async () => {},
+        reloadState: async () => {},
+        canUndo: false,
+        canRedo: false,
+        undo: noop,
+        redo: noop,
+      };
+    }
+    throw new Error('useApp must be used within AppProvider');
+  }
   return ctx;
 }
