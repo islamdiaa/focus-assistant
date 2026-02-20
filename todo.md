@@ -68,3 +68,31 @@
 - [x] Update CHANGELOG.md with V1.2 entries
 - [x] Update version number in package.json and SettingsPage
 - [x] Align all version references to V1.7.0 (package.json, SettingsPage, CHANGELOG, Git tag)
+
+# V1.8 — Knowledge & Reading
+
+- [ ] Read Later pocket — save links with title/URL, tag them, mark as read
+- [ ] Reading notes — add notes/highlights to saved links
+- [ ] Daily digest — surface unread links on the Today page
+- [ ] Obsidian export for reading notes — push highlights to vault
+
+# V1.9 — Focus Experience
+
+- [ ] Spotify/YT Music integration — link playlist, play during focus sessions
+- [ ] Focus ambient sounds — built-in lo-fi/rain/white noise as fallback
+- [ ] Actual notification audio playback — wire Web Audio API to sound preferences
+- [ ] Task-linked pomodoros — pick a task when starting a timer, track focus time per task
+
+# V2.0 — Intelligence
+
+- [ ] AI task breakdown — paste a goal, get subtasks generated via LLM
+- [ ] Smart scheduling — suggest optimal time slots based on energy patterns
+- [ ] Weekly review AI summary — auto-generate insights from week's data
+- [ ] Natural language task input — "call dentist tomorrow high priority"
+
+# V2.1 — Collaboration & Sync
+
+- [ ] Multi-device sync via cloud storage (S3/Supabase)
+- [ ] Shared templates — export/import template packs
+- [ ] Calendar integration (Google Calendar) — see events alongside tasks
+- [ ] Mobile PWA improvements — offline support, push notifications
