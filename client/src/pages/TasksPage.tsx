@@ -435,7 +435,7 @@ function SortableTaskCard({
 // ---- Main Page ----
 export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0, reminderTrigger = 0 }: TasksPageProps) {
   const { state, dispatch } = useApp();
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<Filter>('active');
   const [sort, setSort] = useState<Sort>('priority');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

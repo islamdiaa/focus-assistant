@@ -183,3 +183,7 @@
 - [x] Audit codebase for bugs and issues
 - [x] Fix bugs found during audit (pinnedToday cleared on completion, energy suggestions exclude pinned/due tasks)
 - [x] Add tests for new features and bug fixes (6 tests in v182-pintoday.test.ts)
+- [ ] Tasks page default filter: Open (active) tasks instead of All
+- [ ] Version bump to 1.8.3
+- [x] Tasks page default filter: Open (active) tasks instead of All
+- [x] Version bump to 1.8.3

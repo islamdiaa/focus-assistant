@@ -6,21 +6,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [1.8.2] - 2026-02-20
+## [1.8.3] - 2026-02-20
 
 ### Fixed
 - **Focus Mode ghost overlay** — exiting Focus Mode left timer circle, play/reset buttons, and task selector visible on top of the main layout; replaced `AnimatePresence` wrapper with direct conditional rendering to ensure clean unmount
 - **TimerPage TypeScript error** — `getEffectiveElapsed` function signature didn't accept `null` for `startedAt` and `accumulatedSeconds`, causing TS2345 when called with Zod-inferred types that include `null`
 - **Version string mismatch** — Settings page showed v1.8.0 instead of current version
+- **Energy suggestions duplication** — Today page energy suggestions now exclude tasks already pinned to today or due today, preventing duplicate entries
+- **pinnedToday not cleared on completion** — completing a task now clears its `pinnedToday` field to prevent stale pins
+- **Dockerfile ARM64 QEMU crash** — `--ignore-scripts` only applied to production stage; builder stage now runs scripts normally so esbuild binary installs correctly
 
 ### Added
+- **Pin-to-Today task picker** — "My Today" section on the Today page with an "+ Add Task" button that opens a searchable picker to pin any active task; pinned tasks show with unpin buttons and completion toggles
+- **Undo-acknowledge reminders** — acknowledged reminders now show an "Undo" button to reverse the acknowledgment and restore the reminder to active state
+- **Reminder creation from Tasks page** — new Reminder button in Tasks page header + **R** keyboard shortcut opens a full reminder creation dialog without leaving the Tasks view
 - **Edit Reminder** — click the pencil icon on any reminder to edit its title, description, date, time, category, and recurrence in a pre-filled dialog; uses existing `UPDATE_REMINDER` reducer action
 - **Inline Matrix Task Editing** — click the pencil icon on any task in the Eisenhower Matrix to edit title, priority, and due date inline without leaving the view; priority badges now shown on task cards
+- **SKIP_AUTH env var** — new environment variable (default `true` in Dockerfile) bypasses Manus OAuth for self-hosted deployments; injects a local admin user automatically
+- **Unraid template** — `unraid-template.xml` for Community Apps submission with all env vars pre-configured
 - **v182-audit.test.ts** — 4 tests covering pomodoro serialization with null/undefined `startedAt`, linked tasks round-trip, and reminders round-trip
 - **v182-features.test.ts** — 8 tests covering edit reminder round-trip (title, recurrence, optional fields) and inline matrix task editing round-trip (title, priority, dueDate, quadrant preservation)
+- **v182-pintoday.test.ts** — 6 tests covering pinnedToday field serialization, Zod validation, null handling, and completion clearing
 
 ### Changed
-- Test count increased from 104 to 116 across 13 test files
+- **Tasks page defaults** — Tasks page now defaults to showing Open (active) tasks with priority sort, instead of All tasks with manual order
+- **Analytics script conditional** — `index.html` analytics tag only loads when `VITE_ANALYTICS_ENDPOINT` is set, preventing URIError on self-hosted
+- Test count increased from 104 to 122 across 14 test files
 
 ---
 
