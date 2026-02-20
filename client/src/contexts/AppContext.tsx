@@ -484,6 +484,7 @@ function appReducer(state: AppState, action: Action): AppState {
       // Recurring: advance to next occurrence
       const d = new Date(reminder.date);
       if (reminder.recurrence === 'yearly') d.setFullYear(d.getFullYear() + 1);
+      else if (reminder.recurrence === 'quarterly') d.setMonth(d.getMonth() + 3);
       else if (reminder.recurrence === 'monthly') d.setMonth(d.getMonth() + 1);
       else if (reminder.recurrence === 'weekly') d.setDate(d.getDate() + 7);
       return {

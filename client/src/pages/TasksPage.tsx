@@ -455,14 +455,21 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0, remin
   const [newSubtasks, setNewSubtasks] = useState<string[]>([]);
   const [newSubtaskInput, setNewSubtaskInput] = useState('');
 
-  // Keyboard shortcut: N opens dialog
+  // Keyboard shortcut triggers — skip initial mount to prevent auto-open on navigate
+  const prevNewTaskTrigger = useRef(newTaskTrigger);
+  const prevSearchTrigger = useRef(searchTrigger);
   useEffect(() => {
-    if (newTaskTrigger > 0) setDialogOpen(true);
+    if (newTaskTrigger !== prevNewTaskTrigger.current) {
+      prevNewTaskTrigger.current = newTaskTrigger;
+      if (newTaskTrigger > 0) setDialogOpen(true);
+    }
   }, [newTaskTrigger]);
 
-  // Keyboard shortcut: / focuses search
   useEffect(() => {
-    if (searchTrigger > 0) searchInputRef.current?.focus();
+    if (searchTrigger !== prevSearchTrigger.current) {
+      prevSearchTrigger.current = searchTrigger;
+      if (searchTrigger > 0) searchInputRef.current?.focus();
+    }
   }, [searchTrigger]);
 
   // Reminder dialog state
@@ -484,20 +491,25 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0, remin
   const REMINDER_RECURRENCE: { value: Reminder['recurrence']; label: string }[] = [
     { value: 'none', label: 'One-time' },
     { value: 'yearly', label: 'Yearly' },
+    { value: 'quarterly', label: 'Quarterly' },
     { value: 'monthly', label: 'Monthly' },
     { value: 'weekly', label: 'Weekly' },
   ];
 
-  // Keyboard shortcut: R opens reminder dialog
+  // Keyboard shortcut: R opens reminder dialog — skip initial mount
+  const prevReminderTrigger = useRef(reminderTrigger);
   useEffect(() => {
-    if (reminderTrigger > 0) {
-      setRemTitle('');
-      setRemDescription('');
-      setRemDate('');
-      setRemTime('');
-      setRemRecurrence('none');
-      setRemCategory('other');
-      setReminderDialogOpen(true);
+    if (reminderTrigger !== prevReminderTrigger.current) {
+      prevReminderTrigger.current = reminderTrigger;
+      if (reminderTrigger > 0) {
+        setRemTitle('');
+        setRemDescription('');
+        setRemDate('');
+        setRemTime('');
+        setRemRecurrence('none');
+        setRemCategory('other');
+        setReminderDialogOpen(true);
+      }
     }
   }, [reminderTrigger]);
 

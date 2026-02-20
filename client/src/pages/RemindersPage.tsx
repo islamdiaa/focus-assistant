@@ -4,7 +4,7 @@
  * R keyboard shortcut opens the new reminder dialog.
  * Supports create, edit, acknowledge, and delete.
  */
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import type { Reminder } from '@/lib/types';
 import { Plus, Bell, Cake, Calendar, Star, Trash2, Check, AlertCircle, Clock, Pencil, Undo2 } from 'lucide-react';
@@ -23,6 +23,7 @@ const CATEGORY_CONFIG: Record<Reminder['category'], { icon: typeof Bell; label: 
 const RECURRENCE_OPTIONS: { value: Reminder['recurrence']; label: string }[] = [
   { value: 'none', label: 'One-time' },
   { value: 'yearly', label: 'Yearly' },
+  { value: 'quarterly', label: 'Quarterly' },
   { value: 'monthly', label: 'Monthly' },
   { value: 'weekly', label: 'Weekly' },
 ];
@@ -69,9 +70,13 @@ export default function RemindersPage({ reminderTrigger = 0 }: RemindersPageProp
   const [recurrence, setRecurrence] = useState<Reminder['recurrence']>('none');
   const [category, setCategory] = useState<Reminder['category']>('other');
 
-  // R keyboard shortcut trigger from parent
+  // R keyboard shortcut trigger from parent — skip initial mount
+  const prevTriggerRef = useRef(reminderTrigger);
   useEffect(() => {
-    if (reminderTrigger > 0) openCreateDialog();
+    if (reminderTrigger !== prevTriggerRef.current) {
+      prevTriggerRef.current = reminderTrigger;
+      if (reminderTrigger > 0) openCreateDialog();
+    }
   }, [reminderTrigger]);
 
   const reminders = state.reminders || [];

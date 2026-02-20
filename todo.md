@@ -191,3 +191,9 @@
 - [x] Fix save reliability: save errors now tracked with retry (3 attempts), error banner in UI
 - [x] Add graceful shutdown (SIGTERM handler + STOPSIGNAL in Dockerfile)
 - [x] Column format resilience: col() helper safely handles missing columns in old formats
+- [x] Create preflight script (pnpm preflight) — version consistency, tsc, tests, schema compat, env guards
+- [x] Update agent.md with process improvements from retrospective
+- [x] Update claude.md with process improvements from retrospective
+- [x] BUG: Reminder dialog auto-opens when navigating to Reminders page
+- [x] Add quarterly recurrence for reminders (same as tasks)
+- [x] BUG: TasksPage new task/search/reminder dialogs auto-open on page navigate

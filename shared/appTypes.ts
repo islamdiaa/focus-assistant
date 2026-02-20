@@ -23,7 +23,7 @@ export const energySchema = z.enum(['low', 'medium', 'high']);
 export const recurrenceSchema = z.enum(['daily', 'weekly', 'monthly', 'quarterly', 'weekdays', 'none']);
 export const notificationSoundSchema = z.enum(['gentle-chime', 'bell', 'singing-bowl', 'wood-block', 'digital-beep', 'none']);
 export const readingStatusSchema = z.enum(['unread', 'reading', 'read']);
-export const reminderRecurrenceSchema = z.enum(['none', 'yearly', 'monthly', 'weekly']);
+export const reminderRecurrenceSchema = z.enum(['none', 'yearly', 'quarterly', 'monthly', 'weekly']);
 export const reminderCategorySchema = z.enum(['birthday', 'appointment', 'event', 'other']);
 
 // ---- Entity Schemas ----

@@ -102,8 +102,8 @@ export default function Home() {
     // Skip remaining shortcuts if typing in an input
     if (isInput) return;
 
-    // F: Enter focus mode
-    if (e.key === 'f' || e.key === 'F') {
+    // F: Enter focus mode — skip if Cmd/Ctrl held (browser Find)
+    if ((e.key === 'f' || e.key === 'F') && !isMod) {
       if (!focusMode) {
         e.preventDefault();
         setFocusMode(true);
@@ -118,8 +118,8 @@ export default function Home() {
       return;
     }
 
-    // N: New task (only on tasks page)
-    if (e.key === 'n' || e.key === 'N') {
+    // N: New task (only on tasks page) — skip if Cmd/Ctrl held (new window)
+    if ((e.key === 'n' || e.key === 'N') && !isMod) {
       if (activePage === 'tasks') {
         e.preventDefault();
         setNewTaskTrigger(t => t + 1);
@@ -127,8 +127,8 @@ export default function Home() {
       return;
     }
 
-    // R: New reminder (on tasks or reminders page)
-    if (e.key === 'r' || e.key === 'R') {
+    // R: New reminder (on tasks or reminders page) — skip if Cmd/Ctrl held (browser refresh)
+    if ((e.key === 'r' || e.key === 'R') && !isMod) {
       if (activePage === 'tasks' || activePage === 'reminders') {
         e.preventDefault();
         setReminderTrigger(t => t + 1);
