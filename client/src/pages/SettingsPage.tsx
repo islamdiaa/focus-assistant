@@ -14,10 +14,10 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import {
   Save, RotateCcw, Cloud, CloudOff, Timer, Link2,
-  FileText, HardDrive, Unplug,
+  FileText, HardDrive, Unplug, Download, Upload,
 } from 'lucide-react';
 import {
-  getStorageConfig, setStorageConfig,
+  getStorageConfig, setStorageConfig, exportData,
 } from '@/lib/sheets';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 import type { TimerSettings, StorageMode, StorageConfig } from '@/lib/types';
@@ -111,6 +111,51 @@ export default function SettingsPage() {
   }, []);
 
   const sheetsConfigured = mode === 'sheets' && !!sheetId && !!apiKey;
+
+  const handleExport = useCallback(async (format: 'md' | 'json') => {
+    try {
+      const data = await exportData(format);
+      const blob = new Blob([data], { type: format === 'md' ? 'text/markdown' : 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `focus-assist-data.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Exported as .${format}`);
+    } catch {
+      toast.error('Export failed');
+    }
+  }, []);
+
+  const handleImport = useCallback(async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.md,.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        // POST to server import endpoint
+        const res = await fetch('/api/trpc/data.importData', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ json: { content: text, format: file.name.endsWith('.json') ? 'json' : 'md' } }),
+          credentials: 'include',
+        });
+        if (res.ok) {
+          await reloadState();
+          toast.success('Data imported successfully!');
+        } else {
+          toast.error('Import failed');
+        }
+      } catch {
+        toast.error('Import failed');
+      }
+    };
+    input.click();
+  }, [reloadState]);
 
   return (
     <div className="p-4 lg:p-8 max-w-3xl">
@@ -350,6 +395,28 @@ export default function SettingsPage() {
           </Button>
           <Button onClick={handleReset} variant="outline" className="gap-2">
             <RotateCcw className="w-4 h-4" /> Reset
+          </Button>
+        </div>
+      </div>
+
+      {/* ========== EXPORT / IMPORT ========== */}
+      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Download className="w-4 h-4 text-warm-sage" />
+          <h3 className="font-semibold text-sm text-foreground">Export & Import</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Download your data as a Markdown or JSON file for backup, or import a previously exported file to restore.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={() => handleExport('md')} variant="outline" className="gap-2 text-xs">
+            <Download className="w-3.5 h-3.5" /> Download .md
+          </Button>
+          <Button onClick={() => handleExport('json')} variant="outline" className="gap-2 text-xs">
+            <Download className="w-3.5 h-3.5" /> Download .json
+          </Button>
+          <Button onClick={handleImport} variant="outline" className="gap-2 text-xs">
+            <Upload className="w-3.5 h-3.5" /> Import File
           </Button>
         </div>
       </div>

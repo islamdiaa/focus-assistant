@@ -19,3 +19,14 @@
 - [x] Write agent.md
 - [x] Write/update README.md
 - [x] Create private GitHub repo FocusAssistant and push
+
+# Improvements Batch
+
+- [x] 1. Auto-backup rotation (keep last 5 versions of MD file)
+- [x] 2. Timer persistence across page refresh (save startedAt timestamp)
+- [x] 3. Search + quick filter across task titles/descriptions
+- [x] 4. Keyboard shortcuts (N=new task, Esc=close, 1-5=switch pages)
+- [x] 5. Multi-tab sync via polling
+- [x] 6. Undo/redo action history
+- [x] 7. Recurring tasks (auto-creation on schedule)
+- [x] 8. Export to MD/JSON + Import from file

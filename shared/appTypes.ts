@@ -7,6 +7,7 @@ export type TaskStatus = 'active' | 'done';
 export type QuadrantType = 'do-first' | 'schedule' | 'delegate' | 'eliminate' | 'unassigned';
 export type Category = 'work' | 'personal' | 'health' | 'learning' | 'errands' | 'other';
 export type EnergyLevel = 'low' | 'medium' | 'high';
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'weekdays' | 'none';
 
 export interface Task {
   id: string;
@@ -20,6 +21,12 @@ export interface Task {
   quadrant: QuadrantType;
   createdAt: string;
   completedAt?: string;
+  /** Recurring task settings */
+  recurrence?: RecurrenceFrequency;
+  /** For recurring tasks: the template task ID this was spawned from */
+  recurrenceParentId?: string;
+  /** For recurring tasks: next scheduled creation date (ISO string) */
+  recurrenceNextDate?: string;
 }
 
 export interface Pomodoro {
@@ -30,6 +37,10 @@ export interface Pomodoro {
   status: 'idle' | 'running' | 'paused' | 'completed';
   createdAt: string;
   completedAt?: string;
+  /** Timer persistence: when the timer was started/resumed (ISO string) */
+  startedAt?: string;
+  /** Timer persistence: accumulated seconds before the current run */
+  accumulatedSeconds?: number;
 }
 
 export interface TimerSettings {

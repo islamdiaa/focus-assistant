@@ -50,10 +50,10 @@ export function stateToMarkdown(state: AppState): string {
   if (state.tasks.length === 0) {
     lines.push('_No tasks yet._');
   } else {
-    lines.push('| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed |');
-    lines.push('|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|');
+    lines.push('| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate |');
+    lines.push('|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|');
     for (const t of state.tasks) {
-      lines.push(`| ${t.id} | ${escapeField(t.title)} | ${escapeField(t.description || '')} | ${t.priority} | ${t.status} | ${t.dueDate || ''} | ${t.category || ''} | ${t.energy || ''} | ${t.quadrant} | ${t.createdAt} | ${t.completedAt || ''} |`);
+      lines.push(`| ${t.id} | ${escapeField(t.title)} | ${escapeField(t.description || '')} | ${t.priority} | ${t.status} | ${t.dueDate || ''} | ${t.category || ''} | ${t.energy || ''} | ${t.quadrant} | ${t.createdAt} | ${t.completedAt || ''} | ${t.recurrence || ''} | ${t.recurrenceParentId || ''} | ${t.recurrenceNextDate || ''} |`);
     }
   }
   lines.push('');
@@ -64,10 +64,10 @@ export function stateToMarkdown(state: AppState): string {
   if (state.pomodoros.length === 0) {
     lines.push('_No pomodoros yet._');
   } else {
-    lines.push('| ID | Title | Duration | Elapsed | Status | Created | Completed |');
-    lines.push('|----|-------|----------|---------|--------|---------|-----------|');
+    lines.push('| ID | Title | Duration | Elapsed | Status | Created | Completed | StartedAt | AccumulatedSeconds |');
+    lines.push('|----|-------|----------|---------|--------|---------|-----------|-----------|---------------------|');
     for (const p of state.pomodoros) {
-      lines.push(`| ${p.id} | ${escapeField(p.title)} | ${p.duration} | ${p.elapsed} | ${p.status} | ${p.createdAt} | ${p.completedAt || ''} |`);
+      lines.push(`| ${p.id} | ${escapeField(p.title)} | ${p.duration} | ${p.elapsed} | ${p.status} | ${p.createdAt} | ${p.completedAt || ''} | ${p.startedAt || ''} | ${p.accumulatedSeconds ?? ''} |`);
     }
   }
   lines.push('');
@@ -162,6 +162,9 @@ export function markdownToState(md: string): AppState {
           quadrant: (r[8] as Task['quadrant']) || 'unassigned',
           createdAt: r[9] || new Date().toISOString(),
           completedAt: r[10] || undefined,
+          recurrence: (r[11] as Task['recurrence']) || undefined,
+          recurrenceParentId: r[12] || undefined,
+          recurrenceNextDate: r[13] || undefined,
         });
       }
     }
@@ -179,6 +182,8 @@ export function markdownToState(md: string): AppState {
           status: (r[4] as Pomodoro['status']) || 'idle',
           createdAt: r[5] || new Date().toISOString(),
           completedAt: r[6] || undefined,
+          startedAt: r[7] || undefined,
+          accumulatedSeconds: r[8] ? parseInt(r[8]) : undefined,
         });
       }
     }
@@ -216,13 +221,51 @@ export async function loadFromMdFile(): Promise<AppState | null> {
   }
 }
 
+const MAX_BACKUPS = 5;
+
+async function rotateBackups(): Promise<void> {
+  try {
+    // Check if main file exists
+    await fs.access(DATA_FILE);
+  } catch {
+    return; // No file to backup
+  }
+
+  try {
+    // Shift existing backups: .bak.5 → delete, .bak.4 → .bak.5, etc.
+    for (let i = MAX_BACKUPS; i >= 1; i--) {
+      const src = i === 1 ? DATA_FILE : `${DATA_FILE}.bak.${i - 1}`;
+      const dst = `${DATA_FILE}.bak.${i}`;
+      try {
+        await fs.access(src);
+        await fs.copyFile(src, dst);
+      } catch {
+        // Source doesn't exist, skip
+      }
+    }
+  } catch (e) {
+    console.warn('Backup rotation failed:', e);
+  }
+}
+
 export async function saveToMdFile(state: AppState): Promise<boolean> {
   try {
     await ensureDataDir();
+    await rotateBackups();
     await fs.writeFile(DATA_FILE, stateToMarkdown(state), 'utf-8');
     return true;
   } catch (e) {
     console.warn('Failed to write MD file:', e);
     return false;
+  }
+}
+
+/** Get the file's last modified timestamp for polling */
+export async function getMdFileTimestamp(): Promise<number> {
+  try {
+    const stat = await fs.stat(DATA_FILE);
+    return stat.mtimeMs;
+  } catch {
+    return 0;
   }
 }

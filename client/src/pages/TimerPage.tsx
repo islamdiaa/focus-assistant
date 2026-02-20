@@ -2,10 +2,11 @@
  * Focus Timer Page — Warm Productivity design
  * Pomodoro timers with circular progress
  * Create multiple, start individually
+ * Timer persistence: running timers resume after page refresh using startedAt timestamp
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { Plus, Play, Pause, RotateCcw, Trash2, Info } from 'lucide-react';
+import { Plus, Play, Pause, RotateCcw, Trash2, Info, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -44,55 +45,95 @@ function CircularProgress({ progress, size = 120, strokeWidth = 6 }: { progress:
   );
 }
 
+// Play a completion sound using Web Audio API
+function playCompletionSound() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 523.25; // C5
+    gain.gain.value = 0.3;
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+    osc.stop(ctx.currentTime + 0.8);
+    // Second tone
+    setTimeout(() => {
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.frequency.value = 659.25; // E5
+      gain2.gain.value = 0.3;
+      osc2.start();
+      gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
+      osc2.stop(ctx.currentTime + 1);
+    }, 300);
+  } catch {
+    // Audio not available
+  }
+}
+
+/**
+ * Calculate effective elapsed seconds for a pomodoro,
+ * accounting for timer persistence via startedAt/accumulatedSeconds.
+ */
+function getEffectiveElapsed(pom: { status: string; elapsed: number; startedAt?: string; accumulatedSeconds?: number }): number {
+  if (pom.status === 'running' && pom.startedAt) {
+    const accumulated = pom.accumulatedSeconds || 0;
+    const sinceStart = Math.floor((Date.now() - new Date(pom.startedAt).getTime()) / 1000);
+    return accumulated + sinceStart;
+  }
+  return pom.elapsed;
+}
+
 export default function TimerPage() {
   const { state, dispatch } = useApp();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDuration, setNewDuration] = useState(state.settings.focusDuration);
-  const intervalsRef = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map());
+  const [tick, setTick] = useState(0);
+  const completedRef = useRef<Set<string>>(new Set());
 
   const activeCount = state.pomodoros.filter(p => p.status === 'running').length;
 
-  // Tick running pomodoros
+  // Single tick interval for all running timers
   useEffect(() => {
-    const running = state.pomodoros.filter(p => p.status === 'running');
-    
-    // Start intervals for newly running pomodoros
-    running.forEach(p => {
-      if (!intervalsRef.current.has(p.id)) {
-        const interval = setInterval(() => {
-          dispatch({ type: 'TICK_POMODORO', payload: p.id });
-        }, 1000);
-        intervalsRef.current.set(p.id, interval);
-      }
-    });
+    const hasRunning = state.pomodoros.some(p => p.status === 'running');
+    if (!hasRunning) return;
 
-    // Clear intervals for stopped pomodoros
-    intervalsRef.current.forEach((interval, id) => {
-      if (!running.find(p => p.id === id)) {
-        clearInterval(interval);
-        intervalsRef.current.delete(id);
-      }
-    });
+    const interval = setInterval(() => {
+      setTick(t => t + 1);
+    }, 1000);
 
-    return () => {
-      // Don't clear on unmount — we want timers to keep running
-    };
-  }, [state.pomodoros, dispatch]);
+    return () => clearInterval(interval);
+  }, [state.pomodoros]);
 
-  // Check for completed pomodoros
+  // Check for completed pomodoros on each tick
   useEffect(() => {
-    state.pomodoros.forEach(p => {
-      if (p.status === 'running' && p.elapsed >= p.duration * 60) {
-        dispatch({ type: 'COMPLETE_POMODORO', payload: p.id });
-        const interval = intervalsRef.current.get(p.id);
-        if (interval) {
-          clearInterval(interval);
-          intervalsRef.current.delete(p.id);
+    state.pomodoros.forEach(pom => {
+      if (pom.status === 'running' && !completedRef.current.has(pom.id)) {
+        const elapsed = getEffectiveElapsed(pom);
+        if (elapsed >= pom.duration * 60) {
+          completedRef.current.add(pom.id);
+          dispatch({ type: 'COMPLETE_POMODORO', payload: pom.id });
+          playCompletionSound();
+          // Browser notification
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('Pomodoro Complete!', { body: `"${pom.title}" is done. Great work!` });
+          }
         }
       }
     });
-  }, [state.pomodoros, dispatch]);
+  }, [tick, state.pomodoros, dispatch]);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
   const handleAdd = useCallback(() => {
     if (!newTitle.trim()) return;
@@ -106,14 +147,38 @@ export default function TimerPage() {
     const pom = state.pomodoros.find(p => p.id === id);
     if (!pom) return;
     if (pom.status === 'idle' || pom.status === 'paused') {
-      dispatch({ type: 'UPDATE_POMODORO', payload: { id, status: 'running' } });
+      // Start/resume: set startedAt to now, save accumulatedSeconds
+      dispatch({
+        type: 'UPDATE_POMODORO',
+        payload: {
+          id,
+          status: 'running',
+          startedAt: new Date().toISOString(),
+          accumulatedSeconds: pom.elapsed,
+        },
+      });
     } else if (pom.status === 'running') {
-      dispatch({ type: 'UPDATE_POMODORO', payload: { id, status: 'paused' } });
+      // Pause: calculate elapsed and clear startedAt
+      const elapsed = getEffectiveElapsed(pom);
+      dispatch({
+        type: 'UPDATE_POMODORO',
+        payload: {
+          id,
+          status: 'paused',
+          elapsed,
+          startedAt: undefined,
+          accumulatedSeconds: elapsed,
+        },
+      });
     }
   }, [state.pomodoros, dispatch]);
 
   const resetPomodoro = useCallback((id: string) => {
-    dispatch({ type: 'UPDATE_POMODORO', payload: { id, elapsed: 0, status: 'idle' } });
+    completedRef.current.delete(id);
+    dispatch({
+      type: 'UPDATE_POMODORO',
+      payload: { id, elapsed: 0, status: 'idle', startedAt: undefined, accumulatedSeconds: 0 },
+    });
   }, [dispatch]);
 
   return (
@@ -122,7 +187,7 @@ export default function TimerPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-serif text-2xl lg:text-3xl text-foreground">Focus Timer</h2>
-          <p className="text-sm text-muted-foreground mt-1">Create multiple Pomodoros · Start each when you're ready</p>
+          <p className="text-sm text-muted-foreground mt-1">Create multiple Pomodoros · Timers persist across refreshes</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -167,6 +232,9 @@ export default function TimerPage() {
         <span className="text-xs px-3 py-1 rounded-full bg-warm-sage-light text-warm-sage border border-warm-sage/20 font-medium">
           {activeCount} active
         </span>
+        <span className="text-xs px-3 py-1 rounded-full bg-warm-blue-light text-warm-blue border border-warm-blue/20 font-medium flex items-center gap-1">
+          <Volume2 className="w-3 h-3" /> Sound on complete
+        </span>
       </div>
 
       {/* Pomodoro list */}
@@ -183,8 +251,9 @@ export default function TimerPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           {state.pomodoros.map(pom => {
             const totalSeconds = pom.duration * 60;
-            const remaining = Math.max(0, totalSeconds - pom.elapsed);
-            const progress = totalSeconds > 0 ? pom.elapsed / totalSeconds : 0;
+            const elapsed = getEffectiveElapsed(pom);
+            const remaining = Math.max(0, totalSeconds - elapsed);
+            const progress = totalSeconds > 0 ? Math.min(1, elapsed / totalSeconds) : 0;
             const isCompleted = pom.status === 'completed';
             const isRunning = pom.status === 'running';
 
@@ -253,7 +322,8 @@ export default function TimerPage() {
           <h4 className="text-sm font-semibold text-foreground mb-1">How it works</h4>
           <p className="text-xs text-muted-foreground leading-relaxed">
             Create a Pomodoro for each task or goal you want to focus on. Set the duration (default {state.settings.focusDuration}min),
-            then start each one when you're ready. Multiple timers can run at different times — plan your focus blocks ahead!
+            then start each one when you're ready. Running timers persist across page refreshes — close the tab and come back later!
+            You'll hear a chime and get a browser notification when a timer completes.
           </p>
         </div>
       </div>

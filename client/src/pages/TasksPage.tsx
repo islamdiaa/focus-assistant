@@ -1,17 +1,23 @@
 /**
  * Tasks Page — Warm Productivity design
- * Task list with filters, sorting, add/edit/delete
- * Category, Energy, button-group Priority
+ * Task list with search, filters, sorting, add/edit/delete
+ * Category, Energy, Recurrence, button-group Priority
  * Inline edit on task cards with pencil icon
+ * Keyboard shortcuts: N=new task, /=focus search
  */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check, Pencil, X, Save } from 'lucide-react';
+import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check, Pencil, X, Save, Search, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { Task, Priority, TaskStatus, Category, EnergyLevel } from '@/lib/types';
+import type { Task, Priority, Category, EnergyLevel, RecurrenceFrequency } from '@/lib/types';
+
+interface TasksPageProps {
+  newTaskTrigger?: number;
+  searchTrigger?: number;
+}
 
 const PRIORITY_COLORS: Record<Priority, string> = {
   urgent: 'bg-warm-terracotta/15 text-warm-terracotta border-warm-terracotta/30',
@@ -42,6 +48,14 @@ const ENERGY_CONFIG: Record<EnergyLevel, { emoji: string; label: string }> = {
   high: { emoji: '🔥', label: 'High Energy' },
 };
 
+const RECURRENCE_CONFIG: Record<RecurrenceFrequency, { label: string; short: string }> = {
+  none: { label: 'No Repeat', short: '' },
+  daily: { label: 'Daily', short: 'Daily' },
+  weekly: { label: 'Weekly', short: 'Weekly' },
+  monthly: { label: 'Monthly', short: 'Monthly' },
+  weekdays: { label: 'Weekdays', short: 'Weekdays' },
+};
+
 type Filter = 'all' | 'active' | 'done';
 type Sort = 'newest' | 'priority' | 'dueDate';
 
@@ -57,6 +71,7 @@ function InlineEditForm({ task, onSave, onCancel }: { task: Task; onSave: (updat
   const [category, setCategory] = useState<Category | ''>(task.category || '');
   const [energy, setEnergy] = useState<EnergyLevel | ''>(task.energy || '');
   const [dueDate, setDueDate] = useState(task.dueDate || '');
+  const [recurrence, setRecurrence] = useState<RecurrenceFrequency>(task.recurrence || 'none');
 
   function handleSave() {
     if (!title.trim()) return;
@@ -67,95 +82,72 @@ function InlineEditForm({ task, onSave, onCancel }: { task: Task; onSave: (updat
       category: category || undefined,
       energy: energy || undefined,
       dueDate: dueDate || undefined,
+      recurrence: recurrence !== 'none' ? recurrence : undefined,
     });
   }
 
   return (
     <div className="mt-3 pt-3 border-t border-border space-y-4 animate-in slide-in-from-top-2 duration-200">
-      {/* Title */}
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Title</label>
         <Input value={title} onChange={e => setTitle(e.target.value)} className="bg-background" />
       </div>
-
-      {/* Description */}
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Description (optional)</label>
         <Textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="Add more details..." className="bg-background resize-none" rows={2} />
       </div>
-
-      {/* Priority */}
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Priority</label>
         <div className="grid grid-cols-4 gap-2">
           {(['low', 'medium', 'high', 'urgent'] as Priority[]).map(p => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPriority(p)}
+            <button key={p} type="button" onClick={() => setPriority(p)}
               className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200
-                ${priority === p
-                  ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]`
-                  : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
-                }`}
-            >
+                ${priority === p ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]` : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
               {PRIORITY_LABELS[p]}
             </button>
           ))}
         </div>
       </div>
-
-      {/* Category */}
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Category</label>
         <div className="grid grid-cols-3 gap-2">
           {(Object.keys(CATEGORY_CONFIG) as Category[]).map(c => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setCategory(category === c ? '' : c)}
+            <button key={c} type="button" onClick={() => setCategory(category === c ? '' : c)}
               className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
-                ${category === c
-                  ? 'bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]'
-                  : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
-                }`}
-            >
-              <span>{CATEGORY_CONFIG[c].emoji}</span>
-              <span>{CATEGORY_CONFIG[c].label}</span>
+                ${category === c ? 'bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]' : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
+              <span>{CATEGORY_CONFIG[c].emoji}</span><span>{CATEGORY_CONFIG[c].label}</span>
             </button>
           ))}
         </div>
       </div>
-
-      {/* Energy */}
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Energy Level</label>
         <div className="grid grid-cols-3 gap-2">
           {(Object.keys(ENERGY_CONFIG) as EnergyLevel[]).map(e => (
-            <button
-              key={e}
-              type="button"
-              onClick={() => setEnergy(energy === e ? '' : e)}
+            <button key={e} type="button" onClick={() => setEnergy(energy === e ? '' : e)}
               className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
-                ${energy === e
-                  ? 'bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]'
-                  : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
-                }`}
-            >
-              <span>{ENERGY_CONFIG[e].emoji}</span>
-              <span>{ENERGY_CONFIG[e].label}</span>
+                ${energy === e ? 'bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]' : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
+              <span>{ENERGY_CONFIG[e].emoji}</span><span>{ENERGY_CONFIG[e].label}</span>
             </button>
           ))}
         </div>
       </div>
-
-      {/* Due Date */}
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Repeat</label>
+        <div className="grid grid-cols-5 gap-2">
+          {(Object.keys(RECURRENCE_CONFIG) as RecurrenceFrequency[]).map(r => (
+            <button key={r} type="button" onClick={() => setRecurrence(r)}
+              className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
+                ${recurrence === r ? 'bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]' : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
+              {RECURRENCE_CONFIG[r].label}
+            </button>
+          ))}
+        </div>
+      </div>
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Due Date (optional)</label>
         <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="bg-background" />
       </div>
-
-      {/* Actions */}
       <div className="flex gap-2">
         <Button onClick={handleSave} className="flex-1 bg-warm-sage hover:bg-warm-sage/90 text-white gap-2">
           <Save className="w-4 h-4" /> Save Changes
@@ -169,21 +161,45 @@ function InlineEditForm({ task, onSave, onCancel }: { task: Task; onSave: (updat
 }
 
 // ---- Main Page ----
-export default function TasksPage() {
+export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0 }: TasksPageProps) {
   const { state, dispatch } = useApp();
   const [filter, setFilter] = useState<Filter>('all');
   const [sort, setSort] = useState<Sort>('newest');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // New task form state
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newPriority, setNewPriority] = useState<Priority>('medium');
   const [newCategory, setNewCategory] = useState<Category | ''>('');
   const [newEnergy, setNewEnergy] = useState<EnergyLevel | ''>('');
   const [newDueDate, setNewDueDate] = useState('');
+  const [newRecurrence, setNewRecurrence] = useState<RecurrenceFrequency>('none');
+
+  // Keyboard shortcut: N opens dialog
+  useEffect(() => {
+    if (newTaskTrigger > 0) setDialogOpen(true);
+  }, [newTaskTrigger]);
+
+  // Keyboard shortcut: / focuses search
+  useEffect(() => {
+    if (searchTrigger > 0) searchInputRef.current?.focus();
+  }, [searchTrigger]);
 
   const filteredTasks = useMemo(() => {
     let tasks = [...state.tasks];
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      tasks = tasks.filter(t =>
+        t.title.toLowerCase().includes(q) ||
+        (t.description && t.description.toLowerCase().includes(q))
+      );
+    }
 
     if (filter === 'active') tasks = tasks.filter(t => t.status === 'active');
     if (filter === 'done') tasks = tasks.filter(t => t.status === 'done');
@@ -197,7 +213,7 @@ export default function TasksPage() {
     });
 
     return tasks;
-  }, [state.tasks, filter, sort]);
+  }, [state.tasks, filter, sort, searchQuery]);
 
   const counts = useMemo(() => ({
     all: state.tasks.length,
@@ -221,6 +237,7 @@ export default function TasksPage() {
         dueDate: newDueDate || undefined,
         category: newCategory || undefined,
         energy: newEnergy || undefined,
+        recurrence: newRecurrence !== 'none' ? newRecurrence : undefined,
       },
     });
     setNewTitle('');
@@ -229,6 +246,7 @@ export default function TasksPage() {
     setNewCategory('');
     setNewEnergy('');
     setNewDueDate('');
+    setNewRecurrence('none');
     setDialogOpen(false);
   }
 
@@ -248,115 +266,77 @@ export default function TasksPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-warm-sage hover:bg-warm-sage/90 text-white gap-2">
-              <Plus className="w-4 h-4" /> Add Task
+              <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Task</span><span className="sm:hidden">Add</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-card max-w-md">
+          <DialogContent className="bg-card max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-serif text-xl">New Task</DialogTitle>
               <DialogDescription className="sr-only">Create a new task</DialogDescription>
             </DialogHeader>
             <div className="space-y-5 mt-2">
-              {/* Title */}
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Title</label>
-                <Input
-                  placeholder="e.g., Finish the report..."
-                  value={newTitle}
-                  onChange={e => setNewTitle(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAddTask()}
-                  className="bg-background"
-                />
+                <Input placeholder="e.g., Finish the report..." value={newTitle} onChange={e => setNewTitle(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAddTask()} className="bg-background" />
               </div>
-
-              {/* Description */}
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Description (optional)</label>
-                <Textarea
-                  placeholder="Add more details..."
-                  value={newDesc}
-                  onChange={e => setNewDesc(e.target.value)}
-                  className="bg-background resize-none"
-                  rows={2}
-                />
+                <Textarea placeholder="Add more details..." value={newDesc} onChange={e => setNewDesc(e.target.value)}
+                  className="bg-background resize-none" rows={2} />
               </div>
-
-              {/* Priority - Button Group */}
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Priority</label>
                 <div className="grid grid-cols-4 gap-2">
                   {(['low', 'medium', 'high', 'urgent'] as Priority[]).map(p => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => setNewPriority(p)}
+                    <button key={p} type="button" onClick={() => setNewPriority(p)}
                       className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200
-                        ${newPriority === p
-                          ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]`
-                          : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
-                        }`}
-                    >
+                        ${newPriority === p ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]` : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
                       {PRIORITY_LABELS[p]}
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Category - Button Group */}
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Category</label>
                 <div className="grid grid-cols-3 gap-2">
                   {(Object.keys(CATEGORY_CONFIG) as Category[]).map(c => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setNewCategory(newCategory === c ? '' : c)}
+                    <button key={c} type="button" onClick={() => setNewCategory(newCategory === c ? '' : c)}
                       className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
-                        ${newCategory === c
-                          ? 'bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]'
-                          : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
-                        }`}
-                    >
-                      <span>{CATEGORY_CONFIG[c].emoji}</span>
-                      <span>{CATEGORY_CONFIG[c].label}</span>
+                        ${newCategory === c ? 'bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]' : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
+                      <span>{CATEGORY_CONFIG[c].emoji}</span><span>{CATEGORY_CONFIG[c].label}</span>
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Energy Required - Button Group */}
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Energy Level</label>
                 <div className="grid grid-cols-3 gap-2">
                   {(Object.keys(ENERGY_CONFIG) as EnergyLevel[]).map(e => (
-                    <button
-                      key={e}
-                      type="button"
-                      onClick={() => setNewEnergy(newEnergy === e ? '' : e)}
+                    <button key={e} type="button" onClick={() => setNewEnergy(newEnergy === e ? '' : e)}
                       className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
-                        ${newEnergy === e
-                          ? 'bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]'
-                          : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'
-                        }`}
-                    >
-                      <span>{ENERGY_CONFIG[e].emoji}</span>
-                      <span>{ENERGY_CONFIG[e].label}</span>
+                        ${newEnergy === e ? 'bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]' : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
+                      <span>{ENERGY_CONFIG[e].emoji}</span><span>{ENERGY_CONFIG[e].label}</span>
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Due Date */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Repeat</label>
+                <div className="grid grid-cols-5 gap-2">
+                  {(Object.keys(RECURRENCE_CONFIG) as RecurrenceFrequency[]).map(r => (
+                    <button key={r} type="button" onClick={() => setNewRecurrence(r)}
+                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
+                        ${newRecurrence === r ? 'bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]' : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}>
+                      {RECURRENCE_CONFIG[r].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Due Date (optional)</label>
-                <Input
-                  type="date"
-                  value={newDueDate}
-                  onChange={e => setNewDueDate(e.target.value)}
-                  className="bg-background"
-                />
+                <Input type="date" value={newDueDate} onChange={e => setNewDueDate(e.target.value)} className="bg-background" />
               </div>
-
               <Button onClick={handleAddTask} className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white font-medium py-2.5">
                 Create Task
               </Button>
@@ -365,34 +345,40 @@ export default function TasksPage() {
         </Dialog>
       </div>
 
+      {/* Search Bar */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          ref={searchInputRef}
+          placeholder="Search tasks... (press / to focus)"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="pl-10 bg-card border-border"
+        />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground">
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
       {/* Filters & Sort */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
         <div className="flex bg-warm-sand/50 rounded-lg p-1 gap-1">
           {(['all', 'active', 'done'] as Filter[]).map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
+            <button key={f} onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200
-                ${filter === f
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-                }`}
-            >
+                ${filter === f ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
               {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f]})
             </button>
           ))}
         </div>
         <div className="flex bg-warm-sand/50 rounded-lg p-1 gap-1 sm:ml-auto">
           {(['newest', 'priority', 'dueDate'] as Sort[]).map(s => (
-            <button
-              key={s}
-              onClick={() => setSort(s)}
+            <button key={s} onClick={() => setSort(s)}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-1.5
-                ${sort === s
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-                }`}
-            >
+                ${sort === s ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
               {s === 'newest' && <ArrowUpDown className="w-3.5 h-3.5" />}
               {s === 'priority' && <Flag className="w-3.5 h-3.5" />}
               {s === 'dueDate' && <Calendar className="w-3.5 h-3.5" />}
@@ -405,9 +391,19 @@ export default function TasksPage() {
       {/* Task List */}
       {filteredTasks.length === 0 ? (
         <div className="bg-card rounded-2xl border border-border p-12 text-center">
-          <img src={EMPTY_TASKS_IMG} alt="All clear" className="w-40 h-40 mx-auto mb-4 rounded-2xl object-cover opacity-90" />
-          <h3 className="font-serif text-xl text-foreground mb-2">All clear!</h3>
-          <p className="text-sm text-muted-foreground">Add a task to get started. You got this!</p>
+          {searchQuery ? (
+            <>
+              <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
+              <h3 className="font-serif text-xl text-foreground mb-2">No matches</h3>
+              <p className="text-sm text-muted-foreground">No tasks match "{searchQuery}". Try a different search.</p>
+            </>
+          ) : (
+            <>
+              <img src={EMPTY_TASKS_IMG} alt="All clear" className="w-40 h-40 mx-auto mb-4 rounded-2xl object-cover opacity-90" />
+              <h3 className="font-serif text-xl text-foreground mb-2">All clear!</h3>
+              <p className="text-sm text-muted-foreground">Add a task to get started. You got this!</p>
+            </>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
@@ -423,10 +419,7 @@ export default function TasksPage() {
                 <button
                   onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: task.id })}
                   className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
-                    ${task.status === 'done'
-                      ? 'bg-warm-sage border-warm-sage'
-                      : 'border-border hover:border-warm-sage'
-                    }`}
+                    ${task.status === 'done' ? 'bg-warm-sage border-warm-sage' : 'border-border hover:border-warm-sage'}`}
                 >
                   {task.status === 'done' && <Check className="w-3 h-3 text-white" />}
                 </button>
@@ -453,6 +446,11 @@ export default function TasksPage() {
                         {ENERGY_CONFIG[task.energy].emoji} {ENERGY_CONFIG[task.energy].label}
                       </span>
                     )}
+                    {task.recurrence && task.recurrence !== 'none' && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-warm-blue-light/60 text-warm-charcoal border border-warm-blue/15 flex items-center gap-1">
+                        <Repeat className="w-3 h-3" /> {RECURRENCE_CONFIG[task.recurrence].short}
+                      </span>
+                    )}
                     {task.dueDate && (
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
@@ -474,10 +472,7 @@ export default function TasksPage() {
                   <button
                     onClick={() => setEditingId(editingId === task.id ? null : task.id)}
                     className={`p-1.5 rounded-md transition-colors ${
-                      editingId === task.id
-                        ? 'text-warm-sage bg-warm-sage-light'
-                        : 'text-muted-foreground hover:text-warm-blue hover:bg-warm-blue-light'
-                    }`}
+                      editingId === task.id ? 'text-warm-sage bg-warm-sage-light' : 'text-muted-foreground hover:text-warm-blue hover:bg-warm-blue-light'}`}
                     title="Edit task"
                   >
                     <Pencil className="w-4 h-4" />
@@ -504,6 +499,19 @@ export default function TasksPage() {
           ))}
         </div>
       )}
+
+      {/* Keyboard shortcuts hint */}
+      <div className="mt-8 text-center">
+        <p className="text-xs text-muted-foreground/60">
+          <kbd className="px-1.5 py-0.5 bg-warm-sand/50 rounded text-[10px] font-mono">N</kbd> new task
+          <span className="mx-2">·</span>
+          <kbd className="px-1.5 py-0.5 bg-warm-sand/50 rounded text-[10px] font-mono">/</kbd> search
+          <span className="mx-2">·</span>
+          <kbd className="px-1.5 py-0.5 bg-warm-sand/50 rounded text-[10px] font-mono">1-5</kbd> switch pages
+          <span className="mx-2">·</span>
+          <kbd className="px-1.5 py-0.5 bg-warm-sand/50 rounded text-[10px] font-mono">Ctrl+Z</kbd> undo
+        </p>
+      </div>
     </div>
   );
 }

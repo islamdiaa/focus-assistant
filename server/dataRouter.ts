@@ -6,7 +6,7 @@
  */
 import { z } from 'zod';
 import { publicProcedure, router } from './_core/trpc';
-import { loadFromMdFile, saveToMdFile } from './mdStorage';
+import { loadFromMdFile, saveToMdFile, getMdFileTimestamp, stateToMarkdown } from './mdStorage';
 import { loadFromSheets, saveToSheets } from './sheetsStorage';
 import { loadConfig, saveConfig } from './storageConfig';
 import { DEFAULT_SETTINGS } from '../shared/appTypes';
@@ -25,6 +25,9 @@ const appStateSchema = z.object({
     quadrant: z.enum(['do-first', 'schedule', 'delegate', 'eliminate', 'unassigned']),
     createdAt: z.string(),
     completedAt: z.string().optional(),
+    recurrence: z.enum(['daily', 'weekly', 'monthly', 'weekdays', 'none']).optional(),
+    recurrenceParentId: z.string().optional(),
+    recurrenceNextDate: z.string().optional(),
   })),
   pomodoros: z.array(z.object({
     id: z.string(),
@@ -34,6 +37,8 @@ const appStateSchema = z.object({
     status: z.enum(['idle', 'running', 'paused', 'completed']),
     createdAt: z.string(),
     completedAt: z.string().optional(),
+    startedAt: z.string().optional(),
+    accumulatedSeconds: z.number().optional(),
   })),
   settings: z.object({
     focusDuration: z.number(),
@@ -113,6 +118,80 @@ export const dataRouter = router({
     .input(storageConfigSchema)
     .mutation(async ({ input }) => {
       const ok = await saveConfig(input as StorageConfig);
+      return { success: ok };
+    }),
+
+  /**
+   * Poll for changes — returns the file's last modified timestamp.
+   * Client compares with its last known timestamp to detect external changes.
+   */
+  poll: publicProcedure.query(async () => {
+    const timestamp = await getMdFileTimestamp();
+    return { timestamp };
+  }),
+
+  /**
+   * Export data as Markdown string (for download)
+   */
+  exportMarkdown: publicProcedure.query(async () => {
+    const config = await loadConfig();
+    let state: AppState;
+
+    if (config.mode === 'sheets' && config.sheetsId && config.sheetsApiKey) {
+      state = (await loadFromSheets(config.sheetsId, config.sheetsApiKey)) || emptyState;
+    } else {
+      state = (await loadFromMdFile()) || emptyState;
+    }
+
+    return { markdown: stateToMarkdown(state) };
+  }),
+
+  /**
+   * Export data as JSON string (for Obsidian / programmatic use)
+   */
+  exportJson: publicProcedure.query(async () => {
+    const config = await loadConfig();
+    let state: AppState;
+
+    if (config.mode === 'sheets' && config.sheetsId && config.sheetsApiKey) {
+      state = (await loadFromSheets(config.sheetsId, config.sheetsApiKey)) || emptyState;
+    } else {
+      state = (await loadFromMdFile()) || emptyState;
+    }
+
+    return { json: JSON.stringify(state, null, 2) };
+  }),
+
+  /**
+   * Import data from uploaded file content (MD or JSON)
+   */
+  importData: publicProcedure
+    .input(z.object({
+      content: z.string(),
+      format: z.enum(['md', 'json']),
+    }))
+    .mutation(async ({ input }) => {
+      let state: AppState;
+
+      if (input.format === 'json') {
+        try {
+          state = JSON.parse(input.content);
+        } catch {
+          return { success: false, error: 'Invalid JSON' };
+        }
+      } else {
+        // Parse as MD — reuse the internal parser
+        const { markdownToState } = await import('./mdStorage');
+        state = markdownToState(input.content);
+      }
+
+      const config = await loadConfig();
+      if (config.mode === 'sheets' && config.sheetsId && config.sheetsApiKey) {
+        const ok = await saveToSheets(config.sheetsId, config.sheetsApiKey, state);
+        return { success: ok };
+      }
+
+      const ok = await saveToMdFile(state);
       return { success: ok };
     }),
 });

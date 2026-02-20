@@ -166,3 +166,56 @@ export function isSheetConfigured(): boolean {
   const { sheetId, apiKey } = getSheetConfig();
   return !!(sheetId && apiKey);
 }
+
+// ---- Polling for multi-tab sync ----
+
+export async function pollTimestamp(): Promise<number> {
+  try {
+    const res = await fetch('/api/trpc/data.poll', {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    return json?.result?.data?.json?.timestamp ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+// ---- Export functions ----
+
+export async function exportAsMarkdown(): Promise<string> {
+  try {
+    const res = await fetch('/api/trpc/data.exportMarkdown', {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (!res.ok) return '';
+    const json = await res.json();
+    return json?.result?.data?.json?.markdown ?? '';
+  } catch {
+    return '';
+  }
+}
+
+export async function exportAsJson(): Promise<string> {
+  try {
+    const res = await fetch('/api/trpc/data.exportJson', {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (!res.ok) return '';
+    const json = await res.json();
+    return json?.result?.data?.json?.json ?? '';
+  } catch {
+    return '';
+  }
+}
+
+// ---- Unified export function ----
+
+export async function exportData(format: 'md' | 'json'): Promise<string> {
+  if (format === 'md') return exportAsMarkdown();
+  return exportAsJson();
+}
