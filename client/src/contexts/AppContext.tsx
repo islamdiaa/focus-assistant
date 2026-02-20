@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer, useEffect, useCallback, useRef, useState, type ReactNode } from 'react';
 import { nanoid } from 'nanoid';
-import type { Task, Pomodoro, TimerSettings, DailyStats, AppState, Priority, QuadrantType, Category, EnergyLevel, RecurrenceFrequency, Subtask, TaskTemplate, AppPreferences } from '@/lib/types';
+import type { Task, Pomodoro, TimerSettings, DailyStats, AppState, Priority, QuadrantType, Category, EnergyLevel, RecurrenceFrequency, Subtask, TaskTemplate, AppPreferences, ReadingItem, ReadingStatus } from '@/lib/types';
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from '@/lib/types';
 import { loadState, saveState, pollTimestamp } from '@/lib/sheets';
 
@@ -29,6 +29,10 @@ type Action =
   | { type: 'DELETE_TEMPLATE'; payload: string }
   | { type: 'APPLY_TEMPLATE'; payload: string }
   | { type: 'UPDATE_PREFERENCES'; payload: Partial<AppPreferences> }
+  | { type: 'ADD_READING_ITEM'; payload: { url: string; title: string; description?: string; tags?: string[] } }
+  | { type: 'UPDATE_READING_ITEM'; payload: Partial<ReadingItem> & { id: string } }
+  | { type: 'DELETE_READING_ITEM'; payload: string }
+  | { type: 'MARK_READING_STATUS'; payload: { id: string; status: ReadingStatus } }
   | { type: 'UNDO' }
   | { type: 'REDO' };
 
@@ -40,6 +44,7 @@ const initialState: AppState = {
   currentStreak: 0,
   templates: [],
   preferences: { ...DEFAULT_PREFERENCES },
+  readingList: [],
 };
 
 function getToday(): string {
@@ -103,6 +108,7 @@ function appReducer(state: AppState, action: Action): AppState {
         ...action.payload,
         templates: action.payload.templates || [],
         preferences: { ...DEFAULT_PREFERENCES, ...action.payload.preferences },
+        readingList: action.payload.readingList || [],
       };
 
     case 'ADD_TASK': {
@@ -352,6 +358,46 @@ function appReducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         preferences: { ...(state.preferences || DEFAULT_PREFERENCES), ...action.payload },
+      };
+    }
+
+    case 'ADD_READING_ITEM': {
+      let domain = '';
+      try { domain = new URL(action.payload.url).hostname.replace('www.', ''); } catch { /* ignore */ }
+      const item: ReadingItem = {
+        id: nanoid(),
+        url: action.payload.url,
+        title: action.payload.title,
+        description: action.payload.description,
+        tags: action.payload.tags || [],
+        status: 'unread',
+        domain,
+        createdAt: new Date().toISOString(),
+      };
+      return { ...state, readingList: [item, ...(state.readingList || [])] };
+    }
+
+    case 'UPDATE_READING_ITEM': {
+      return {
+        ...state,
+        readingList: (state.readingList || []).map(r =>
+          r.id === action.payload.id ? { ...r, ...action.payload } : r
+        ),
+      };
+    }
+
+    case 'DELETE_READING_ITEM': {
+      return { ...state, readingList: (state.readingList || []).filter(r => r.id !== action.payload) };
+    }
+
+    case 'MARK_READING_STATUS': {
+      return {
+        ...state,
+        readingList: (state.readingList || []).map(r =>
+          r.id === action.payload.id
+            ? { ...r, status: action.payload.status, readAt: action.payload.status === 'read' ? new Date().toISOString() : r.readAt }
+            : r
+        ),
       };
     }
 

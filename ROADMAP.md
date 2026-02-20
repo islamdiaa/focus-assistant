@@ -14,6 +14,7 @@ The next release focuses on building a personal knowledge capture layer directly
 | **Reading Notes** | Add freeform notes and highlights to any saved link |
 | **Daily Digest** | Surface unread links on the Today page as a "Reading Queue" section |
 | **Obsidian Export** | Push reading notes and highlights to your Obsidian vault alongside task data |
+| **Obsidian Vault Sync** | Server-side write of `FocusAssist.md` to configured vault path on every save, with Docker volume mount support and Obsidian-friendly formatting (tasks, stats, active pomodoros) |
 
 ---
 

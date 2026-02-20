@@ -81,6 +81,19 @@ const appStateSchema = z.object({
     obsidianVaultPath: z.string().optional(),
     obsidianAutoSync: z.boolean().optional(),
   }).optional(),
+  readingList: z.array(z.object({
+    id: z.string(),
+    url: z.string(),
+    title: z.string(),
+    description: z.string().optional(),
+    tags: z.array(z.string()),
+    status: z.enum(['unread', 'reading', 'read']),
+    notes: z.string().optional(),
+    imageUrl: z.string().optional(),
+    domain: z.string().optional(),
+    createdAt: z.string(),
+    readAt: z.string().optional(),
+  })).optional(),
 });
 
 const storageConfigSchema = z.object({
@@ -97,6 +110,7 @@ const emptyState: AppState = {
   currentStreak: 0,
   templates: [],
   preferences: { ...DEFAULT_PREFERENCES },
+  readingList: [],
 };
 
 export const dataRouter = router({

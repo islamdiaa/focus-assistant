@@ -24,6 +24,7 @@ import SettingsPage from './SettingsPage';
 import DailyPlannerPage from './DailyPlannerPage';
 import TemplatesPage from './TemplatesPage';
 import WeeklyReviewPage from './WeeklyReviewPage';
+import ReadLaterPage from './ReadLaterPage';
 import FocusModePage from './FocusModePage';
 import { useApp } from '@/contexts/AppContext';
 import { Smile, Clock, Menu, Undo2, Redo2 } from 'lucide-react';
@@ -43,9 +44,10 @@ const PAGE_MAP: Record<string, Page> = {
   '3': 'timer',
   '4': 'matrix',
   '5': 'stats',
-  '6': 'templates',
-  '7': 'review',
-  '8': 'settings',
+  '6': 'reading',
+  '7': 'templates',
+  '8': 'review',
+  '9': 'settings',
 };
 
 export default function Home() {
@@ -218,6 +220,7 @@ export default function Home() {
             {activePage === 'timer' && <TimerPage />}
             {activePage === 'matrix' && <MatrixPage />}
             {activePage === 'stats' && <StatsPage />}
+            {activePage === 'reading' && <ReadLaterPage />}
             {activePage === 'templates' && <TemplatesPage />}
             {activePage === 'review' && <WeeklyReviewPage />}
             {activePage === 'settings' && <SettingsPage />}

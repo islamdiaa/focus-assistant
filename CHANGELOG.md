@@ -6,6 +6,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.8.0] - 2026-02-20
+
+### Added
+- **Read Later Pocket** — save links with URL, title, description, and tags; mark as unread/reading/read; add freeform notes; filter by status and tags; search across titles and notes
+- **Reading Queue on Today page** — Daily Digest section showing unread/in-progress reading items with domain badges and tag previews
+- **Obsidian Vault Sync** — server-side write of `FocusAssist.md` to configured vault path on every save; YAML frontmatter, Obsidian-compatible task checkboxes, #hashtag tags, reading list with links, stats table; fire-and-forget async (doesn't block saves)
+- **Obsidian export includes reading list** — unread, currently reading, and read sections with notes and tags
+- **ReadingItem data model** — id, url, title, description, tags, status (unread/reading/read), notes, domain, createdAt, readAt
+- **Reading list MD serialization** — new `## Reading List` section in data file with pipe-escaped fields
+- **Sidebar "Knowledge" section** — Read Later page with BookOpen icon
+- **Keyboard shortcut 6** — switches to Read Later page (Templates → 7, Weekly Review → 8, Settings → 9)
+- 8 new V1.8 tests (58 total across 9 test files) covering reading list serialization, Obsidian markdown generation, and edge cases
+
+### Changed
+- Sidebar navigation expanded from 8 to 9 items with new "Knowledge" section
+- Version bumped to 1.8.0 in package.json and Settings About section
+- AppState model extended with `readingList: ReadingItem[]`
+- Markdown serialization updated for reading list section
+- Obsidian sync now fires automatically on every data save (when enabled)
+
+---
+
 ## [1.7.0] - 2026-02-20
 
 ### Added

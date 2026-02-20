@@ -9,6 +9,25 @@ export type Category = 'work' | 'personal' | 'health' | 'learning' | 'errands' |
 export type EnergyLevel = 'low' | 'medium' | 'high';
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'weekdays' | 'none';
 export type NotificationSound = 'gentle-chime' | 'bell' | 'singing-bowl' | 'wood-block' | 'digital-beep' | 'none';
+export type ReadingStatus = 'unread' | 'reading' | 'read';
+
+export interface ReadingItem {
+  id: string;
+  url: string;
+  title: string;
+  description?: string;
+  /** User-defined tags for categorization */
+  tags: string[];
+  status: ReadingStatus;
+  /** User notes / highlights */
+  notes?: string;
+  /** Favicon or preview image URL */
+  imageUrl?: string;
+  /** Domain extracted from URL */
+  domain?: string;
+  createdAt: string;
+  readAt?: string;
+}
 
 export interface Subtask {
   id: string;
@@ -94,6 +113,8 @@ export interface AppState {
   templates?: TaskTemplate[];
   /** User preferences */
   preferences?: AppPreferences;
+  /** Read Later pocket — saved links */
+  readingList?: ReadingItem[];
 }
 
 export interface AppPreferences {

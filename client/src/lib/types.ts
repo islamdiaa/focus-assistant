@@ -5,6 +5,21 @@ export type Category = 'work' | 'personal' | 'health' | 'learning' | 'errands' |
 export type EnergyLevel = 'low' | 'medium' | 'high';
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'weekdays' | 'none';
 export type NotificationSound = 'gentle-chime' | 'bell' | 'singing-bowl' | 'wood-block' | 'digital-beep' | 'none';
+export type ReadingStatus = 'unread' | 'reading' | 'read';
+
+export interface ReadingItem {
+  id: string;
+  url: string;
+  title: string;
+  description?: string;
+  tags: string[];
+  status: ReadingStatus;
+  notes?: string;
+  imageUrl?: string;
+  domain?: string;
+  createdAt: string;
+  readAt?: string;
+}
 
 export interface Subtask {
   id: string;
@@ -80,6 +95,7 @@ export interface AppState {
   currentStreak: number;
   templates?: TaskTemplate[];
   preferences?: AppPreferences;
+  readingList?: ReadingItem[];
 }
 
 export interface AppPreferences {

@@ -71,10 +71,10 @@
 
 # V1.8 — Knowledge & Reading
 
-- [ ] Read Later pocket — save links with title/URL, tag them, mark as read
-- [ ] Reading notes — add notes/highlights to saved links
-- [ ] Daily digest — surface unread links on the Today page
-- [ ] Obsidian export for reading notes — push highlights to vault
+- [x] Read Later pocket — save links with title/URL, tag them, mark as read
+- [x] Reading notes — add notes/highlights to saved links
+- [x] Daily digest — surface unread links on the Today page
+- [x] Obsidian export for reading notes — push highlights to vault
 
 # V1.9 — Focus Experience
 
@@ -97,3 +97,15 @@
 - [ ] Calendar integration (Google Calendar) — see events alongside tasks
 - [ ] Mobile PWA improvements — offline support, push notifications
 - [x] Daily backup snapshot — copy data file to /data/daily_backup/YYYY-MM-DD.md once per day, kept indefinitely
+- [x] Proper Obsidian vault sync — server-side write of FocusAssist.md to vault path on every save, Docker volume mount support
+
+# V1.8 Implementation
+
+- [x] ReadingItem data model + MD serialization
+- [x] Server endpoints for reading items CRUD
+- [x] Read Later page — save links, tag, mark read, add notes/highlights
+- [x] Daily Digest section on Today page — unread links queue
+- [x] Obsidian Vault Sync — server-side write FocusAssist.md to vault path on save
+- [x] Navigation + sidebar updates for Read Later
+- [x] V1.8 tests
+- [x] CHANGELOG + version bump to 1.8.0

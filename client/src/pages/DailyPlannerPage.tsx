@@ -4,7 +4,7 @@
  */
 import { useMemo, useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { CheckCircle2, Circle, Clock, Sun, Sunset, Moon, Target, Zap, Calendar, ChevronRight, Check, ListChecks, Quote } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Sun, Sunset, Moon, Target, Zap, Calendar, ChevronRight, Check, ListChecks, Quote, BookOpen, ExternalLink, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Task, EnergyLevel } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -294,6 +294,61 @@ export default function DailyPlannerPage() {
             {energySuggestions.map(t => (
               <TaskItem key={t.id} task={t} onToggle={() => toggleTask(t.id)} />
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Reading Queue — Daily Digest */}
+      {(state.readingList || []).filter(r => r.status === 'unread' || r.status === 'reading').length > 0 && (
+        <div className="bg-card rounded-xl border border-border p-5 mb-4">
+          <h3 className="font-serif text-lg text-foreground mb-1 flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-warm-lavender" />
+            Reading Queue
+          </h3>
+          <p className="text-xs text-muted-foreground mb-3">
+            {(state.readingList || []).filter(r => r.status === 'unread').length} unread links waiting for you
+          </p>
+          <div className="space-y-2">
+            {(state.readingList || [])
+              .filter(r => r.status === 'unread' || r.status === 'reading')
+              .slice(0, 5)
+              .map(item => (
+                <motion.a
+                  key={item.id}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-background/50 hover:bg-background hover:border-warm-lavender/30 transition-colors group"
+                >
+                  <div className={`shrink-0 mt-0.5 w-7 h-7 rounded-md flex items-center justify-center ${
+                    item.status === 'reading' ? 'bg-warm-blue/10' : 'bg-warm-lavender/10'
+                  }`}>
+                    {item.status === 'reading'
+                      ? <BookOpen className="w-3.5 h-3.5 text-warm-blue" />
+                      : <Globe className="w-3.5 h-3.5 text-warm-lavender" />
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground group-hover:text-warm-lavender transition-colors line-clamp-1 flex items-center gap-1.5">
+                      {item.title}
+                      <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-muted-foreground">{item.domain || 'link'}</span>
+                      {item.tags.length > 0 && (
+                        <span className="text-[10px] text-warm-lavender/70">{item.tags.slice(0, 2).join(', ')}</span>
+                      )}
+                    </div>
+                  </div>
+                </motion.a>
+              ))}
+            {(state.readingList || []).filter(r => r.status === 'unread' || r.status === 'reading').length > 5 && (
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                + {(state.readingList || []).filter(r => r.status === 'unread' || r.status === 'reading').length - 5} more in Read Later
+              </p>
+            )}
           </div>
         </div>
       )}

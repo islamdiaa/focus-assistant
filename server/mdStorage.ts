@@ -8,7 +8,8 @@
  */
 import fs from 'fs/promises';
 import path from 'path';
-import type { Task, Pomodoro, AppState, TaskTemplate, AppPreferences } from '../shared/appTypes';
+import type { Task, Pomodoro, AppState, TaskTemplate, AppPreferences, ReadingItem } from '../shared/appTypes';
+import { syncToObsidian } from './obsidianSync';
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from '../shared/appTypes';
 
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
@@ -100,6 +101,18 @@ export function stateToMarkdown(state: AppState): string {
     }
   }
   lines.push('');
+
+  // Reading List
+  if (state.readingList && state.readingList.length > 0) {
+    lines.push('## Reading List');
+    lines.push('');
+    lines.push('| ID | URL | Title | Description | Tags | Status | Notes | ImageUrl | Domain | Created | ReadAt |');
+    lines.push('|----|-----|-------|-------------|------|--------|-------|----------|--------|---------|--------|');
+    for (const r of state.readingList) {
+      lines.push(`| ${r.id} | ${escapeField(r.url)} | ${escapeField(r.title)} | ${escapeField(r.description || '')} | ${escapeField(r.tags.join(','))} | ${r.status} | ${escapeField(r.notes || '')} | ${r.imageUrl || ''} | ${r.domain || ''} | ${r.createdAt} | ${r.readAt || ''} |`);
+    }
+    lines.push('');
+  }
 
   // Templates
   if (state.templates && state.templates.length > 0) {
@@ -250,6 +263,28 @@ export function markdownToState(md: string): AppState {
       }
     }
 
+    if (title === 'reading list') {
+      state.readingList = [];
+      const rows = parseMarkdownTable(sectionLines);
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r[0]) continue;
+        state.readingList.push({
+          id: r[0],
+          url: r[1] || '',
+          title: r[2] || '',
+          description: r[3] || undefined,
+          tags: r[4] ? r[4].split(',').map(t => t.trim()).filter(Boolean) : [],
+          status: (r[5] as ReadingItem['status']) || 'unread',
+          notes: r[6] || undefined,
+          imageUrl: r[7] || undefined,
+          domain: r[8] || undefined,
+          createdAt: r[9] || new Date().toISOString(),
+          readAt: r[10] || undefined,
+        });
+      }
+    }
+
     if (title === 'templates') {
       const rows = parseMarkdownTable(sectionLines);
       for (let i = 1; i < rows.length; i++) {
@@ -350,6 +385,8 @@ export async function saveToMdFile(state: AppState): Promise<boolean> {
     await rotateBackups();
     await createDailySnapshot();
     await fs.writeFile(DATA_FILE, stateToMarkdown(state), 'utf-8');
+    // Obsidian vault sync (fire-and-forget, don't block save)
+    syncToObsidian(state).catch(e => console.warn('[ObsidianSync] Error:', e));
     return true;
   } catch (e) {
     console.warn('Failed to write MD file:', e);
