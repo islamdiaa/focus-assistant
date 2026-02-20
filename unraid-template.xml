@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>FocusAssistant</Name>
+  <Repository>islamdiaa/focus-assistant</Repository>
+  <Registry>https://hub.docker.com/r/islamdiaa/focus-assistant</Registry>
+  <Branch>
+    <Tag>latest</Tag>
+    <TagDescription>Latest stable release</TagDescription>
+  </Branch>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/islamdiaa/focus-assistant/issues</Support>
+  <Project>https://github.com/islamdiaa/focus-assistant</Project>
+  <Overview>
+    Focus Assistant is an ADHD-friendly productivity app featuring task management with the Eisenhower Matrix, a Pomodoro timer, daily planning, weekly reviews, reading list, reminders, and detailed statistics. All data is stored locally in Markdown files — no external database required.
+  </Overview>
+  <Category>Productivity: Tools:</Category>
+  <WebUI>http://[IP]:[PORT:1992]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/islamdiaa/focus-assistant/main/unraid-template.xml</TemplateURL>
+  <Icon>https://cdn-icons-png.flaticon.com/512/7246/7246748.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText>Support the project</DonateText>
+  <DonateLink>https://github.com/islamdiaa/focus-assistant</DonateLink>
+  <Requires/>
+  <Config
+    Name="Web UI Port"
+    Target="1992"
+    Default="1992"
+    Mode="tcp"
+    Description="Port for the web interface"
+    Type="Port"
+    Display="always"
+    Required="true"
+    Mask="false">1992</Config>
+  <Config
+    Name="Data Directory"
+    Target="/app/data"
+    Default="/mnt/user/appdata/focus-assistant"
+    Mode="rw"
+    Description="Persistent storage for your tasks, settings, and stats (Markdown files)"
+    Type="Path"
+    Display="always"
+    Required="true"
+    Mask="false">/mnt/user/appdata/focus-assistant</Config>
+  <Config
+    Name="SKIP_AUTH"
+    Target="SKIP_AUTH"
+    Default="true"
+    Mode=""
+    Description="Set to true to bypass Manus OAuth (required for self-hosted). Set to false only if you have Manus OAuth configured."
+    Type="Variable"
+    Display="always"
+    Required="false"
+    Mask="false">true</Config>
+  <Config
+    Name="GOOGLE_SHEETS_ID"
+    Target="GOOGLE_SHEETS_ID"
+    Default=""
+    Mode=""
+    Description="(Optional) Google Sheets ID for cloud sync. Leave blank to use local Markdown storage only."
+    Type="Variable"
+    Display="always"
+    Required="false"
+    Mask="false"/>
+  <Config
+    Name="GOOGLE_SERVICE_ACCOUNT_EMAIL"
+    Target="GOOGLE_SERVICE_ACCOUNT_EMAIL"
+    Default=""
+    Mode=""
+    Description="(Optional) Google service account email for Sheets sync."
+    Type="Variable"
+    Display="always"
+    Required="false"
+    Mask="false"/>
+  <Config
+    Name="GOOGLE_PRIVATE_KEY"
+    Target="GOOGLE_PRIVATE_KEY"
+    Default=""
+    Mode=""
+    Description="(Optional) Google service account private key for Sheets sync."
+    Type="Variable"
+    Display="always"
+    Required="false"
+    Mask="true"/>
+</Container>

@@ -76,6 +76,8 @@ EXPOSE 1992
 ENV NODE_ENV=production
 ENV PORT=1992
 ENV DATA_DIR=/app/data
+ENV SKIP_AUTH=true
+ENV JWT_SECRET=focus-assistant-local-secret
 
 # Volume for persistent data
 VOLUME ["/app/data"]
