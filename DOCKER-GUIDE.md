@@ -48,10 +48,10 @@ docker build -t focus-assist .
 docker run -d \
   --name focus-assist \
   --restart unless-stopped \
-  -p 3000:3000 \
+  -p 1992:1992 \
   -v focus-data:/app/data \
   -e NODE_ENV=production \
-  -e PORT=3000 \
+  -e PORT=1992 \
   focus-assist
 ```
 
@@ -63,7 +63,7 @@ docker run -d \
 2. Go to **Docker** → **Compose** → **Add New Stack**
 3. Paste the `docker-compose.yml` content (or point to the file)
 4. Click **Compose Up**
-5. Access at `http://YOUR_UNRAID_IP:3000`
+5. Access at `http://YOUR_UNRAID_IP:1992`
 
 ### Method 2: Manual Docker Template
 
@@ -75,7 +75,7 @@ docker run -d \
 | **Name** | `focus-assist` |
 | **Repository** | `focus-assist` (after building locally) |
 | **Network Type** | `bridge` |
-| **Port Mapping** | Host: `3000` → Container: `3000` (TCP) |
+| **Port Mapping** | Host: `1992` → Container: `1992` (TCP) |
 
 3. Add a **Path** mapping:
 
@@ -110,10 +110,10 @@ docker build -t focus-assist .
 docker run -d \
   --name focus-assist \
   --restart unless-stopped \
-  -p 3000:3000 \
+  -p 1992:1992 \
   -v /mnt/user/appdata/focus-assist/data:/app/data \
   -e NODE_ENV=production \
-  -e PORT=3000 \
+  -e PORT=1992 \
   focus-assist
 ```
 
@@ -171,7 +171,7 @@ Your data persists in the volume — it survives container rebuilds.
 | Issue | Solution |
 |-------|----------|
 | Container won't start | Check logs: `docker logs focus-assist` |
-| Port 3000 in use | Change the host port: `-p 8080:3000` |
+| Port 1992 in use | Change the host port: `-p 8080:1992` |
 | Data not persisting | Verify volume mount: `docker inspect focus-assist` |
 | Blank page | Clear browser cache, check `docker logs` for build errors |
 | Google Sheets not syncing | Verify API key has Sheets API enabled and Sheet is shared |
@@ -181,6 +181,6 @@ Your data persists in the volume — it survives container rebuilds.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `NODE_ENV` | `production` | Set to `production` for Docker |
-| `PORT` | `3000` | Server port (inside container) |
+| `PORT` | `1992` | Server port (inside container) |
 | `DATA_DIR` | `/app/data` | Path to data directory |
 | `JWT_SECRET` | auto-generated | Session cookie secret |

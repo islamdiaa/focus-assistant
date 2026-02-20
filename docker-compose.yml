@@ -6,13 +6,14 @@ services:
     container_name: focus-assist
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "1992:1992"  # Main app
+      # Reserve 1993 and 1994 for future services (e.g., WebSocket, admin)
     volumes:
       # Persistent data — your .md file and config live here
       - focus-data:/app/data
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=1992
       - DATA_DIR=/app/data
       # Optional: Set a JWT secret for session cookies (auto-generated if not set)
       # - JWT_SECRET=your-secret-here

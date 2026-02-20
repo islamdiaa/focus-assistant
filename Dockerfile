@@ -53,11 +53,11 @@ COPY --from=builder /app/drizzle ./drizzle
 RUN mkdir -p /app/data
 
 # Expose port (server picks it up from PORT env or defaults)
-EXPOSE 3000
+EXPOSE 1992
 
 # Environment defaults
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=1992
 ENV DATA_DIR=/app/data
 
 # Volume for persistent data

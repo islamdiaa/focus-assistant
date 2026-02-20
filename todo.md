@@ -10,3 +10,12 @@
 - [x] Write Unraid deployment guide
 - [x] Run pnpm db:push for schema sync
 - [x] Test end-to-end flow
+
+# GitHub Repo & Docs
+
+- [x] Update ports to 1992/1993/1994 in Dockerfile, docker-compose.yml, and DOCKER-GUIDE.md
+- [x] Write architecture.md
+- [x] Write claude.md
+- [x] Write agent.md
+- [x] Write/update README.md
+- [x] Create private GitHub repo FocusAssistant and push

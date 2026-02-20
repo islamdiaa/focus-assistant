@@ -12,9 +12,7 @@
 
 ## Tasks
 
-| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed |
-|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|
-| oqnI32T_HaoQcOa-s9dY2 | Test server storage |  | medium | active |  |  |  | unassigned | 2026-02-20T01:48:37.776Z |  |
+_No tasks yet._
 
 ## Pomodoros
 
