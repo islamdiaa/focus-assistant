@@ -96,3 +96,4 @@
 - [ ] Shared templates — export/import template packs
 - [ ] Calendar integration (Google Calendar) — see events alongside tasks
 - [ ] Mobile PWA improvements — offline support, push notifications
+- [x] Daily backup snapshot — copy data file to /data/daily_backup/YYYY-MM-DD.md once per day, kept indefinitely

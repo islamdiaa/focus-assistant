@@ -315,10 +315,40 @@ async function rotateBackups(): Promise<void> {
   }
 }
 
+const DAILY_BACKUP_DIR = path.join(DATA_DIR, 'daily_backup');
+
+/**
+ * Create a daily snapshot if one doesn't exist yet for today.
+ * Snapshots are stored as /data/daily_backup/YYYY-MM-DD.md and kept indefinitely.
+ */
+export async function createDailySnapshot(): Promise<void> {
+  try {
+    await fs.mkdir(DAILY_BACKUP_DIR, { recursive: true });
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const snapshotPath = path.join(DAILY_BACKUP_DIR, `${today}.md`);
+    try {
+      await fs.access(snapshotPath);
+      // Snapshot already exists for today, skip
+      return;
+    } catch {
+      // Doesn't exist yet — create it
+    }
+    try {
+      await fs.access(DATA_FILE);
+      await fs.copyFile(DATA_FILE, snapshotPath);
+    } catch {
+      // No data file to snapshot yet
+    }
+  } catch (e) {
+    console.warn('Daily snapshot failed:', e);
+  }
+}
+
 export async function saveToMdFile(state: AppState): Promise<boolean> {
   try {
     await ensureDataDir();
     await rotateBackups();
+    await createDailySnapshot();
     await fs.writeFile(DATA_FILE, stateToMarkdown(state), 'utf-8');
     return true;
   } catch (e) {
