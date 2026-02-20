@@ -20,7 +20,7 @@
 
 | ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate | Subtasks |
 |----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|----------|
-| t1 | After save task |  | medium | active |  |  |  | do-first | 2026-02-20T11:05:45.505Z |  |  |  |  |  |
+| t1 | After save task |  | medium | active |  |  |  | do-first | 2026-02-20T11:45:26.262Z |  |  |  |  |  |
 
 ## Pomodoros
 

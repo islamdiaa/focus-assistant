@@ -5,7 +5,7 @@ import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
-import { getLoginUrl } from "./const";
+import { getLoginUrl, isOAuthConfigured } from "./const";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -18,7 +18,16 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   if (!isUnauthorized) return;
 
-  window.location.href = getLoginUrl();
+  // In standalone/Docker mode (no OAuth), don't redirect — just log
+  if (!isOAuthConfigured()) {
+    console.warn("[Auth] Not authenticated, but OAuth is not configured (standalone mode).");
+    return;
+  }
+
+  const loginUrl = getLoginUrl();
+  if (loginUrl) {
+    window.location.href = loginUrl;
+  }
 };
 
 queryClient.getQueryCache().subscribe(event => {

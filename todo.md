@@ -111,3 +111,4 @@
 - [x] CHANGELOG + version bump to 1.8.0
 - [x] Fix Dockerfile — client/dist path not found after template upgrade to tRPC/Express
 - [x] Fix Docker production error — vite imported at runtime in dist/index.js but not in prod dependencies
+- [x] Fix Docker standalone mode — Invalid URL error when VITE_ OAuth env vars are missing
