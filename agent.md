@@ -6,8 +6,8 @@ This file provides context for AI coding agents (Cursor, Copilot, Windsurf, Devi
 
 FocusAssist is a personal productivity web app with these features:
 
-1. **Today** — Daily planner with reminders (overdue/today/upcoming), due tasks, pinned tasks ("My Today"), energy-based suggestions, motivational quotes.
-2. **Tasks** — Create, edit, delete, filter, and sort tasks with priority, category, energy level, due dates, subtasks, and recurrence (daily/weekly/monthly/quarterly/weekdays). Default view: Open tasks sorted by priority. Includes reminder creation via R shortcut.
+1. **Today** — Daily planner with reminders (overdue/today/upcoming), due tasks, pinned tasks ("My Today"), energy-based suggestions, monitoring section, motivational quotes.
+2. **Tasks** — Create, edit, delete, filter, and sort tasks with priority, category, energy level, due dates, subtasks, and recurrence (daily/weekly/monthly/quarterly/weekdays). Filter tabs: All/Open/Monitored/Done. Monitor toggle (Eye icon) for "waiting-on" tasks. Includes reminder creation via R shortcut.
 3. **Focus Timer** — Multiple Pomodoro timers with configurable durations, circular progress, and multi-task/subtask linking.
 4. **Eisenhower Matrix** — Drag tasks into four quadrants (Do First, Schedule, Delegate, Eliminate). Inline task editing via pencil icon.
 5. **Stats** — Daily streak tracking, completed tasks, focus minutes, weekly charts, all-time statistics.
@@ -25,7 +25,7 @@ FocusAssist is a personal productivity web app with these features:
 - **Type System:** Zod schemas → inferred TypeScript types (single source of truth)
 - **Storage:** Local Markdown file (default) or Google Sheets (optional) + Obsidian vault sync
 - **Build:** Vite 7 (client) + esbuild (server)
-- **Tests:** Vitest (122+ tests across 14 files)
+- **Tests:** Vitest (172+ tests across 15 files)
 - **CI/CD:** GitHub Actions → Docker Hub + GHCR (multi-arch: amd64 + arm64)
 - **Deployment:** Docker (single container, port 1992) on Unraid with Watchtower auto-updates
 - **Preflight:** `pnpm preflight` — automated pre-push checks (see below)
@@ -99,8 +99,9 @@ client/src/
   contexts/AppContext.tsx   ← Global state (useReducer + Context)
   lib/sheets.ts             ← Client API bridge (calls tRPC, retry logic, error reporting)
   lib/types.ts              ← Re-exports from shared/appTypes.ts (DO NOT add types here)
+  lib/contextFilter.ts      ← Context filter utility (Work/Personal/All)
   pages/                    ← All page components (12 pages)
-  components/Sidebar.tsx    ← Navigation sidebar
+  components/Sidebar.tsx    ← Navigation sidebar (includes context switcher)
 
 server/
   dataRouter.ts             ← tRPC procedures: load, save, getConfig, setConfig
@@ -109,7 +110,7 @@ server/
   sheetsStorage.ts          ← Google Sheets API backend
   storageConfig.ts          ← Storage mode config manager
   routers.ts                ← Root tRPC router
-  *.test.ts                 ← 14 test files, 122+ tests
+  *.test.ts                 ← 15 test files, 172+ tests
 
 shared/
   appTypes.ts               ← SINGLE SOURCE OF TRUTH: Zod schemas → inferred TS types
@@ -139,7 +140,7 @@ App Load → trpc.data.load → dataRouter → mdStorage.loadFromMdFile()
 ```bash
 pnpm dev        # Dev server with HMR (port 3000 in dev)
 pnpm build      # Production build
-pnpm test       # Run vitest tests (122+ tests)
+pnpm test       # Run vitest tests (172+ tests)
 pnpm preflight  # Pre-push checks (MUST pass before every push)
 pnpm db:push    # Database migrations (only for users table)
 ```

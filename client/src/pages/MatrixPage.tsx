@@ -12,6 +12,7 @@ import { Info, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, GripVertical, 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { QuadrantType, Priority } from '@/lib/types';
+import { filterTasksByContext } from '@/lib/contextFilter';
 
 const EMPTY_MATRIX_IMG = 'https://private-us-east-1.manuscdn.com/sessionFile/PlXiEUsi6v4VD1JuecPpX3/sandbox/k4s8ZO93y8NMD02oOYn6TD-img-3_1771447502000_na1fn_ZW1wdHktbWF0cml4.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvUGxYaUVVc2k2djRWRDFKdWVjUHBYMy9zYW5kYm94L2s0czhaTzkzeThOTUQwMm9PWW42VEQtaW1nLTNfMTc3MTQ0NzUwMjAwMF9uYTFmbl9aVzF3ZEhrdGJXRjBjbWw0LnBuZz94LW9zcy1wcm9jZXNzPWltYWdlL3Jlc2l6ZSx3XzE5MjAsaF8xOTIwL2Zvcm1hdCx3ZWJwL3F1YWxpdHkscV84MCIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5ODc2MTYwMH19fV19&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=rAeoXHfOL1AQlur01UCUEB5-LTROSoOKnq3Qs7SOkYf3umtWoDqWmtBO1BRZsXP8mFXt8C9ofQqUp2JhAEv0C~dDO4PpJT8jur35ejs6lVF3IWJP5JxFTn-pr9m1Z7zfMcIVaCvV1q9zm3hsP9uvwgaMTabGHdQ5RVz3YOuYX-ZLFXWqJcRoz3D9qPjQBA5tmXs-3e4hhj6dBzPqeJNvOEeTuLsOs2nBmKxtf7y-5ns40Dgp9FAi2S5FEHDLtXb1IzasqjQKK6-iXu6wV7bJLawgEfaYOMXUHBZboobVUm8kmtmQ7ViCzd9xQrfx4aZ6b3KeCR7MeJmqCMAtVo1yIA__';
 
@@ -177,7 +178,8 @@ export default function MatrixPage() {
   const [dragOverQuadrant, setDragOverQuadrant] = useState<QuadrantType | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
-  const activeTasks = state.tasks.filter(t => t.status === 'active');
+  const activeContext = state.preferences?.activeContext || 'all';
+  const activeTasks = filterTasksByContext(state.tasks, activeContext).filter(t => t.status === 'active');
   const unassigned = useMemo(() => activeTasks.filter(t => t.quadrant === 'unassigned'), [activeTasks]);
   const assigned = useMemo(() => activeTasks.filter(t => t.quadrant !== 'unassigned'), [activeTasks]);
 
@@ -424,7 +426,7 @@ export default function MatrixPage() {
       )}
 
       {/* Empty state when no tasks at all */}
-      {state.tasks.filter(t => t.status === 'active').length === 0 && (
+      {activeTasks.length === 0 && (
         <div className="mt-8 bg-card rounded-2xl border border-border p-8 lg:p-12 text-center">
           <img src={EMPTY_MATRIX_IMG} alt="No tasks" className="w-32 lg:w-40 h-32 lg:h-40 mx-auto mb-4 rounded-2xl object-cover opacity-90" />
           <h3 className="font-serif text-lg lg:text-xl text-foreground mb-2">No tasks to prioritize</h3>

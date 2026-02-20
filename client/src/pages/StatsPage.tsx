@@ -5,7 +5,8 @@
  */
 import { useMemo } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { Flame, CheckCircle2, Clock, Target, TrendingUp, Calendar } from 'lucide-react';
+import { Flame, CheckCircle2, Clock, Target, TrendingUp, Calendar, Eye } from 'lucide-react';
+import { filterTasksByContext } from '@/lib/contextFilter';
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 function getWeekDays(): string[] {
@@ -25,9 +26,18 @@ function formatDayLabel(dateStr: string): string {
 
 export default function StatsPage() {
   const { state } = useApp();
+  const activeContext = state.preferences?.activeContext || 'all';
+  const contextTasks = useMemo(() => filterTasksByContext(state.tasks, activeContext), [state.tasks, activeContext]);
 
   const todayStr = new Date().toISOString().split('T')[0];
   const todayStats = state.dailyStats.find(s => s.date === todayStr);
+
+  const taskSummary = useMemo(() => ({
+    open: contextTasks.filter(t => t.status === 'active').length,
+    monitored: contextTasks.filter(t => t.status === 'monitored').length,
+    done: contextTasks.filter(t => t.status === 'done').length,
+    total: contextTasks.length,
+  }), [contextTasks]);
 
   const weekDays = useMemo(() => getWeekDays(), []);
 
@@ -151,6 +161,35 @@ export default function StatsPage() {
                 <Bar dataKey="value" fill="#7BA3C4" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Task Status Summary */}
+      <div className="bg-card rounded-2xl border border-border p-4 lg:p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Target className="w-4 h-4 text-warm-sage" />
+          <h3 className="font-semibold text-sm text-foreground">Task Overview{activeContext !== 'all' ? ` (${activeContext})` : ''}</h3>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-warm-sage-light/50 rounded-xl p-3 text-center">
+            <p className="font-serif text-xl text-warm-charcoal">{taskSummary.open}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Open</p>
+          </div>
+          <div className="bg-warm-amber-light/50 rounded-xl p-3 text-center">
+            <div className="flex items-center justify-center gap-1">
+              <Eye className="w-3.5 h-3.5 text-warm-amber" />
+              <p className="font-serif text-xl text-warm-charcoal">{taskSummary.monitored}</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">Monitored</p>
+          </div>
+          <div className="bg-warm-blue-light/50 rounded-xl p-3 text-center">
+            <p className="font-serif text-xl text-warm-charcoal">{taskSummary.done}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Done</p>
+          </div>
+          <div className="bg-warm-lavender-light/50 rounded-xl p-3 text-center">
+            <p className="font-serif text-xl text-warm-charcoal">{taskSummary.total}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Total</p>
           </div>
         </div>
       </div>

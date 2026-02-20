@@ -4,6 +4,7 @@
  * V1.2: Notification sounds, Obsidian vault sync, data integrity check
  */
 import { useState, useEffect, useCallback } from 'react';
+import pkgJson from '../../../package.json';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -635,7 +636,7 @@ export default function SettingsPage() {
           and satisfying feedback to help you stay focused and motivated.
         </p>
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">v1.8.4</span>
+          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">v{pkgJson.version}</span>
           <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">ADHD-Friendly</span>
           <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">Subtasks</span>
           <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">Focus Mode</span>

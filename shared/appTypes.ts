@@ -16,7 +16,7 @@ import { z } from 'zod';
 // ---- Enum Schemas ----
 
 export const prioritySchema = z.enum(['low', 'medium', 'high', 'urgent']);
-export const taskStatusSchema = z.enum(['active', 'done']);
+export const taskStatusSchema = z.enum(['active', 'done', 'monitored']);
 export const quadrantSchema = z.enum(['do-first', 'schedule', 'delegate', 'eliminate', 'unassigned']);
 export const categorySchema = z.enum(['work', 'personal', 'health', 'learning', 'errands', 'other']);
 export const energySchema = z.enum(['low', 'medium', 'high']);
@@ -25,6 +25,7 @@ export const notificationSoundSchema = z.enum(['gentle-chime', 'bell', 'singing-
 export const readingStatusSchema = z.enum(['unread', 'reading', 'read']);
 export const reminderRecurrenceSchema = z.enum(['none', 'yearly', 'quarterly', 'monthly', 'weekly']);
 export const reminderCategorySchema = z.enum(['birthday', 'appointment', 'event', 'other']);
+export const contextFilterSchema = z.enum(['all', 'work', 'personal']);
 
 // ---- Entity Schemas ----
 
@@ -136,6 +137,7 @@ export const appPreferencesSchema = z.object({
   notificationSound: notificationSoundSchema.nullable().optional(),
   obsidianVaultPath: z.string().nullable().optional(),
   obsidianAutoSync: z.boolean().nullable().optional(),
+  activeContext: contextFilterSchema.nullable().optional(), // 'all' | 'work' | 'personal' — global filter
 });
 
 /**
@@ -183,6 +185,7 @@ export type TaskTemplate = z.infer<typeof taskTemplateSchema>;
 export type Reminder = z.infer<typeof reminderSchema>;
 export type ReadingItem = z.infer<typeof readingItemSchema>;
 export type AppPreferences = z.infer<typeof appPreferencesSchema>;
+export type ContextFilter = z.infer<typeof contextFilterSchema>;
 export type AppState = z.infer<typeof appStateSchema>;
 export type StorageMode = z.infer<typeof storageConfigSchema>['mode'];
 export type StorageConfig = z.infer<typeof storageConfigSchema>;
@@ -200,7 +203,16 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   notificationSound: 'gentle-chime',
   obsidianVaultPath: '',
   obsidianAutoSync: false,
+  activeContext: 'all',
 };
+
+/**
+ * Maps task categories to context filters.
+ * 'work' context = only 'work' category tasks
+ * 'personal' context = everything else (personal, health, learning, errands, other, null)
+ */
+export const WORK_CATEGORIES: Category[] = ['work'];
+export const PERSONAL_CATEGORIES: Category[] = ['personal', 'health', 'learning', 'errands', 'other'];
 
 export const DAILY_TIPS = [
   "Break big tasks into small steps. Your brain loves checking things off!",

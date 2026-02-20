@@ -15,12 +15,13 @@
 - **Notification Sound:** gentle-chime
 - **Obsidian Vault Path:** 
 - **Obsidian Auto Sync:** false
+- **Active Context:** all
 
 ## Tasks
 
 | ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate | Subtasks | RecurrenceDayOfMonth | RecurrenceStartMonth | PinnedToday |
 |----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|----------|---------------------|----------------------|-------------|
-| t1 | After save task |  | medium | active |  |  |  | do-first | 2026-02-20T23:18:34.219Z |  |  |  |  |  |  |  |  |
+| t1 | After save task |  | medium | active |  |  |  | do-first | 2026-02-20T23:57:55.352Z |  |  |  |  |  |  |  |  |
 
 ## Pomodoros
 

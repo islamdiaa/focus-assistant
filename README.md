@@ -12,8 +12,8 @@ A warm, ADHD-friendly productivity app with task management, Pomodoro timers, Ei
 
 | Feature | Description |
 |---------|-------------|
-| **Today View** | Daily planner with motivational quotes, stats summary, due tasks, and reminders (overdue, today, upcoming 5 days). |
-| **Tasks** | Create, edit, delete tasks with priority, category, energy level, due dates, subtasks. Filter by status, sort by date/priority. Inline editing on cards. Recurring tasks (daily, weekly, monthly, quarterly). |
+| **Today View** | Daily planner with motivational quotes, stats summary, due tasks, monitoring section, and reminders (overdue, today, upcoming 5 days). |
+| **Tasks** | Create, edit, delete tasks with priority, category, energy level, due dates, subtasks. Filter tabs: All/Open/Monitored/Done. Monitor toggle for "waiting-on" tasks. Inline editing on cards. Recurring tasks (daily, weekly, monthly, quarterly). |
 | **Focus Timer** | Multiple Pomodoro timers with circular progress. Configurable focus/break durations. Link multiple tasks or subtasks to a session. |
 | **Eisenhower Matrix** | Drag tasks into Do First / Schedule / Delegate / Eliminate quadrants. |
 | **Reminders** | Birthdays, appointments, events with optional time-of-day. Recurring support (yearly, monthly, etc.). Acknowledge to dismiss or advance to next occurrence. |
@@ -22,6 +22,7 @@ A warm, ADHD-friendly productivity app with task management, Pomodoro timers, Ei
 | **Weekly Review** | Guided reflection with accomplishments, challenges, and next-week planning. |
 | **Stats** | Daily streak, completed tasks, focus minutes, weekly charts, all-time statistics. |
 | **Settings** | Timer presets (Classic/Short/Deep/Gentle), custom sliders, focus mode, keyboard shortcuts. |
+| **Context Filtering** | Global Work/Personal toggle in sidebar. Filters tasks, reminders, and stats by context. Persisted across sessions. |
 
 ## Quick Start
 
@@ -89,7 +90,7 @@ The project uses GitHub Actions for continuous integration and deployment:
 Code push → CI tests → Docker build → Docker Hub → Watchtower → Auto-update
 ```
 
-- **Test job:** TypeScript type-checking + Vitest (104+ tests)
+- **Test job:** TypeScript type-checking + Vitest (172+ tests)
 - **Docker job:** Multi-arch build (amd64/arm64), pushes to Docker Hub + GHCR
 - **Versioning:** Semver tags on GitHub releases (e.g., `v1.8.1` → Docker tag `1.8.1`)
 
@@ -138,7 +139,7 @@ For detailed architecture documentation, see [architecture.md](./architecture.md
 - **Storage:** Local Markdown file or Google Sheets
 - **Validation:** Zod (single source of truth for types + runtime validation)
 - **Build:** Vite 7 (client), esbuild (server)
-- **Tests:** Vitest (104+ tests including schema integrity + persistence round-trips)
+- **Tests:** Vitest (172+ tests including schema integrity + persistence round-trips)
 - **CI/CD:** GitHub Actions → Docker Hub + GHCR
 - **Container:** Docker (Node 22 Alpine, multi-arch amd64/arm64)
 

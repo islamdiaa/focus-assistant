@@ -54,6 +54,7 @@ export function stateToMarkdown(state: AppState): string {
     lines.push(`- **Notification Sound:** ${state.preferences.notificationSound || 'gentle-chime'}`);
     lines.push(`- **Obsidian Vault Path:** ${state.preferences.obsidianVaultPath || ''}`);
     lines.push(`- **Obsidian Auto Sync:** ${state.preferences.obsidianAutoSync ? 'true' : 'false'}`);
+    lines.push(`- **Active Context:** ${state.preferences.activeContext || 'all'}`);
     lines.push('');
   }
 
@@ -212,6 +213,7 @@ export function markdownToState(md: string): AppState {
         if (key === 'notification sound') state.preferences!.notificationSound = (val as any) || 'gentle-chime';
         if (key === 'obsidian vault path') state.preferences!.obsidianVaultPath = val || '';
         if (key === 'obsidian auto sync') state.preferences!.obsidianAutoSync = val === 'true';
+        if (key === 'active context') state.preferences!.activeContext = (['all', 'work', 'personal'].includes(val) ? val : 'all') as any;
       }
     }
 
@@ -485,7 +487,7 @@ export async function checkDataIntegrity(): Promise<{ ok: boolean; issues: strin
 
     // Check for invalid task statuses
     for (const t of state.tasks) {
-      if (!['active', 'done'].includes(t.status)) {
+      if (!['active', 'done', 'monitored'].includes(t.status)) {
         issues.push(`Task "${t.title}" has invalid status: ${t.status}`);
         t.status = 'active';
         fixed.push(`Fixed task "${t.title}" status to "active"`);

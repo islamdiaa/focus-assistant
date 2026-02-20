@@ -57,7 +57,8 @@ export default function Home() {
   const [activePage, setActivePage] = useState<Page>('planner');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
-  const { state, canUndo, canRedo, undo, redo, saveStatus, saveError } = useApp();
+  const { state, dispatch, canUndo, canRedo, undo, redo, saveStatus, saveError } = useApp();
+  const activeContext = state.preferences?.activeContext || 'all';
 
   // Expose triggers for keyboard shortcuts in child components
   const [newTaskTrigger, setNewTaskTrigger] = useState(0);
@@ -166,6 +167,8 @@ export default function Home() {
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           onFocusMode={() => setFocusMode(true)}
+          activeContext={activeContext}
+          onContextChange={(ctx) => dispatch({ type: 'SET_CONTEXT', payload: ctx })}
         />
 
         <div className="flex-1 flex flex-col min-w-0">

@@ -3,9 +3,11 @@
  * Desktop: fixed left rail with icon + label navigation + daily tip
  * Mobile: hidden by default, opens as overlay via hamburger button
  * V1.2: Added Daily Planner, Templates, Weekly Review, Focus Mode
+ * V1.8.5: Added Work/Personal/All context switcher
  */
-import { CheckSquare, Timer, LayoutGrid, BarChart3, Settings, Sparkles, X, Sun, FileText, CalendarCheck, Crosshair, BookOpen, Bell } from 'lucide-react';
+import { CheckSquare, Timer, LayoutGrid, BarChart3, Settings, Sparkles, X, Sun, FileText, CalendarCheck, Crosshair, BookOpen, Bell, Briefcase, User, Globe } from 'lucide-react';
 import { DAILY_TIPS } from '@/lib/types';
+import type { ContextFilter } from '@/lib/types';
 import { useMemo } from 'react';
 
 export type Page = 'planner' | 'tasks' | 'timer' | 'matrix' | 'stats' | 'reading' | 'reminders' | 'templates' | 'review' | 'settings';
@@ -16,6 +18,8 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   onFocusMode?: () => void;
+  activeContext: ContextFilter;
+  onContextChange: (context: ContextFilter) => void;
 }
 
 const NAV_ITEMS: { id: Page; label: string; icon: typeof CheckSquare; section?: string }[] = [
@@ -31,7 +35,13 @@ const NAV_ITEMS: { id: Page; label: string; icon: typeof CheckSquare; section?: 
   { id: 'settings', label: 'Settings', icon: Settings, section: 'System' },
 ];
 
-export default function Sidebar({ activePage, onNavigate, isOpen, onClose, onFocusMode }: SidebarProps) {
+const CONTEXT_OPTIONS: { id: ContextFilter; label: string; icon: typeof Globe }[] = [
+  { id: 'all', label: 'All', icon: Globe },
+  { id: 'work', label: 'Work', icon: Briefcase },
+  { id: 'personal', label: 'Personal', icon: User },
+];
+
+export default function Sidebar({ activePage, onNavigate, isOpen, onClose, onFocusMode, activeContext, onContextChange }: SidebarProps) {
   const tip = useMemo(() => DAILY_TIPS[Math.floor(Math.random() * DAILY_TIPS.length)], []);
 
   function handleNav(page: Page) {
@@ -76,6 +86,30 @@ export default function Sidebar({ activePage, onNavigate, isOpen, onClose, onFoc
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Context Switcher */}
+        <div className="px-3 pt-3 pb-1">
+          <div className="flex bg-warm-sand/40 rounded-lg p-0.5 gap-0.5">
+            {CONTEXT_OPTIONS.map(opt => {
+              const Icon = opt.icon;
+              const isActive = activeContext === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => onContextChange(opt.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200
+                    ${isActive
+                      ? 'bg-white text-warm-charcoal shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Navigation */}

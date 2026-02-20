@@ -197,3 +197,41 @@
 - [x] BUG: Reminder dialog auto-opens when navigating to Reminders page
 - [x] Add quarterly recurrence for reminders (same as tasks)
 - [x] BUG: TasksPage new task/search/reminder dialogs auto-open on page navigate
+
+# V1.8.5 — Work/Personal Context Switcher
+- [x] Add activeContext ('all' | 'work' | 'personal') to preferences schema
+- [x] Add SET_CONTEXT reducer action
+- [x] Build context switcher toggle in Sidebar
+- [x] Filter Tasks page by context
+- [x] Filter Today/DailyPlanner page by context
+- [x] Filter Matrix page by context
+- [x] Filter Stats page by context
+- [x] Filter Reminders page by context (reminders always show, tasks filtered)
+- [x] Thorough tests for context filtering logic
+- [ ] Update ROADMAP with V1.9 Planning tab feature
+- [x] Version bump to 1.8.5
+
+# V1.8.5 — Monitored Task Status
+- [x] Add 'monitored' to taskStatusSchema enum in appTypes.ts
+- [x] Add TOGGLE_MONITOR reducer action (active ↔ monitored)
+- [x] Update TasksPage filter tabs: All | Open | Monitored | Done
+- [x] Add monitor/reactivate toggle button on task cards (Eye icon)
+- [x] Visual distinction for monitored tasks (muted style, eye badge)
+- [x] Exclude monitored tasks from Daily Planner actionable sections
+- [x] Add "Monitoring" summary section on Daily Planner
+- [x] Exclude monitored tasks from Matrix quadrants
+- [x] Update Stats to track monitored separately
+- [x] Markdown serialization round-trip for monitored status
+- [x] Comprehensive tests for monitored task lifecycle
+- [x] Comprehensive tests for context filtering across all pages
+
+# V1.8.5 — Docs Update
+- [x] Update claude.md with V1.8.5 features
+- [x] Update agent.md with V1.8.5 features
+- [x] Update architecture.md with monitored status + context filtering
+- [x] Update README.md with new features
+- [x] Update CHANGELOG.md for V1.8.5
+
+# V1.8.5 — Version Auto-Read
+- [x] SettingsPage reads version from package.json instead of hardcoding
+- [x] Update preflight to remove SettingsPage version check (no longer needed)

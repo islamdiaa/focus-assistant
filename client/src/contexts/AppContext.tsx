@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer, useEffect, useCallback, useRef, useState, type ReactNode } from 'react';
 import { nanoid } from 'nanoid';
-import type { Task, Pomodoro, PomodoroLink, TimerSettings, DailyStats, AppState, Priority, QuadrantType, Category, EnergyLevel, RecurrenceFrequency, Subtask, TaskTemplate, AppPreferences, ReadingItem, ReadingStatus, Reminder } from '@/lib/types';
+import type { Task, Pomodoro, PomodoroLink, TimerSettings, DailyStats, AppState, Priority, QuadrantType, Category, EnergyLevel, RecurrenceFrequency, Subtask, TaskTemplate, AppPreferences, ReadingItem, ReadingStatus, Reminder, ContextFilter } from '@/lib/types';
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from '@/lib/types';
 import { loadState, saveState, pollTimestamp, setSaveErrorHandler, setSaveSuccessHandler } from '@/lib/sheets';
 
@@ -40,6 +40,8 @@ type Action =
   | { type: 'UNACK_REMINDER'; payload: string }
   | { type: 'PIN_TO_TODAY'; payload: string }
   | { type: 'UNPIN_FROM_TODAY'; payload: string }
+  | { type: 'SET_CONTEXT'; payload: ContextFilter }
+  | { type: 'TOGGLE_MONITOR'; payload: string }
   | { type: 'UNDO' }
   | { type: 'REDO' };
 
@@ -233,6 +235,26 @@ function appReducer(state: AppState, action: Action): AppState {
         dailyStats: updateTodayStats(state.dailyStats, {
           tasksCompleted: Math.max(0, todayStats.tasksCompleted + delta),
         }),
+      };
+    }
+
+    case 'TOGGLE_MONITOR': {
+      const task = state.tasks.find(t => t.id === action.payload);
+      if (!task) return state;
+      // Toggle between active and monitored. If done, move to monitored.
+      const newStatus = task.status === 'monitored' ? 'active' : 'monitored';
+      return {
+        ...state,
+        tasks: state.tasks.map(t =>
+          t.id === action.payload
+            ? {
+                ...t,
+                status: newStatus as Task['status'],
+                // Clear pin when moving to monitored (not actionable)
+                pinnedToday: newStatus === 'monitored' ? null : t.pinnedToday,
+              }
+            : t
+        ),
       };
     }
 
@@ -517,6 +539,13 @@ function appReducer(state: AppState, action: Action): AppState {
         tasks: state.tasks.map(t =>
           t.id === action.payload ? { ...t, pinnedToday: todayDate } : t
         ),
+      };
+    }
+
+    case 'SET_CONTEXT': {
+      return {
+        ...state,
+        preferences: { ...(state.preferences || DEFAULT_PREFERENCES), activeContext: action.payload },
       };
     }
 

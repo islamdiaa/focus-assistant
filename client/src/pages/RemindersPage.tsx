@@ -7,6 +7,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import type { Reminder } from '@/lib/types';
+import { filterRemindersByContext } from '@/lib/contextFilter';
 import { Plus, Bell, Cake, Calendar, Star, Trash2, Check, AlertCircle, Clock, Pencil, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -79,7 +80,8 @@ export default function RemindersPage({ reminderTrigger = 0 }: RemindersPageProp
     }
   }, [reminderTrigger]);
 
-  const reminders = state.reminders || [];
+  const activeContext = state.preferences?.activeContext || 'all';
+  const reminders = filterRemindersByContext(state.reminders || [], activeContext);
 
   const filteredReminders = useMemo(() => {
     let items = [...reminders];

@@ -58,7 +58,7 @@ FocusAssist is a full-stack productivity web application designed for ADHD-frien
 | Primary Storage | Local Markdown file | Human-readable, git-friendly persistence |
 | Cloud Storage | Google Sheets API v4 | Optional cloud sync backend |
 | Build | Vite 7 (client), esbuild (server) | Fast builds, HMR in dev |
-| Testing | Vitest (104+ tests) | Unit tests, schema integrity, persistence round-trips |
+| Testing | Vitest (172+ tests) | Unit tests, schema integrity, persistence round-trips |
 | Container | Docker (Alpine-based) | Single container deployment |
 | CI/CD | GitHub Actions | Test → Docker build → push to Docker Hub + GHCR |
 | Auth | Manus OAuth (optional) | Session-based authentication |
@@ -71,18 +71,19 @@ focus-assist/
 ├── client/                    # Frontend (React SPA)
 │   ├── src/
 │   │   ├── components/        # Reusable UI components
-│   │   │   ├── Sidebar.tsx    # Navigation sidebar with daily tips
+│   │   │   ├── Sidebar.tsx    # Navigation sidebar with context switcher and daily tips
 │   │   │   └── ui/            # shadcn/ui primitives
 │   │   ├── contexts/
 │   │   │   └── AppContext.tsx  # Global state (tasks, pomodoros, settings, stats, reminders, reading list)
 │   │   ├── lib/
 │   │   │   ├── sheets.ts      # Client → server API bridge
 │   │   │   ├── types.ts       # Re-exports from shared/appTypes.ts (single source of truth)
+│   │   │   ├── contextFilter.ts # Context filter utility (Work/Personal/All)
 │   │   │   └── md-storage.ts  # (Legacy) File System Access API
 │   │   └── pages/
 │   │       ├── Home.tsx            # Main layout shell (sidebar + content + header)
-│   │       ├── DailyPlannerPage.tsx # Today view: reminders, due tasks, energy suggestions
-│   │       ├── TasksPage.tsx       # CRUD tasks with filters, sort, inline edit, recurrence
+│   │       ├── DailyPlannerPage.tsx # Today view: reminders, due tasks, energy suggestions, monitoring
+│   │       ├── TasksPage.tsx       # CRUD tasks with filters (All/Open/Monitored/Done), monitor toggle
 │   │       ├── TimerPage.tsx       # Pomodoro timers with multi-task/subtask linking
 │   │       ├── MatrixPage.tsx      # Eisenhower 4-quadrant drag-and-drop
 │   │       ├── StatsPage.tsx       # Streak, charts, all-time statistics
@@ -108,7 +109,7 @@ focus-assist/
 │   ├── storageConfig.ts       # Storage mode config (file vs sheets)
 │   ├── routers.ts             # Root tRPC router
 │   ├── db.ts                  # Database helpers (Drizzle ORM)
-│   └── *.test.ts              # Vitest test files (11 files, 104+ tests)
+│   └── *.test.ts              # Vitest test files (15 files, 172+ tests)
 │
 ├── shared/                    # Shared between client and server
 │   ├── appTypes.ts            # SINGLE SOURCE OF TRUTH: Zod schemas → inferred TS types
@@ -136,7 +137,7 @@ All types are defined as Zod schemas in `shared/appTypes.ts`. TypeScript types a
 
 | Entity | Key Fields | Notes |
 |--------|-----------|-------|
-| Task | id, title, priority, status, dueDate, category, energy, quadrant, recurrence, subtasks | Supports daily/weekly/monthly/quarterly/weekdays recurrence |
+| Task | id, title, priority, status, dueDate, category, energy, quadrant, recurrence, subtasks, pinnedToday | Status: `active`/`done`/`monitored`. Supports daily/weekly/monthly/quarterly/weekdays recurrence. Monitored = waiting on external action. |
 | Subtask | id, title, done | Nested under parent task |
 | Pomodoro | id, title, duration, elapsed, status, linkedTasks | Links to multiple tasks/subtasks via `linkedTasks` array |
 | PomodoroLink | taskId, subtaskId? | Associates a pomodoro with a task and optionally a subtask |
@@ -144,7 +145,7 @@ All types are defined as Zod schemas in `shared/appTypes.ts`. TypeScript types a
 | ReadingItem | id, url, title, tags, status, notes | Read-later pocket with unread/reading/read status |
 | TaskTemplate | id, name, tasks | Reusable task sets |
 | DailyStats | date, tasksCompleted, focusMinutes, pomodorosCompleted | Per-day aggregates |
-| AppPreferences | notificationSound, obsidianVaultPath, obsidianAutoSync | User preferences |
+| AppPreferences | notificationSound, obsidianVaultPath, obsidianAutoSync, activeContext | User preferences. activeContext: `all`/`work`/`personal` for global context filtering. |
 
 ## Data Flow
 

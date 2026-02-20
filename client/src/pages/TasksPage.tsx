@@ -9,13 +9,14 @@
  */
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check, Pencil, X, Save, Search, Repeat, GripVertical, ChevronDown, ChevronRight, ListChecks, Bell, Cake, Star } from 'lucide-react';
+import { Plus, Trash2, Calendar, Flag, ArrowUpDown, Check, Pencil, X, Save, Search, Repeat, GripVertical, ChevronDown, ChevronRight, ListChecks, Bell, Cake, Star, Eye, EyeOff } from 'lucide-react';
 import type { Reminder } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { Task, Priority, Category, EnergyLevel, RecurrenceFrequency, Subtask } from '@/lib/types';
+import { filterTasksByContext } from '@/lib/contextFilter';
 import { DragDropProvider } from '@dnd-kit/react';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -64,7 +65,7 @@ const RECURRENCE_CONFIG: Record<RecurrenceFrequency, { label: string; short: str
   weekdays: { label: 'Weekdays', short: 'Weekdays' },
 };
 
-type Filter = 'all' | 'active' | 'done';
+type Filter = 'all' | 'active' | 'monitored' | 'done';
 type Sort = 'newest' | 'priority' | 'dueDate' | 'manual';
 
 const PRIORITY_ORDER: Record<Priority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
@@ -306,8 +307,10 @@ function SortableTaskCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.2 }}
-      className={`group bg-card rounded-xl border border-border p-4 transition-all duration-200 hover:shadow-md
-        ${task.status === 'done' ? 'opacity-60' : ''}
+      className={`group bg-card rounded-xl border p-4 transition-all duration-200 hover:shadow-md
+        ${task.status === 'done' ? 'opacity-60 border-border' : ''}
+        ${task.status === 'monitored' ? 'opacity-75 border-dashed border-warm-amber/40 bg-warm-amber-light/20' : 'border-border'}
+        ${task.status === 'active' ? 'border-border' : ''}
         ${editingId === task.id ? 'ring-2 ring-warm-sage/30 shadow-md' : ''}
         ${isDragSource ? 'shadow-xl ring-2 ring-warm-sage/40 opacity-50' : ''}`}
     >
@@ -326,16 +329,26 @@ function SortableTaskCard({
         <button
           onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: task.id })}
           className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
-            ${task.status === 'done' ? 'bg-warm-sage border-warm-sage' : 'border-border hover:border-warm-sage'}`}
+            ${task.status === 'done' ? 'bg-warm-sage border-warm-sage' : ''}
+            ${task.status === 'monitored' ? 'bg-warm-amber/20 border-warm-amber/50' : ''}
+            ${task.status === 'active' ? 'border-border hover:border-warm-sage' : ''}`}
         >
           {task.status === 'done' && <Check className="w-3 h-3 text-white" />}
+          {task.status === 'monitored' && <Eye className="w-3 h-3 text-warm-amber" />}
         </button>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium ${task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-            {task.title}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className={`text-sm font-medium ${task.status === 'done' ? 'line-through text-muted-foreground' : task.status === 'monitored' ? 'text-muted-foreground' : 'text-foreground'}`}>
+              {task.title}
+            </p>
+            {task.status === 'monitored' && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-warm-amber/15 text-warm-amber border border-warm-amber/20 flex items-center gap-0.5">
+                <Eye className="w-2.5 h-2.5" /> Monitoring
+              </span>
+            )}
+          </div>
           {task.description && (
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.description}</p>
           )}
@@ -381,10 +394,24 @@ function SortableTaskCard({
           >
             <ListChecks className="w-4 h-4" />
           </button>
+          {/* Monitor toggle */}
+          {task.status !== 'done' && (
+            <button
+              onClick={() => dispatch({ type: 'TOGGLE_MONITOR', payload: task.id })}
+              className={`p-1.5 rounded-md transition-colors ${
+                task.status === 'monitored'
+                  ? 'text-warm-amber bg-warm-amber-light'
+                  : 'text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light'
+              }`}
+              title={task.status === 'monitored' ? 'Reactivate task' : 'Monitor task (waiting)'}
+            >
+              {task.status === 'monitored' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          )}
           <button
             onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: task.id })}
             className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
-            title={task.status === 'done' ? 'Mark as active' : 'Mark as done'}
+            title={task.status === 'done' ? 'Reopen task' : 'Mark as done'}
           >
             <Check className="w-4 h-4" />
           </button>
@@ -537,8 +564,10 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0, remin
 
   const isDragDisabled = sort !== 'manual' || !!searchQuery.trim();
 
+  const activeContext = state.preferences?.activeContext || 'all';
+
   const filteredTasks = useMemo(() => {
-    let tasks = [...state.tasks];
+    let tasks = filterTasksByContext([...state.tasks], activeContext);
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -549,6 +578,7 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0, remin
     }
 
     if (filter === 'active') tasks = tasks.filter(t => t.status === 'active');
+    if (filter === 'monitored') tasks = tasks.filter(t => t.status === 'monitored');
     if (filter === 'done') tasks = tasks.filter(t => t.status === 'done');
 
     if (sort === 'newest') tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -560,18 +590,21 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0, remin
     });
 
     return tasks;
-  }, [state.tasks, filter, sort, searchQuery]);
+  }, [state.tasks, filter, sort, searchQuery, activeContext]);
+
+  const contextTasks = useMemo(() => filterTasksByContext(state.tasks, activeContext), [state.tasks, activeContext]);
 
   const counts = useMemo(() => ({
-    all: state.tasks.length,
-    active: state.tasks.filter(t => t.status === 'active').length,
-    done: state.tasks.filter(t => t.status === 'done').length,
-  }), [state.tasks]);
+    all: contextTasks.length,
+    active: contextTasks.filter(t => t.status === 'active').length,
+    monitored: contextTasks.filter(t => t.status === 'monitored').length,
+    done: contextTasks.filter(t => t.status === 'done').length,
+  }), [contextTasks]);
 
   const todayCount = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    return state.tasks.filter(t => t.status === 'active' && (!t.dueDate || t.dueDate <= today)).length;
-  }, [state.tasks]);
+    return contextTasks.filter(t => t.status === 'active' && (!t.dueDate || t.dueDate <= today)).length;
+  }, [contextTasks]);
 
   function handleAddTask() {
     if (!newTitle.trim()) return;
@@ -850,13 +883,16 @@ export default function TasksPage({ newTaskTrigger = 0, searchTrigger = 0, remin
       {/* Filters & Sort */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
         <div className="flex bg-warm-sand/50 rounded-lg p-1 gap-1">
-          {(['all', 'active', 'done'] as Filter[]).map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200
-                ${filter === f ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-              {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f]})
-            </button>
-          ))}
+          {(['all', 'active', 'monitored', 'done'] as Filter[]).map(f => {
+            const labels: Record<Filter, string> = { all: 'All', active: 'Open', monitored: 'Monitored', done: 'Done' };
+            return (
+              <button key={f} onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                  ${filter === f ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                {labels[f]} ({counts[f]})
+              </button>
+            );
+          })}
         </div>
         <div className="flex bg-warm-sand/50 rounded-lg p-1 gap-1 sm:ml-auto flex-wrap">
           {(['manual', 'newest', 'priority', 'dueDate'] as Sort[]).map(s => (

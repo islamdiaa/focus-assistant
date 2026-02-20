@@ -39,19 +39,24 @@ const pkgJson = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8'));
 const pkgVersion = pkgJson.version;
 console.log(`  package.json version: ${pkgVersion}`);
 
-// Check SettingsPage
+// Check SettingsPage imports version from package.json (no hardcoded version to check)
 const settingsPath = resolve(ROOT, 'client/src/pages/SettingsPage.tsx');
 if (existsSync(settingsPath)) {
   const settingsContent = readFileSync(settingsPath, 'utf8');
-  const vMatch = settingsContent.match(/v(\d+\.\d+\.\d+)/);
-  if (vMatch) {
-    if (vMatch[1] === pkgVersion) {
-      pass(`SettingsPage version matches: v${vMatch[1]}`);
-    } else {
-      fail(`SettingsPage version mismatch: v${vMatch[1]} (expected v${pkgVersion})`);
-    }
+  if (settingsContent.includes('pkgJson.version') || settingsContent.includes('package.json')) {
+    pass('SettingsPage reads version dynamically from package.json');
   } else {
-    warn('Could not find version string in SettingsPage.tsx');
+    // Fallback: check for hardcoded version match
+    const vMatch = settingsContent.match(/v(\d+\.\d+\.\d+)/);
+    if (vMatch) {
+      if (vMatch[1] === pkgVersion) {
+        pass(`SettingsPage version matches: v${vMatch[1]}`);
+      } else {
+        fail(`SettingsPage version mismatch: v${vMatch[1]} (expected v${pkgVersion})`);
+      }
+    } else {
+      warn('Could not find version string in SettingsPage.tsx');
+    }
   }
 }
 

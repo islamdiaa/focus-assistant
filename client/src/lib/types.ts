@@ -26,6 +26,7 @@ export {
   type Reminder,
   type ReadingItem,
   type AppPreferences,
+  type ContextFilter,
   type AppState,
   type StorageMode,
   type StorageConfig,
@@ -35,4 +36,6 @@ export {
   DEFAULT_PREFERENCES,
   DAILY_TIPS,
   NOTIFICATION_SOUNDS,
+  WORK_CATEGORIES,
+  PERSONAL_CATEGORIES,
 } from '@shared/appTypes';

@@ -4,11 +4,12 @@
  */
 import { useMemo, useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
-import { CheckCircle2, Circle, Clock, Sun, Sunset, Moon, Target, Zap, Calendar, ChevronRight, Check, ListChecks, Quote, BookOpen, ExternalLink, Globe, Bell, Cake, Star, AlertCircle, Plus, Pin, PinOff, Search, X } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Sun, Sunset, Moon, Target, Zap, Calendar, ChevronRight, Check, ListChecks, Quote, BookOpen, ExternalLink, Globe, Bell, Cake, Star, AlertCircle, Plus, Pin, PinOff, Search, X, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import type { Task, EnergyLevel, Reminder } from '@/lib/types';
+import { filterTasksByContext, filterRemindersByContext } from '@/lib/contextFilter';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ENERGY_EMOJI: Record<EnergyLevel, string> = { low: '🔋', medium: '⚡', high: '🔥' };
@@ -129,6 +130,7 @@ function TaskItem({ task, onToggle }: TaskItemProps) {
 
 export default function DailyPlannerPage() {
   const { state, dispatch } = useApp();
+  const activeContext = state.preferences?.activeContext || 'all';
   const timeOfDay = getTimeOfDay();
   const greeting = TIME_GREETING[timeOfDay];
   const GreetingIcon = greeting.icon;
@@ -147,19 +149,22 @@ export default function DailyPlannerPage() {
     };
   }, [state.dailyStats, today]);
 
+  // Context-filtered tasks
+  const contextTasks = useMemo(() => filterTasksByContext(state.tasks, activeContext), [state.tasks, activeContext]);
+
   // Pinned tasks (manually added to Today)
   const pinnedTasks = useMemo(() => {
-    return state.tasks.filter(t =>
+    return contextTasks.filter(t =>
       t.status === 'active' && t.pinnedToday === today
     ).sort((a, b) => {
       const pOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
       return pOrder[a.priority] - pOrder[b.priority];
     });
-  }, [state.tasks, today]);
+  }, [contextTasks, today]);
 
   // Tasks due today or overdue (excluding already pinned)
   const dueTasks = useMemo(() => {
-    return state.tasks.filter(t =>
+    return contextTasks.filter(t =>
       t.status === 'active' && t.dueDate && t.dueDate <= today && t.pinnedToday !== today
     ).sort((a, b) => {
       // Overdue first, then by priority
@@ -169,24 +174,24 @@ export default function DailyPlannerPage() {
       const pOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
       return pOrder[a.priority] - pOrder[b.priority];
     });
-  }, [state.tasks, today]);
+  }, [contextTasks, today]);
 
   // High-priority tasks (not due today but urgent/high, excluding pinned)
   const highPriorityTasks = useMemo(() => {
-    return state.tasks.filter(t =>
+    return contextTasks.filter(t =>
       t.status === 'active' &&
       (t.priority === 'urgent' || t.priority === 'high') &&
       (!t.dueDate || t.dueDate > today) &&
       t.pinnedToday !== today
     );
-  }, [state.tasks, today]);
+  }, [contextTasks, today]);
 
   // Task picker state
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSearch, setPickerSearch] = useState('');
 
   const pickableTasks = useMemo(() => {
-    return state.tasks.filter(t =>
+    return contextTasks.filter(t =>
       t.status === 'active' &&
       t.pinnedToday !== today &&
       !(t.dueDate && t.dueDate <= today)
@@ -198,7 +203,7 @@ export default function DailyPlannerPage() {
       const pOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
       return pOrder[a.priority] - pOrder[b.priority];
     });
-  }, [state.tasks, today, pickerSearch]);
+  }, [contextTasks, today, pickerSearch]);
 
   // Energy-matched suggestions
   const energySuggestions = useMemo(() => {
@@ -208,22 +213,27 @@ export default function DailyPlannerPage() {
       evening: 'low',
     };
     const suggestedEnergy = energyMap[timeOfDay];
-    return state.tasks.filter(t =>
+    return contextTasks.filter(t =>
       t.status === 'active' && t.energy === suggestedEnergy &&
       t.pinnedToday !== today &&
       !(t.dueDate && t.dueDate <= today)
     ).slice(0, 5);
-  }, [state.tasks, timeOfDay]);
+  }, [contextTasks, timeOfDay]);
+
+  // Monitored tasks (waiting on external action)
+  const monitoredTasks = useMemo(() => {
+    return contextTasks.filter(t => t.status === 'monitored');
+  }, [contextTasks]);
 
   // Recently completed today
   const completedToday = useMemo(() => {
-    return state.tasks.filter(t =>
+    return contextTasks.filter(t =>
       t.status === 'done' && t.completedAt && t.completedAt.startsWith(today)
     );
-  }, [state.tasks, today]);
+  }, [contextTasks, today]);
 
   // Reminders: overdue, today, upcoming (5 days)
-  const reminders = state.reminders || [];
+  const reminders = useMemo(() => filterRemindersByContext(state.reminders || [], activeContext), [state.reminders, activeContext]);
   const overdueReminders = useMemo(() => {
     return reminders.filter(r => !r.acknowledged && r.date < today)
       .sort((a, b) => a.date.localeCompare(b.date));
@@ -569,6 +579,52 @@ export default function DailyPlannerPage() {
             ))}
             {highPriorityTasks.length > 5 && (
               <p className="text-xs text-muted-foreground text-center mt-2">+ {highPriorityTasks.length - 5} more</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Monitoring — waiting on external action */}
+      {monitoredTasks.length > 0 && (
+        <div className="bg-card rounded-xl border border-dashed border-warm-amber/30 p-5 mb-4">
+          <h3 className="font-serif text-lg text-foreground mb-1 flex items-center gap-2">
+            <Eye className="w-5 h-5 text-warm-amber" />
+            Monitoring ({monitoredTasks.length})
+          </h3>
+          <p className="text-xs text-muted-foreground mb-3">
+            Tasks waiting on external action — check if any need follow-up
+          </p>
+          <div className="space-y-2">
+            {monitoredTasks.slice(0, 5).map(t => (
+              <div key={t.id} className="flex items-center gap-3 p-2 rounded-lg bg-warm-amber-light/20 border border-warm-amber/10">
+                <Eye className="w-4 h-4 text-warm-amber shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground">{t.title}</p>
+                  {t.dueDate && (
+                    <span className="text-xs text-muted-foreground/70 flex items-center gap-1 mt-0.5">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(t.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => dispatch({ type: 'TOGGLE_MONITOR', payload: t.id })}
+                  className="text-xs px-2 py-1 rounded-md bg-warm-sage-light text-warm-sage hover:bg-warm-sage/20 transition-colors flex items-center gap-1"
+                  title="Reactivate task"
+                >
+                  <EyeOff className="w-3 h-3" /> Reactivate
+                </button>
+                <button
+                  onClick={() => dispatch({ type: 'TOGGLE_TASK', payload: t.id })}
+                  className="text-xs px-2 py-1 rounded-md bg-warm-sage-light text-warm-sage hover:bg-warm-sage/20 transition-colors flex items-center gap-1"
+                  title="Mark as done"
+                >
+                  <Check className="w-3 h-3" /> Done
+                </button>
+              </div>
+            ))}
+            {monitoredTasks.length > 5 && (
+              <p className="text-xs text-muted-foreground text-center mt-2">+ {monitoredTasks.length - 5} more monitored</p>
             )}
           </div>
         </div>

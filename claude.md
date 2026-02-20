@@ -6,12 +6,14 @@ This file helps Claude (Anthropic's AI assistant) navigate and contribute to the
 
 FocusAssist is a full-stack productivity app (React 19 + Express 4 + tRPC 11) designed for ADHD-friendly task management. It runs as a single Docker container. Data is stored as a local Markdown file (`data/focus-assist-data.md`) by default, with optional Google Sheets sync and Obsidian vault export.
 
+**V1.8.5 additions:** Work/Personal context filtering (global toggle in sidebar), Monitored task status (active ↔ monitored ↔ done state machine for "waiting-on" tasks).
+
 ## Quick Start (Development)
 
 ```bash
 pnpm install
 pnpm dev          # Starts Express + Vite dev server on port 3000
-pnpm test         # Runs vitest (122+ tests)
+pnpm test         # Runs vitest (172+ tests)
 pnpm build        # Production build (Vite + esbuild)
 pnpm preflight    # Pre-push checks (MUST pass before every push)
 pnpm db:push      # Drizzle schema migrations
@@ -33,7 +35,7 @@ Client (React SPA)  ──tRPC──►  Server (Express)  ──►  Storage (M
 
 | File | What It Does |
 |------|-------------|
-| `shared/appTypes.ts` | **SINGLE SOURCE OF TRUTH** — Zod schemas → inferred TS types. All types defined here. |
+| `shared/appTypes.ts` | **SINGLE SOURCE OF TRUTH** — Zod schemas → inferred TS types. All types defined here. Includes `taskStatusSchema` (`active`/`done`/`monitored`), `contextFilterSchema` (`all`/`work`/`personal`), and category constants (`WORK_CATEGORIES`, `PERSONAL_CATEGORIES`). |
 | `server/dataRouter.ts` | tRPC router with `load`, `save`, `getConfig`, `setConfig` procedures. Imports schemas from shared. |
 | `server/mdStorage.ts` | Serializes/deserializes `AppState` ↔ Markdown tables. Uses `col()` safe accessor for backward compat. |
 | `server/obsidianSync.ts` | Writes Obsidian-compatible markdown to configured vault path |
@@ -42,9 +44,10 @@ Client (React SPA)  ──tRPC──►  Server (Express)  ──►  Storage (M
 | `client/src/contexts/AppContext.tsx` | React Context + useReducer — the global state store. Includes save status tracking. |
 | `client/src/lib/sheets.ts` | Client-side API bridge (calls tRPC endpoints). **Includes retry logic (3x) and error reporting.** |
 | `client/src/lib/types.ts` | Re-exports from `shared/appTypes.ts` (do not add types here) |
+| `client/src/lib/contextFilter.ts` | Context filter utility — filters tasks/reminders by Work/Personal/All. Work = `work` category. Personal = everything else + uncategorized. |
 | `client/src/pages/Home.tsx` | Main layout shell (sidebar + header + page content + save error banner) |
-| `client/src/pages/DailyPlannerPage.tsx` | Today view: reminders, due tasks, pinned tasks ("My Today"), energy suggestions |
-| `client/src/pages/TasksPage.tsx` | Tasks CRUD with filters (default: Open + priority sort), inline edit, recurrence, R shortcut for reminders |
+| `client/src/pages/DailyPlannerPage.tsx` | Today view: reminders, due tasks, pinned tasks ("My Today"), energy suggestions, monitoring section |
+| `client/src/pages/TasksPage.tsx` | Tasks CRUD with filters (All/Open/Monitored/Done + priority sort), inline edit, recurrence, monitor toggle (Eye icon), R shortcut for reminders |
 | `client/src/pages/TimerPage.tsx` | Pomodoro timers with multi-task/subtask linking |
 | `client/src/pages/RemindersPage.tsx` | Reminders with yearly/quarterly/monthly/weekly recurrence, edit + undo-ack |
 | `client/src/pages/ReadLaterPage.tsx` | Read-later pocket with tags, status, notes |
@@ -147,6 +150,28 @@ export type Task = z.infer<typeof taskSchema>;
 
 **Why `.strict()`?** The `appStateSchema` uses `.strict()` to reject unknown fields. This prevents silent data loss where new fields get stripped during save.
 
+## Task Status State Machine
+
+```
+Active (Open) ↔ Monitored ↔ Done
+     ↓                        ↑
+     └────────────────────────┘
+```
+
+- **Active (Open):** Actionable tasks you can work on now
+- **Monitored:** You've done your part, waiting on external action (e.g., waiting for NPC response). Excluded from daily planner actionable sections and matrix quadrants.
+- **Done:** Completed tasks
+
+Transitions: `TOGGLE_MONITOR` (active ↔ monitored), `TOGGLE_TASK` (active ↔ done). Monitored → done via `TOGGLE_TASK` reopens to active first.
+
+## Context Filtering
+
+- **All:** No filter, shows everything
+- **Work:** Tasks with `category: 'work'`; reminders with `category: 'appointment'`
+- **Personal:** Tasks with `category: 'personal' | 'health' | 'learning' | 'errands' | 'other' | null`; all reminders
+
+Context is persisted in `preferences.activeContext` and serialized to the Markdown file. Filter utility lives in `client/src/lib/contextFilter.ts`. Constants `WORK_CATEGORIES` and `PERSONAL_CATEGORIES` are in `shared/appTypes.ts`.
+
 ## Data Flow Pattern
 
 1. User action → React dispatch → `AppContext` reducer updates state
@@ -170,13 +195,13 @@ export type Task = z.infer<typeof taskSchema>;
 ## Testing
 
 ```bash
-pnpm test                              # Run all 122+ tests
+pnpm test                              # Run all 172+ tests
 pnpm vitest run server/                # Run only server tests
 pnpm vitest run server/schema-integrity # Run schema integrity tests
 pnpm preflight                         # Full pre-push validation
 ```
 
-Test files (14 files, 122+ tests):
+Test files (15 files, 172+ tests):
 - `server/schema-integrity.test.ts` — **Most important.** Schema drift detection + full persistence round-trips
 - `server/v182-pintoday.test.ts` — Pin-to-today, unpin, completion clearing, energy suggestion dedup
 - `server/v182-features.test.ts` — Edit reminder, inline matrix editing
@@ -184,6 +209,7 @@ Test files (14 files, 122+ tests):
 - `server/v181-persistence.test.ts` — Save/load round-trips for V1.8.1 features
 - `server/mdStorage.comprehensive.test.ts` — Core serialization round-trips
 - `server/v18-features.test.ts` — Reading list, Obsidian sync, templates
+- `server/v185-features.test.ts` — Context filtering (tasks + reminders), monitored status lifecycle, serialization, data integrity, combined scenarios
 - `server/appTypes.test.ts` — Zod schema validation
 - `server/sheetsStorage.test.ts` — Google Sheets API mocking
 - `server/auth.logout.test.ts` — Auth cookie clearing
