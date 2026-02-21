@@ -318,6 +318,7 @@ function appReducer(state: AppState, action: Action): AppState {
               status: newStatus as Task["status"],
               completedAt:
                 newStatus === "done" ? new Date().toISOString() : undefined,
+              statusChangedAt: new Date().toISOString(),
               pinnedToday: newStatus === "done" ? null : t.pinnedToday, // Clear pin on completion
               subtasks:
                 newStatus === "done" && t.subtasks
@@ -384,6 +385,7 @@ function appReducer(state: AppState, action: Action): AppState {
             ? {
                 ...t,
                 status: newStatus as Task["status"],
+                statusChangedAt: new Date().toISOString(),
                 // Clear pin when moving to monitored (not actionable)
                 pinnedToday: newStatus === "monitored" ? null : t.pinnedToday,
               }

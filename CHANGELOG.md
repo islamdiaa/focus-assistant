@@ -13,17 +13,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Work/Personal context filtering** — global toggle in sidebar (All/Work/Personal) filters tasks, reminders, and stats by context. Work = `work` category tasks + `appointment` reminders. Personal = everything else. Persisted in preferences.
 - **Monitored task status** — new `monitored` state for tasks where you've done your part but are waiting on external action (e.g., waiting for NPC response on a ticket appeal). Clean state machine: Active ↔ Monitored ↔ Done.
 - **Monitor toggle on task cards** — Eye icon button to send tasks to monitoring; EyeOff to reactivate. Visual distinction with dashed border and muted opacity.
-- **Monitoring section on Today page** — shows monitored tasks with reactivate/done actions. Monitored tasks excluded from actionable sections (My Today, Due Today, energy suggestions).
+- **Today view overhaul** — full task actions on Today cards (monitor/complete/delete), full reminder actions (acknowledge/delete), removed monitoring section for focus-only view.
+- **Actioned Today section** — collapsible section at bottom of Today view showing tasks completed or sent to monitoring today. Uses new `statusChangedAt` field.
+- **`statusChangedAt` field** — tracks when a task's status last changed (ISO string). Set on TOGGLE_TASK and TOGGLE_MONITOR actions. Serialized to Markdown.
 - **Task filter tabs updated** — Tasks page now shows All/Open/Monitored/Done tabs with counts.
 - **Monitored tasks excluded from Matrix** — only active tasks appear in Eisenhower quadrants.
 - **Stats page context awareness** — task status summary shows open/monitored/done counts, filtered by context.
 - **activeContext preference persistence** — context filter choice serialized to Markdown file and restored on load.
-- **50 new tests** — comprehensive test suite for context filtering (tasks + reminders), monitored status lifecycle, serialization round-trips, data integrity, combined scenarios, and stress tests (172+ total).
+- **71 new tests** — comprehensive test suite for context filtering (tasks + reminders), monitored status lifecycle, statusChangedAt, Actioned Today logic, Today view exclusion rules, serialization round-trips, data integrity, combined scenarios, and stress tests (193+ total).
 
 ### Changed
 
 - **Data integrity check** — `checkDataIntegrity()` now accepts `monitored` as a valid task status alongside `active` and `done`.
 - **Preferences serialization** — `activeContext` field added to Markdown preferences section.
+- **Task serialization** — `statusChangedAt` column added to tasks Markdown table (column 19). Backward compatible with older formats.
+- **Husky git hooks** — pre-push runs `pnpm preflight`, pre-commit runs `pnpm format:check`.
+- **CI workflow** — replaced separate tsc + test steps with single `pnpm preflight` command.
+- **SettingsPage version** — now reads version from package.json dynamically instead of hardcoding.
 
 ---
 

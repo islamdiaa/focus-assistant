@@ -20,6 +20,9 @@ pnpm-lock.yaml
 *.sqlite
 *.sqlite3
 
+# Runtime data
+data/
+
 # Logs
 *.log
 

@@ -6,14 +6,14 @@ This file helps Claude (Anthropic's AI assistant) navigate and contribute to the
 
 FocusAssist is a full-stack productivity app (React 19 + Express 4 + tRPC 11) designed for ADHD-friendly task management. It runs as a single Docker container. Data is stored as a local Markdown file (`data/focus-assist-data.md`) by default, with optional Google Sheets sync and Obsidian vault export.
 
-**V1.8.5 additions:** Work/Personal context filtering (global toggle in sidebar), Monitored task status (active ↔ monitored ↔ done state machine for "waiting-on" tasks).
+**V1.8.5 additions:** Work/Personal context filtering (global toggle in sidebar), Monitored task status (active ↔ monitored ↔ done state machine for "waiting-on" tasks), `statusChangedAt` field for tracking when tasks change status, Today view overhaul (full task/reminder actions, "Actioned Today" section, no monitoring section).
 
 ## Quick Start (Development)
 
 ```bash
 pnpm install
 pnpm dev          # Starts Express + Vite dev server on port 3000
-pnpm test         # Runs vitest (172+ tests)
+pnpm test         # Runs vitest (193+ tests)
 pnpm build        # Production build (Vite + esbuild)
 pnpm preflight    # Pre-push checks (MUST pass before every push)
 pnpm db:push      # Drizzle schema migrations
@@ -46,7 +46,7 @@ Client (React SPA)  ──tRPC──►  Server (Express)  ──►  Storage (M
 | `client/src/lib/types.ts`               | Re-exports from `shared/appTypes.ts` (do not add types here)                                                                                                                                                                                                         |
 | `client/src/lib/contextFilter.ts`       | Context filter utility — filters tasks/reminders by Work/Personal/All. Work = `work` category. Personal = everything else + uncategorized.                                                                                                                           |
 | `client/src/pages/Home.tsx`             | Main layout shell (sidebar + header + page content + save error banner)                                                                                                                                                                                              |
-| `client/src/pages/DailyPlannerPage.tsx` | Today view: reminders, due tasks, pinned tasks ("My Today"), energy suggestions, monitoring section                                                                                                                                                                  |
+| `client/src/pages/DailyPlannerPage.tsx` | Today view: reminders, due tasks, pinned tasks ("My Today"), energy suggestions, "Actioned Today" collapsible section. Full task actions (monitor/complete/delete) and reminder actions (ack/delete) on cards.                                                       |
 | `client/src/pages/TasksPage.tsx`        | Tasks CRUD with filters (All/Open/Monitored/Done + priority sort), inline edit, recurrence, monitor toggle (Eye icon), R shortcut for reminders                                                                                                                      |
 | `client/src/pages/TimerPage.tsx`        | Pomodoro timers with multi-task/subtask linking                                                                                                                                                                                                                      |
 | `client/src/pages/RemindersPage.tsx`    | Reminders with yearly/quarterly/monthly/weekly recurrence, edit + undo-ack                                                                                                                                                                                           |
@@ -177,7 +177,14 @@ Active (Open) ↔ Monitored ↔ Done
 - **Monitored:** You've done your part, waiting on external action (e.g., waiting for NPC response). Excluded from daily planner actionable sections and matrix quadrants.
 - **Done:** Completed tasks
 
-Transitions: `TOGGLE_MONITOR` (active ↔ monitored), `TOGGLE_TASK` (active ↔ done). Monitored → done via `TOGGLE_TASK` reopens to active first.
+Transitions: `TOGGLE_MONITOR` (active ↔ monitored), `TOGGLE_TASK` (active ↔ done). Monitored → done via `TOGGLE_TASK` reopens to active first. Every status transition sets `statusChangedAt` (ISO string) for tracking when the change happened.
+
+### Today View Design
+
+- **Action-oriented only:** Shows pinned tasks, due/overdue tasks, high priority, energy suggestions, reminders
+- **Full actions on cards:** Task cards have monitor/complete/delete buttons (hover). Reminder cards have acknowledge/delete buttons.
+- **No monitoring section:** Monitored tasks are excluded from all actionable sections (they live on the Tasks page under Monitored tab)
+- **Actioned Today:** Collapsible section at bottom showing tasks completed or sent to monitoring today (uses `statusChangedAt` field)
 
 ## Context Filtering
 

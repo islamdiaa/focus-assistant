@@ -250,3 +250,15 @@
 
 - [x] Add pre-commit hook for pnpm format:check
 - [ ] Tag V1.8.5 and push to GitHub
+
+# V1.8.5 — Today View Overhaul
+
+- [x] Add statusChangedAt field to task schema (ISO string, set on status transitions)
+- [x] Update reducer: set statusChangedAt on TOGGLE_TASK, TOGGLE_MONITOR actions
+- [x] Update Markdown serialization: add statusChangedAt column to tasks table
+- [x] Today task cards: add monitor/complete/delete buttons (same as Tasks page)
+- [x] Today reminder cards: add acknowledge/delete buttons (same as Reminders page)
+- [x] Remove Monitoring section from Today view
+- [x] Add "Actioned Today" collapsible section (completed + monitored today)
+- [x] Comprehensive tests for statusChangedAt, Actioned Today logic, serialization
+- [x] Update docs (claude.md, agent.md, architecture.md, CHANGELOG)

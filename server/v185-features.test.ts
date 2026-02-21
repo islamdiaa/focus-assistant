@@ -863,3 +863,462 @@ describe("Edge cases", () => {
     expect(parsed.tasks.find(t => t.id === "w-done")!.status).toBe("done");
   });
 });
+
+// ============================================================
+// 13. statusChangedAt FIELD
+// ============================================================
+
+describe("statusChangedAt — field behavior", () => {
+  it("task without statusChangedAt serializes and deserializes correctly", () => {
+    const task = makeTask({ id: "no-sca", status: "active" });
+    expect(task.statusChangedAt).toBeUndefined();
+
+    const state = makeState({ tasks: [task] });
+    const md = stateToMarkdown(state);
+    const parsed = markdownToState(md);
+
+    expect(parsed.tasks[0].statusChangedAt).toBeUndefined();
+  });
+
+  it("task with statusChangedAt round-trips through markdown", () => {
+    const ts = "2026-02-21T14:30:00.000Z";
+    const task = makeTask({
+      id: "sca-1",
+      status: "monitored",
+      statusChangedAt: ts,
+    });
+
+    const state = makeState({ tasks: [task] });
+    const md = stateToMarkdown(state);
+    const parsed = markdownToState(md);
+
+    expect(parsed.tasks[0].statusChangedAt).toBe(ts);
+    expect(parsed.tasks[0].status).toBe("monitored");
+  });
+
+  it("statusChangedAt updates on status transition (active → done)", () => {
+    const now = new Date().toISOString();
+    const task = makeTask({
+      id: "sca-2",
+      status: "done",
+      statusChangedAt: now,
+    });
+
+    const state = makeState({ tasks: [task] });
+    const md = stateToMarkdown(state);
+    const parsed = markdownToState(md);
+
+    expect(parsed.tasks[0].statusChangedAt).toBe(now);
+  });
+
+  it("statusChangedAt updates on monitor transition (active → monitored)", () => {
+    const now = "2026-02-21T09:15:00.000Z";
+    const task = makeTask({
+      id: "sca-3",
+      status: "monitored",
+      statusChangedAt: now,
+    });
+
+    const state = makeState({ tasks: [task] });
+    const md = stateToMarkdown(state);
+    const parsed = markdownToState(md);
+
+    expect(parsed.tasks[0].statusChangedAt).toBe(now);
+    expect(parsed.tasks[0].status).toBe("monitored");
+  });
+
+  it("statusChangedAt preserved alongside all other fields", () => {
+    const task = makeTask({
+      id: "sca-full",
+      title: "Full task with statusChangedAt",
+      description: "Testing all fields together",
+      priority: "high",
+      status: "monitored",
+      dueDate: "2026-03-01",
+      category: "work",
+      energy: "medium",
+      quadrant: "schedule",
+      statusChangedAt: "2026-02-21T10:00:00.000Z",
+      pinnedToday: "2026-02-21",
+      subtasks: [{ id: "s1", title: "Sub", done: false }],
+    });
+
+    const state = makeState({ tasks: [task] });
+    const md = stateToMarkdown(state);
+    const parsed = markdownToState(md);
+
+    const t = parsed.tasks[0];
+    expect(t.statusChangedAt).toBe("2026-02-21T10:00:00.000Z");
+    expect(t.pinnedToday).toBe("2026-02-21");
+    expect(t.status).toBe("monitored");
+    expect(t.category).toBe("work");
+    expect(t.subtasks).toHaveLength(1);
+  });
+});
+
+// ============================================================
+// 14. ACTIONED TODAY — filtering logic
+// ============================================================
+
+describe("Actioned Today — filtering logic", () => {
+  const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+
+  it("shows tasks completed today", () => {
+    const tasks = [
+      makeTask({
+        id: "ct-1",
+        status: "done",
+        statusChangedAt: `${today}T10:00:00.000Z`,
+      }),
+      makeTask({
+        id: "ct-2",
+        status: "done",
+        statusChangedAt: `${yesterday}T10:00:00.000Z`,
+      }),
+    ];
+
+    const actionedToday = tasks.filter(
+      t =>
+        t.statusChangedAt &&
+        t.statusChangedAt.startsWith(today) &&
+        (t.status === "done" || t.status === "monitored")
+    );
+
+    expect(actionedToday).toHaveLength(1);
+    expect(actionedToday[0].id).toBe("ct-1");
+  });
+
+  it("shows tasks moved to monitored today", () => {
+    const tasks = [
+      makeTask({
+        id: "mt-1",
+        status: "monitored",
+        statusChangedAt: `${today}T14:00:00.000Z`,
+      }),
+      makeTask({
+        id: "mt-2",
+        status: "monitored",
+        statusChangedAt: `${yesterday}T14:00:00.000Z`,
+      }),
+    ];
+
+    const actionedToday = tasks.filter(
+      t =>
+        t.statusChangedAt &&
+        t.statusChangedAt.startsWith(today) &&
+        (t.status === "done" || t.status === "monitored")
+    );
+
+    expect(actionedToday).toHaveLength(1);
+    expect(actionedToday[0].id).toBe("mt-1");
+  });
+
+  it("shows both completed and monitored tasks actioned today", () => {
+    const tasks = [
+      makeTask({
+        id: "a1",
+        status: "done",
+        statusChangedAt: `${today}T09:00:00.000Z`,
+      }),
+      makeTask({
+        id: "a2",
+        status: "monitored",
+        statusChangedAt: `${today}T11:00:00.000Z`,
+      }),
+      makeTask({
+        id: "a3",
+        status: "active",
+        statusChangedAt: `${today}T08:00:00.000Z`,
+      }), // reactivated — not "actioned"
+    ];
+
+    const actionedToday = tasks.filter(
+      t =>
+        t.statusChangedAt &&
+        t.statusChangedAt.startsWith(today) &&
+        (t.status === "done" || t.status === "monitored")
+    );
+
+    expect(actionedToday).toHaveLength(2);
+    expect(actionedToday.map(t => t.id).sort()).toEqual(["a1", "a2"]);
+  });
+
+  it("excludes active tasks even if statusChangedAt is today", () => {
+    // Task was monitored, then reactivated today — should NOT appear in actioned
+    const tasks = [
+      makeTask({
+        id: "reactivated",
+        status: "active",
+        statusChangedAt: `${today}T15:00:00.000Z`,
+      }),
+    ];
+
+    const actionedToday = tasks.filter(
+      t =>
+        t.statusChangedAt &&
+        t.statusChangedAt.startsWith(today) &&
+        (t.status === "done" || t.status === "monitored")
+    );
+
+    expect(actionedToday).toHaveLength(0);
+  });
+
+  it("excludes tasks without statusChangedAt", () => {
+    const tasks = [
+      makeTask({ id: "old-done", status: "done" }), // no statusChangedAt
+    ];
+
+    const actionedToday = tasks.filter(
+      t =>
+        t.statusChangedAt &&
+        t.statusChangedAt.startsWith(today) &&
+        (t.status === "done" || t.status === "monitored")
+    );
+
+    expect(actionedToday).toHaveLength(0);
+  });
+
+  it("empty task list returns empty actioned today", () => {
+    const actionedToday: Task[] = [];
+    expect(actionedToday).toHaveLength(0);
+  });
+});
+
+// ============================================================
+// 15. ACTIONED TODAY + CONTEXT FILTERING COMBINED
+// ============================================================
+
+describe("Actioned Today + context filtering", () => {
+  const today = new Date().toISOString().split("T")[0];
+
+  it("work context shows only work actioned tasks", () => {
+    const tasks = [
+      makeTask({
+        id: "wa",
+        status: "done",
+        category: "work",
+        statusChangedAt: `${today}T10:00:00.000Z`,
+      }),
+      makeTask({
+        id: "pa",
+        status: "done",
+        category: "personal",
+        statusChangedAt: `${today}T10:00:00.000Z`,
+      }),
+      makeTask({
+        id: "wm",
+        status: "monitored",
+        category: "work",
+        statusChangedAt: `${today}T11:00:00.000Z`,
+      }),
+    ];
+
+    const contextFiltered = filterTasksByContext(tasks, "work");
+    const actionedToday = contextFiltered.filter(
+      t =>
+        t.statusChangedAt &&
+        t.statusChangedAt.startsWith(today) &&
+        (t.status === "done" || t.status === "monitored")
+    );
+
+    expect(actionedToday).toHaveLength(2);
+    expect(actionedToday.map(t => t.id).sort()).toEqual(["wa", "wm"]);
+  });
+
+  it("personal context shows personal + uncategorized actioned tasks", () => {
+    const tasks = [
+      makeTask({
+        id: "wa",
+        status: "done",
+        category: "work",
+        statusChangedAt: `${today}T10:00:00.000Z`,
+      }),
+      makeTask({
+        id: "pa",
+        status: "monitored",
+        category: "personal",
+        statusChangedAt: `${today}T10:00:00.000Z`,
+      }),
+      makeTask({
+        id: "na",
+        status: "done",
+        category: null,
+        statusChangedAt: `${today}T12:00:00.000Z`,
+      }),
+    ];
+
+    const contextFiltered = filterTasksByContext(tasks, "personal");
+    const actionedToday = contextFiltered.filter(
+      t =>
+        t.statusChangedAt &&
+        t.statusChangedAt.startsWith(today) &&
+        (t.status === "done" || t.status === "monitored")
+    );
+
+    expect(actionedToday).toHaveLength(2);
+    expect(actionedToday.map(t => t.id).sort()).toEqual(["na", "pa"]);
+  });
+});
+
+// ============================================================
+// 16. statusChangedAt — MULTIPLE TRANSITIONS SERIALIZATION
+// ============================================================
+
+describe("statusChangedAt — transition chain serialization", () => {
+  it("active → monitored → done preserves final statusChangedAt", () => {
+    // Step 1: active → monitored
+    let task = makeTask({
+      id: "chain-1",
+      status: "monitored",
+      statusChangedAt: "2026-02-21T09:00:00.000Z",
+    });
+
+    let state = makeState({ tasks: [task] });
+    let md = stateToMarkdown(state);
+    let parsed = markdownToState(md);
+    expect(parsed.tasks[0].statusChangedAt).toBe("2026-02-21T09:00:00.000Z");
+
+    // Step 2: monitored → done
+    task = {
+      ...parsed.tasks[0],
+      status: "done",
+      completedAt: "2026-02-21T15:00:00.000Z",
+      statusChangedAt: "2026-02-21T15:00:00.000Z",
+    };
+    state = makeState({ tasks: [task] });
+    md = stateToMarkdown(state);
+    parsed = markdownToState(md);
+
+    expect(parsed.tasks[0].status).toBe("done");
+    expect(parsed.tasks[0].statusChangedAt).toBe("2026-02-21T15:00:00.000Z");
+    expect(parsed.tasks[0].completedAt).toBe("2026-02-21T15:00:00.000Z");
+  });
+
+  it("active → monitored → active (reactivated) clears from actioned", () => {
+    const today = new Date().toISOString().split("T")[0];
+
+    const task = makeTask({
+      id: "reactivated",
+      status: "active",
+      statusChangedAt: `${today}T16:00:00.000Z`,
+    });
+
+    // Even though statusChangedAt is today, status is active → not in actioned
+    const actionedToday = [task].filter(
+      t =>
+        t.statusChangedAt &&
+        t.statusChangedAt.startsWith(today) &&
+        (t.status === "done" || t.status === "monitored")
+    );
+
+    expect(actionedToday).toHaveLength(0);
+  });
+
+  it("done → active (reopened) then done again updates statusChangedAt", () => {
+    const task = makeTask({
+      id: "redone",
+      status: "done",
+      statusChangedAt: "2026-02-21T18:00:00.000Z",
+      completedAt: "2026-02-21T18:00:00.000Z",
+    });
+
+    const state = makeState({ tasks: [task] });
+    const md = stateToMarkdown(state);
+    const parsed = markdownToState(md);
+
+    expect(parsed.tasks[0].statusChangedAt).toBe("2026-02-21T18:00:00.000Z");
+    expect(parsed.tasks[0].status).toBe("done");
+  });
+});
+
+// ============================================================
+// 17. TODAY VIEW — task exclusion rules
+// ============================================================
+
+describe("Today view — task exclusion rules", () => {
+  const today = new Date().toISOString().split("T")[0];
+
+  it("monitored tasks excluded from pinned today section", () => {
+    const tasks = [
+      makeTask({
+        id: "p1",
+        status: "active",
+        pinnedToday: today,
+      }),
+      makeTask({
+        id: "p2",
+        status: "monitored",
+        pinnedToday: today,
+      }),
+    ];
+
+    const pinnedActive = tasks.filter(
+      t => t.status === "active" && t.pinnedToday === today
+    );
+    expect(pinnedActive).toHaveLength(1);
+    expect(pinnedActive[0].id).toBe("p1");
+  });
+
+  it("monitored tasks excluded from due today section", () => {
+    const tasks = [
+      makeTask({ id: "d1", status: "active", dueDate: today }),
+      makeTask({ id: "d2", status: "monitored", dueDate: today }),
+      makeTask({ id: "d3", status: "done", dueDate: today }),
+    ];
+
+    const dueActive = tasks.filter(
+      t => t.status === "active" && t.dueDate && t.dueDate <= today
+    );
+    expect(dueActive).toHaveLength(1);
+    expect(dueActive[0].id).toBe("d1");
+  });
+
+  it("monitored tasks excluded from high priority section", () => {
+    const tasks = [
+      makeTask({
+        id: "hp1",
+        status: "active",
+        priority: "urgent",
+      }),
+      makeTask({
+        id: "hp2",
+        status: "monitored",
+        priority: "urgent",
+      }),
+    ];
+
+    const highPriorityActive = tasks.filter(
+      t =>
+        t.status === "active" &&
+        (t.priority === "urgent" || t.priority === "high")
+    );
+    expect(highPriorityActive).toHaveLength(1);
+    expect(highPriorityActive[0].id).toBe("hp1");
+  });
+
+  it("monitored tasks excluded from energy suggestions", () => {
+    const tasks = [
+      makeTask({ id: "e1", status: "active", energy: "high" }),
+      makeTask({ id: "e2", status: "monitored", energy: "high" }),
+    ];
+
+    const energySuggestions = tasks.filter(
+      t => t.status === "active" && t.energy === "high"
+    );
+    expect(energySuggestions).toHaveLength(1);
+    expect(energySuggestions[0].id).toBe("e1");
+  });
+
+  it("monitored tasks excluded from task picker", () => {
+    const tasks = [
+      makeTask({ id: "pk1", status: "active" }),
+      makeTask({ id: "pk2", status: "monitored" }),
+      makeTask({ id: "pk3", status: "done" }),
+    ];
+
+    const pickable = tasks.filter(t => t.status === "active");
+    expect(pickable).toHaveLength(1);
+    expect(pickable[0].id).toBe("pk1");
+  });
+});

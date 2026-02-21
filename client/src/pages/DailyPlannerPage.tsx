@@ -1,6 +1,8 @@
 /**
  * Daily Planner — "Today" page
  * Shows due tasks, focus blocks, timeline, quick stats, and a motivational quote
+ * V1.8.5: Full task actions (monitor/complete/edit/delete), full reminder actions,
+ *         "Actioned Today" section, no monitoring section (focus-only view)
  */
 import { useMemo, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
@@ -32,6 +34,11 @@ import {
   X,
   Eye,
   EyeOff,
+  Pencil,
+  Trash2,
+  Undo2,
+  ChevronDown,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -247,12 +254,14 @@ const TIME_GREETING: Record<string, { icon: typeof Sun; text: string }> = {
   evening: { icon: Moon, text: "Good evening" },
 };
 
-interface TaskItemProps {
+// ---- Task card with full actions ----
+interface TodayTaskCardProps {
   task: Task;
-  onToggle: () => void;
+  dispatch: ReturnType<typeof useApp>["dispatch"];
+  showUnpin?: boolean;
 }
 
-function TaskItem({ task, onToggle }: TaskItemProps) {
+function TodayTaskCard({ task, dispatch, showUnpin }: TodayTaskCardProps) {
   const subtasksDone = task.subtasks?.filter(s => s.done).length || 0;
   const subtasksTotal = task.subtasks?.length || 0;
 
@@ -261,17 +270,20 @@ function TaskItem({ task, onToggle }: TaskItemProps) {
       layout
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-background/50 hover:bg-background transition-colors ${
+      className={`flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-background/50 hover:bg-background transition-colors group ${
         task.status === "done" ? "opacity-50" : ""
       }`}
     >
+      {/* Status checkbox */}
       <button
-        onClick={onToggle}
+        onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
         className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
           ${task.status === "done" ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
       >
         {task.status === "done" && <Check className="w-3 h-3 text-white" />}
       </button>
+
+      {/* Content */}
       <div className="flex-1 min-w-0">
         <p
           className={`text-sm font-medium ${task.status === "done" ? "line-through text-muted-foreground" : "text-foreground"}`}
@@ -299,7 +311,204 @@ function TaskItem({ task, onToggle }: TaskItemProps) {
               {subtasksTotal}
             </span>
           )}
+          {task.category && (
+            <span className="text-[10px] text-muted-foreground/70">
+              {task.category}
+            </span>
+          )}
         </div>
+      </div>
+
+      {/* Action buttons — visible on hover */}
+      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Monitor toggle (only for active tasks) */}
+        {task.status === "active" && (
+          <button
+            onClick={() =>
+              dispatch({ type: "TOGGLE_MONITOR", payload: task.id })
+            }
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light transition-colors"
+            title="Monitor task (waiting)"
+          >
+            <Eye className="w-3.5 h-3.5" />
+          </button>
+        )}
+        {/* Complete/reopen */}
+        <button
+          onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
+          className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
+          title={task.status === "done" ? "Reopen task" : "Mark as done"}
+        >
+          <Check className="w-3.5 h-3.5" />
+        </button>
+        {/* Unpin (only for pinned tasks) */}
+        {showUnpin && (
+          <button
+            onClick={() =>
+              dispatch({ type: "UNPIN_FROM_TODAY", payload: task.id })
+            }
+            title="Remove from Today"
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta/10 transition-colors"
+          >
+            <PinOff className="w-3.5 h-3.5" />
+          </button>
+        )}
+        {/* Delete */}
+        <button
+          onClick={() => dispatch({ type: "DELETE_TASK", payload: task.id })}
+          className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
+          title="Delete task"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+// ---- Reminder card with full actions ----
+interface TodayReminderCardProps {
+  reminder: Reminder;
+  dispatch: ReturnType<typeof useApp>["dispatch"];
+  variant?: "overdue" | "today" | "upcoming";
+}
+
+const REMINDER_CATEGORY_ICON: Record<Reminder["category"], typeof Bell> = {
+  birthday: Cake,
+  appointment: Calendar,
+  event: Star,
+  other: Bell,
+};
+
+const REMINDER_CATEGORY_COLOR: Record<
+  Reminder["category"],
+  { color: string; bg: string }
+> = {
+  birthday: { color: "text-pink-500", bg: "bg-pink-50" },
+  appointment: { color: "text-warm-blue", bg: "bg-warm-blue-light" },
+  event: { color: "text-warm-amber", bg: "bg-warm-amber-light" },
+  other: { color: "text-warm-sage", bg: "bg-warm-sage-light" },
+};
+
+function TodayReminderCard({
+  reminder,
+  dispatch,
+  variant = "today",
+}: TodayReminderCardProps) {
+  const Icon = REMINDER_CATEGORY_ICON[reminder.category];
+  const colors = REMINDER_CATEGORY_COLOR[reminder.category];
+  const today = new Date().toISOString().split("T")[0];
+
+  const borderClass =
+    variant === "overdue"
+      ? "border-red-200/50"
+      : variant === "today"
+        ? "border-warm-amber/20"
+        : "border-warm-blue/10";
+
+  const daysOverdue =
+    variant === "overdue"
+      ? Math.floor(
+          (new Date(today).getTime() - new Date(reminder.date).getTime()) /
+            86400000
+        )
+      : 0;
+  const daysUntil =
+    variant === "upcoming"
+      ? Math.floor(
+          (new Date(reminder.date).getTime() - new Date(today).getTime()) /
+            86400000
+        )
+      : 0;
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      className={`flex items-center gap-3 p-3 rounded-lg border ${borderClass} bg-white/50 group`}
+    >
+      <div
+        className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center shrink-0`}
+      >
+        <Icon className={`w-4 h-4 ${colors.color}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground">{reminder.title}</p>
+        {reminder.description && (
+          <p className="text-[10px] text-muted-foreground">
+            {reminder.description}
+          </p>
+        )}
+        <p
+          className={`text-[10px] font-medium ${
+            variant === "overdue"
+              ? "text-red-500"
+              : variant === "today"
+                ? "text-warm-amber"
+                : "text-warm-blue"
+          }`}
+        >
+          {variant === "overdue" && (
+            <>
+              {daysOverdue}d overdue •{" "}
+              {new Date(reminder.date + "T00:00:00").toLocaleDateString(
+                "en-US",
+                { month: "short", day: "numeric" }
+              )}
+            </>
+          )}
+          {variant === "today" && <>Today</>}
+          {variant === "upcoming" && (
+            <>
+              In {daysUntil}d •{" "}
+              {new Date(reminder.date + "T00:00:00").toLocaleDateString(
+                "en-US",
+                { weekday: "short", month: "short", day: "numeric" }
+              )}
+            </>
+          )}
+          {reminder.time ? ` at ${formatReminderTime(reminder.time)}` : ""}
+          {reminder.recurrence !== "none" ? ` • ${reminder.recurrence}` : ""}
+        </p>
+      </div>
+
+      {/* Action buttons — visible on hover */}
+      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        {!reminder.acknowledged ? (
+          <button
+            onClick={() =>
+              dispatch({ type: "ACK_REMINDER", payload: reminder.id })
+            }
+            title={
+              reminder.recurrence !== "none"
+                ? "Acknowledge & advance to next"
+                : "Acknowledge"
+            }
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
+          >
+            <Check className="w-3.5 h-3.5" />
+          </button>
+        ) : (
+          <button
+            onClick={() =>
+              dispatch({ type: "UNACK_REMINDER", payload: reminder.id })
+            }
+            title="Undo acknowledge"
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light transition-colors"
+          >
+            <Undo2 className="w-3.5 h-3.5" />
+          </button>
+        )}
+        <button
+          onClick={() =>
+            dispatch({ type: "DELETE_REMINDER", payload: reminder.id })
+          }
+          className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 transition-colors"
+          title="Delete reminder"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
       </div>
     </motion.div>
   );
@@ -423,18 +632,17 @@ export default function DailyPlannerPage() {
       .slice(0, 5);
   }, [contextTasks, timeOfDay]);
 
-  // Monitored tasks (waiting on external action)
-  const monitoredTasks = useMemo(() => {
-    return contextTasks.filter(t => t.status === "monitored");
-  }, [contextTasks]);
-
-  // Recently completed today
-  const completedToday = useMemo(() => {
+  // Actioned Today: tasks completed or moved to monitored today (using statusChangedAt)
+  const actionedToday = useMemo(() => {
     return contextTasks.filter(
       t =>
-        t.status === "done" && t.completedAt && t.completedAt.startsWith(today)
+        t.statusChangedAt &&
+        t.statusChangedAt.startsWith(today) &&
+        (t.status === "done" || t.status === "monitored")
     );
   }, [contextTasks, today]);
+
+  const [actionedExpanded, setActionedExpanded] = useState(false);
 
   // Reminders: overdue, today, upcoming (5 days)
   const reminders = useMemo(
@@ -459,27 +667,6 @@ export default function DailyPlannerPage() {
       .filter(r => !r.acknowledged && r.date > today && r.date <= cutoff)
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [reminders, today]);
-
-  const REMINDER_CATEGORY_ICON: Record<Reminder["category"], typeof Bell> = {
-    birthday: Cake,
-    appointment: Calendar,
-    event: Star,
-    other: Bell,
-  };
-
-  const REMINDER_CATEGORY_COLOR: Record<
-    Reminder["category"],
-    { color: string; bg: string }
-  > = {
-    birthday: { color: "text-pink-500", bg: "bg-pink-50" },
-    appointment: { color: "text-warm-blue", bg: "bg-warm-blue-light" },
-    event: { color: "text-warm-amber", bg: "bg-warm-amber-light" },
-    other: { color: "text-warm-sage", bg: "bg-warm-sage-light" },
-  };
-
-  function toggleTask(id: string) {
-    dispatch({ type: "TOGGLE_TASK", payload: id });
-  }
 
   return (
     <div className="p-4 lg:p-8 max-w-4xl">
@@ -598,64 +785,12 @@ export default function DailyPlannerPage() {
         ) : (
           <div className="space-y-2">
             {pinnedTasks.map(t => (
-              <motion.div
+              <TodayTaskCard
                 key={t.id}
-                layout
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                className={`flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-background/50 hover:bg-background transition-colors ${
-                  t.status === "done" ? "opacity-50" : ""
-                }`}
-              >
-                <button
-                  onClick={() => toggleTask(t.id)}
-                  className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
-                    ${t.status === "done" ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
-                >
-                  {t.status === "done" && (
-                    <Check className="w-3 h-3 text-white" />
-                  )}
-                </button>
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm font-medium ${t.status === "done" ? "line-through text-muted-foreground" : "text-foreground"}`}
-                  >
-                    {t.title}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    {t.energy && (
-                      <span className="text-[10px] text-muted-foreground">
-                        {ENERGY_EMOJI[t.energy]} {t.energy}
-                      </span>
-                    )}
-                    {t.dueDate && (
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                        <Calendar className="w-2.5 h-2.5" />
-                        {new Date(t.dueDate).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
-                    )}
-                    {(t.subtasks?.length || 0) > 0 && (
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                        <ListChecks className="w-2.5 h-2.5" />{" "}
-                        {t.subtasks?.filter(s => s.done).length || 0}/
-                        {t.subtasks?.length || 0}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={() =>
-                    dispatch({ type: "UNPIN_FROM_TODAY", payload: t.id })
-                  }
-                  title="Remove from Today"
-                  className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta/10 transition-colors shrink-0"
-                >
-                  <PinOff className="w-3.5 h-3.5" />
-                </button>
-              </motion.div>
+                task={t}
+                dispatch={dispatch}
+                showUnpin
+              />
             ))}
           </div>
         )}
@@ -756,51 +891,14 @@ export default function DailyPlannerPage() {
             Overdue Reminders ({overdueReminders.length})
           </h3>
           <div className="space-y-2">
-            {overdueReminders.map(r => {
-              const Icon = REMINDER_CATEGORY_ICON[r.category];
-              const colors = REMINDER_CATEGORY_COLOR[r.category];
-              const daysOverdue = Math.floor(
-                (new Date(today).getTime() - new Date(r.date).getTime()) /
-                  86400000
-              );
-              return (
-                <motion.div
-                  key={r.id}
-                  layout
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-red-200/50 bg-white/50"
-                >
-                  <div
-                    className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center shrink-0`}
-                  >
-                    <Icon className={`w-4 h-4 ${colors.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">
-                      {r.title}
-                    </p>
-                    <p className="text-[10px] text-red-500">
-                      {daysOverdue}d overdue •{" "}
-                      {new Date(r.date + "T00:00:00").toLocaleDateString(
-                        "en-US",
-                        { month: "short", day: "numeric" }
-                      )}
-                      {r.time ? ` at ${formatReminderTime(r.time)}` : ""}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      dispatch({ type: "ACK_REMINDER", payload: r.id })
-                    }
-                    className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
-                    title="Acknowledge"
-                  >
-                    <Check className="w-4 h-4" />
-                  </button>
-                </motion.div>
-              );
-            })}
+            {overdueReminders.map(r => (
+              <TodayReminderCard
+                key={r.id}
+                reminder={r}
+                dispatch={dispatch}
+                variant="overdue"
+              />
+            ))}
           </div>
         </div>
       )}
@@ -813,48 +911,14 @@ export default function DailyPlannerPage() {
             Today's Reminders ({todayReminders.length})
           </h3>
           <div className="space-y-2">
-            {todayReminders.map(r => {
-              const Icon = REMINDER_CATEGORY_ICON[r.category];
-              const colors = REMINDER_CATEGORY_COLOR[r.category];
-              return (
-                <motion.div
-                  key={r.id}
-                  layout
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-warm-amber/20 bg-white/50"
-                >
-                  <div
-                    className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center shrink-0`}
-                  >
-                    <Icon className={`w-4 h-4 ${colors.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">
-                      {r.title}
-                    </p>
-                    {r.description && (
-                      <p className="text-[10px] text-muted-foreground">
-                        {r.description}
-                      </p>
-                    )}
-                    <p className="text-[10px] text-warm-amber font-medium">
-                      Today{r.time ? ` at ${formatReminderTime(r.time)}` : ""}
-                      {r.recurrence !== "none" ? ` • ${r.recurrence}` : ""}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      dispatch({ type: "ACK_REMINDER", payload: r.id })
-                    }
-                    className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
-                    title="Acknowledge"
-                  >
-                    <Check className="w-4 h-4" />
-                  </button>
-                </motion.div>
-              );
-            })}
+            {todayReminders.map(r => (
+              <TodayReminderCard
+                key={r.id}
+                reminder={r}
+                dispatch={dispatch}
+                variant="today"
+              />
+            ))}
           </div>
         </div>
       )}
@@ -867,42 +931,14 @@ export default function DailyPlannerPage() {
             Upcoming Reminders ({upcomingReminders.length})
           </h3>
           <div className="space-y-2">
-            {upcomingReminders.map(r => {
-              const Icon = REMINDER_CATEGORY_ICON[r.category];
-              const colors = REMINDER_CATEGORY_COLOR[r.category];
-              const daysUntil = Math.floor(
-                (new Date(r.date).getTime() - new Date(today).getTime()) /
-                  86400000
-              );
-              return (
-                <motion.div
-                  key={r.id}
-                  layout
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-warm-blue/10 bg-white/50"
-                >
-                  <div
-                    className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center shrink-0`}
-                  >
-                    <Icon className={`w-4 h-4 ${colors.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">
-                      {r.title}
-                    </p>
-                    <p className="text-[10px] text-warm-blue">
-                      In {daysUntil}d •{" "}
-                      {new Date(r.date + "T00:00:00").toLocaleDateString(
-                        "en-US",
-                        { weekday: "short", month: "short", day: "numeric" }
-                      )}
-                      {r.time ? ` at ${formatReminderTime(r.time)}` : ""}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {upcomingReminders.map(r => (
+              <TodayReminderCard
+                key={r.id}
+                reminder={r}
+                dispatch={dispatch}
+                variant="upcoming"
+              />
+            ))}
           </div>
         </div>
       )}
@@ -920,7 +956,7 @@ export default function DailyPlannerPage() {
         ) : (
           <div className="space-y-2">
             {dueTasks.map(t => (
-              <TaskItem key={t.id} task={t} onToggle={() => toggleTask(t.id)} />
+              <TodayTaskCard key={t.id} task={t} dispatch={dispatch} />
             ))}
           </div>
         )}
@@ -935,69 +971,11 @@ export default function DailyPlannerPage() {
           </h3>
           <div className="space-y-2">
             {highPriorityTasks.slice(0, 5).map(t => (
-              <TaskItem key={t.id} task={t} onToggle={() => toggleTask(t.id)} />
+              <TodayTaskCard key={t.id} task={t} dispatch={dispatch} />
             ))}
             {highPriorityTasks.length > 5 && (
               <p className="text-xs text-muted-foreground text-center mt-2">
                 + {highPriorityTasks.length - 5} more
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Monitoring — waiting on external action */}
-      {monitoredTasks.length > 0 && (
-        <div className="bg-card rounded-xl border border-dashed border-warm-amber/30 p-5 mb-4">
-          <h3 className="font-serif text-lg text-foreground mb-1 flex items-center gap-2">
-            <Eye className="w-5 h-5 text-warm-amber" />
-            Monitoring ({monitoredTasks.length})
-          </h3>
-          <p className="text-xs text-muted-foreground mb-3">
-            Tasks waiting on external action — check if any need follow-up
-          </p>
-          <div className="space-y-2">
-            {monitoredTasks.slice(0, 5).map(t => (
-              <div
-                key={t.id}
-                className="flex items-center gap-3 p-2 rounded-lg bg-warm-amber-light/20 border border-warm-amber/10"
-              >
-                <Eye className="w-4 h-4 text-warm-amber shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-muted-foreground">{t.title}</p>
-                  {t.dueDate && (
-                    <span className="text-xs text-muted-foreground/70 flex items-center gap-1 mt-0.5">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(t.dueDate).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={() =>
-                    dispatch({ type: "TOGGLE_MONITOR", payload: t.id })
-                  }
-                  className="text-xs px-2 py-1 rounded-md bg-warm-sage-light text-warm-sage hover:bg-warm-sage/20 transition-colors flex items-center gap-1"
-                  title="Reactivate task"
-                >
-                  <EyeOff className="w-3 h-3" /> Reactivate
-                </button>
-                <button
-                  onClick={() =>
-                    dispatch({ type: "TOGGLE_TASK", payload: t.id })
-                  }
-                  className="text-xs px-2 py-1 rounded-md bg-warm-sage-light text-warm-sage hover:bg-warm-sage/20 transition-colors flex items-center gap-1"
-                  title="Mark as done"
-                >
-                  <Check className="w-3 h-3" /> Done
-                </button>
-              </div>
-            ))}
-            {monitoredTasks.length > 5 && (
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                + {monitoredTasks.length - 5} more monitored
               </p>
             )}
           </div>
@@ -1016,7 +994,7 @@ export default function DailyPlannerPage() {
           </p>
           <div className="space-y-2">
             {energySuggestions.map(t => (
-              <TaskItem key={t.id} task={t} onToggle={() => toggleTask(t.id)} />
+              <TodayTaskCard key={t.id} task={t} dispatch={dispatch} />
             ))}
           </div>
         </div>
@@ -1098,24 +1076,57 @@ export default function DailyPlannerPage() {
         </div>
       )}
 
-      {/* Completed Today */}
-      {completedToday.length > 0 && (
+      {/* Actioned Today — tasks completed or sent to monitoring today */}
+      {actionedToday.length > 0 && (
         <div className="bg-card rounded-xl border border-border p-5">
-          <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-warm-sage" />
-            Done Today ({completedToday.length})
-          </h3>
-          <div className="space-y-1.5">
-            {completedToday.map(t => (
-              <div
-                key={t.id}
-                className="flex items-center gap-2 text-sm opacity-60"
+          <button
+            onClick={() => setActionedExpanded(!actionedExpanded)}
+            className="w-full flex items-center justify-between"
+          >
+            <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
+              <Activity className="w-5 h-5 text-warm-sage" />
+              Actioned Today ({actionedToday.length})
+            </h3>
+            <ChevronDown
+              className={`w-5 h-5 text-muted-foreground transition-transform ${
+                actionedExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          <AnimatePresence>
+            {actionedExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                <CheckCircle2 className="w-3.5 h-3.5 text-warm-sage shrink-0" />
-                <span className="text-foreground line-through">{t.title}</span>
-              </div>
-            ))}
-          </div>
+                <div className="space-y-1.5 mt-3">
+                  {actionedToday.map(t => (
+                    <div
+                      key={t.id}
+                      className="flex items-center gap-2 text-sm opacity-70"
+                    >
+                      {t.status === "done" ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-warm-sage shrink-0" />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5 text-warm-amber shrink-0" />
+                      )}
+                      <span
+                        className={`text-foreground ${t.status === "done" ? "line-through" : ""}`}
+                      >
+                        {t.title}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                        {t.status === "done" ? "Completed" : "Monitoring"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </div>
