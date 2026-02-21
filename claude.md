@@ -10,12 +10,14 @@ FocusAssist is a full-stack productivity app (React 19 + Express 4 + tRPC 11) de
 
 **V1.8.6 fixes:** Auto-save race condition (C1), poll overwrites unsaved changes (C2), JSON import Zod validation (C3), write mutex + atomic saves (C4), zero-safe integer parsing (C6), corrupt file handling (H5), missing default fields in fallback states (H8). All backward compatible.
 
+**V1.8.7 changes:** Code-split 8 pages with React.lazy + Suspense (Timer, Matrix, Stats, Settings, Templates, WeeklyReview, ReadLater, FocusMode). Fixed AudioContext leak (H1), duplicate recurrence spawning (H7), and pomodoro stats using planned vs actual time (H9). Playwright E2E added to CI.
+
 ## Quick Start (Development)
 
 ```bash
 pnpm install
 pnpm dev          # Starts Express + Vite dev server on port 3000
-pnpm test         # Runs vitest (228+ tests)
+pnpm test         # Runs vitest (278+ tests)
 pnpm build        # Production build (Vite + esbuild)
 pnpm preflight    # Pre-push checks (MUST pass before every push)
 pnpm db:push      # Drizzle schema migrations

@@ -332,10 +332,15 @@ function appReducer(state: AppState, action: Action): AppState {
           : t
       );
 
+      // H7 fix: Check for existing pending recurrence before spawning duplicate
+      const hasPendingRecurrence = tasks.some(
+        t => t.recurrenceParentId === task.id && t.status === "active"
+      );
       if (
         newStatus === "done" &&
         task.recurrence &&
-        task.recurrence !== "none"
+        task.recurrence !== "none" &&
+        !hasPendingRecurrence
       ) {
         const nextDate = computeNextDate(task.recurrence, new Date(), {
           recurrenceDayOfMonth: task.recurrenceDayOfMonth,
@@ -524,7 +529,9 @@ function appReducer(state: AppState, action: Action): AppState {
             : p
         ),
         dailyStats: updateTodayStats(state.dailyStats, {
-          focusMinutes: todayStats.focusMinutes + pom.duration,
+          // H9 fix: Use actual elapsed time, not planned duration
+          focusMinutes:
+            todayStats.focusMinutes + Math.round((pom.elapsed || 0) / 60),
           pomodorosCompleted: todayStats.pomodorosCompleted + 1,
         }),
       };

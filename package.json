@@ -1,6 +1,6 @@
 {
   "name": "focus-assist",
-  "version": "1.8.6",
+  "version": "1.8.7",
   "type": "module",
   "license": "MIT",
   "scripts": {
@@ -11,6 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "preflight": "node scripts/preflight.mjs",
     "prepare": "husky"

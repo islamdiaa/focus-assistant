@@ -262,106 +262,205 @@ interface TodayTaskCardProps {
 }
 
 function TodayTaskCard({ task, dispatch, showUnpin }: TodayTaskCardProps) {
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(task.title);
+  const [editDueDate, setEditDueDate] = useState(task.dueDate || "");
+  const [editPriority, setEditPriority] = useState(task.priority);
   const subtasksDone = task.subtasks?.filter(s => s.done).length || 0;
   const subtasksTotal = task.subtasks?.length || 0;
+
+  function handleEditSave() {
+    if (!editTitle.trim()) return;
+    dispatch({
+      type: "UPDATE_TASK",
+      payload: {
+        id: task.id,
+        title: editTitle.trim(),
+        dueDate: editDueDate || undefined,
+        priority: editPriority,
+      },
+    });
+    setEditing(false);
+  }
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-background/50 hover:bg-background transition-colors group ${
+      className={`rounded-lg border border-border/50 bg-background/50 hover:bg-background transition-colors group ${
         task.status === "done" ? "opacity-50" : ""
       }`}
     >
-      {/* Status checkbox */}
-      <button
-        onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
-        className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
-          ${task.status === "done" ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
-      >
-        {task.status === "done" && <Check className="w-3 h-3 text-white" />}
-      </button>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <p
-          className={`text-sm font-medium ${task.status === "done" ? "line-through text-muted-foreground" : "text-foreground"}`}
+      <div className="flex items-start gap-3 p-3">
+        {/* Status checkbox */}
+        <button
+          onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
+          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
+            ${task.status === "done" ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
         >
-          {task.title}
-        </p>
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
-          {task.energy && (
-            <span className="text-[10px] text-muted-foreground">
-              {ENERGY_EMOJI[task.energy]} {task.energy}
-            </span>
+          {task.status === "done" && <Check className="w-3 h-3 text-white" />}
+        </button>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <p
+            className={`text-sm font-medium ${task.status === "done" ? "line-through text-muted-foreground" : "text-foreground"}`}
+          >
+            {task.title}
+          </p>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            {task.energy && (
+              <span className="text-[10px] text-muted-foreground">
+                {ENERGY_EMOJI[task.energy]} {task.energy}
+              </span>
+            )}
+            {task.dueDate && (
+              <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                <Calendar className="w-2.5 h-2.5" />
+                {new Date(task.dueDate).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            )}
+            {subtasksTotal > 0 && (
+              <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                <ListChecks className="w-2.5 h-2.5" /> {subtasksDone}/
+                {subtasksTotal}
+              </span>
+            )}
+            {task.category && (
+              <span className="text-[10px] text-muted-foreground/70">
+                {task.category}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Action buttons — visible on hover */}
+        <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Monitor toggle (only for active tasks) */}
+          {task.status === "active" && (
+            <button
+              onClick={() =>
+                dispatch({ type: "TOGGLE_MONITOR", payload: task.id })
+              }
+              className="p-1.5 rounded-md text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light transition-colors"
+              title="Monitor task (waiting)"
+            >
+              <Eye className="w-3.5 h-3.5" />
+            </button>
           )}
-          {task.dueDate && (
-            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-              <Calendar className="w-2.5 h-2.5" />
-              {new Date(task.dueDate).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
+          {/* Complete/reopen */}
+          <button
+            onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
+            title={task.status === "done" ? "Reopen task" : "Mark as done"}
+          >
+            <Check className="w-3.5 h-3.5" />
+          </button>
+          {/* Edit */}
+          <button
+            onClick={() => {
+              setEditTitle(task.title);
+              setEditDueDate(task.dueDate || "");
+              setEditPriority(task.priority);
+              setEditing(!editing);
+            }}
+            className={`p-1.5 rounded-md transition-colors ${
+              editing
+                ? "text-warm-blue bg-warm-blue-light"
+                : "text-muted-foreground hover:text-warm-blue hover:bg-warm-blue-light"
+            }`}
+            title="Edit task"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          {/* Unpin (only for pinned tasks) */}
+          {showUnpin && (
+            <button
+              onClick={() =>
+                dispatch({ type: "UNPIN_FROM_TODAY", payload: task.id })
+              }
+              title="Remove from Today"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta/10 transition-colors"
+            >
+              <PinOff className="w-3.5 h-3.5" />
+            </button>
           )}
-          {subtasksTotal > 0 && (
-            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-              <ListChecks className="w-2.5 h-2.5" /> {subtasksDone}/
-              {subtasksTotal}
-            </span>
-          )}
-          {task.category && (
-            <span className="text-[10px] text-muted-foreground/70">
-              {task.category}
-            </span>
-          )}
+          {/* Delete */}
+          <button
+            onClick={() => dispatch({ type: "DELETE_TASK", payload: task.id })}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
+            title="Delete task"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
-      {/* Action buttons — visible on hover */}
-      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-        {/* Monitor toggle (only for active tasks) */}
-        {task.status === "active" && (
-          <button
-            onClick={() =>
-              dispatch({ type: "TOGGLE_MONITOR", payload: task.id })
-            }
-            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light transition-colors"
-            title="Monitor task (waiting)"
+      {/* Compact inline edit form */}
+      <AnimatePresence>
+        {editing && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
           >
-            <Eye className="w-3.5 h-3.5" />
-          </button>
+            <div className="px-3 pb-3 pt-2 border-t border-border/50 space-y-2">
+              <Input
+                value={editTitle}
+                onChange={e => setEditTitle(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") handleEditSave();
+                  if (e.key === "Escape") setEditing(false);
+                }}
+                placeholder="Task title"
+                className="h-8 text-sm bg-background"
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  value={editDueDate}
+                  onChange={e => setEditDueDate(e.target.value)}
+                  className="h-8 text-xs bg-background flex-1"
+                />
+                <select
+                  value={editPriority}
+                  onChange={e => setEditPriority(e.target.value as any)}
+                  className="h-8 text-xs bg-background border border-border rounded-md px-2"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleEditSave}
+                  size="sm"
+                  className="h-7 text-xs bg-warm-sage hover:bg-warm-sage/90 text-white flex-1"
+                >
+                  Save
+                </Button>
+                <Button
+                  onClick={() => setEditing(false)}
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </motion.div>
         )}
-        {/* Complete/reopen */}
-        <button
-          onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
-          className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
-          title={task.status === "done" ? "Reopen task" : "Mark as done"}
-        >
-          <Check className="w-3.5 h-3.5" />
-        </button>
-        {/* Unpin (only for pinned tasks) */}
-        {showUnpin && (
-          <button
-            onClick={() =>
-              dispatch({ type: "UNPIN_FROM_TODAY", payload: task.id })
-            }
-            title="Remove from Today"
-            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta/10 transition-colors"
-          >
-            <PinOff className="w-3.5 h-3.5" />
-          </button>
-        )}
-        {/* Delete */}
-        <button
-          onClick={() => dispatch({ type: "DELETE_TASK", payload: task.id })}
-          className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
-          title="Delete task"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
-      </div>
+      </AnimatePresence>
     </motion.div>
   );
 }

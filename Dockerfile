@@ -4,11 +4,10 @@
 # Stage 1: Install deps + build
 # Stage 2: Slim production image
 #
-# NOTE on multi-arch: If building for ARM64 on an x86 host via
-# QEMU, the builder stage may crash on native postinstall scripts
-# (esbuild, @tailwindcss/oxide). In that case, build natively on
-# ARM or use a remote ARM builder with `docker buildx create`.
-# For single-arch (amd64-only) builds this works out of the box.
+# Multi-arch: CI uses native runners per architecture (no QEMU).
+# ARM64 builds on `ubuntu-24.04-arm`, AMD64 on `ubuntu-latest`.
+# Per-arch images are pushed by digest, then merged into a
+# multi-arch manifest. See .github/workflows/ci.yml for details.
 # ============================================================
 
 # --- Build stage ---
@@ -43,7 +42,7 @@ FROM node:22-alpine AS production
 LABEL org.opencontainers.image.title="Focus Assistant"
 LABEL org.opencontainers.image.description="ADHD-friendly productivity app with tasks, Pomodoro timer, Eisenhower matrix, and stats"
 LABEL org.opencontainers.image.source="https://github.com/islamdiaa/focus-assistant"
-LABEL org.opencontainers.image.version="1.8.6"
+LABEL org.opencontainers.image.version="1.8.7"
 LABEL net.unraid.docker.icon="https://cdn-icons-png.flaticon.com/512/7246/7246748.png"
 LABEL net.unraid.docker.webui="http://[IP]:[PORT:1992]/"
 LABEL net.unraid.docker.managed="dockerman"

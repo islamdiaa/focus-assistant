@@ -105,6 +105,8 @@ function playCompletionSound() {
       osc2.start();
       gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
       osc2.stop(ctx.currentTime + 1);
+      // Close AudioContext after second tone finishes to prevent leak (H1 fix)
+      setTimeout(() => ctx.close().catch(() => {}), 1200);
     }, 300);
   } catch {
     // Audio not available

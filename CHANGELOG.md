@@ -6,6 +6,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.8.7] - 2026-02-21
+
+### Fixed
+
+- **H1: AudioContext leak** — `ctx.close()` now called after both tones finish playing in `playCompletionSound()`. Prevents browser from running out of AudioContext instances after ~6 pomodoro completions.
+- **H7: Duplicate recurrences on rapid toggle** — added dedup check before spawning recurrence child. If an active child with the same `recurrenceParentId` already exists, no duplicate is created. Prevents accumulating duplicate recurring tasks from done→active→done toggling.
+- **H9: COMPLETE_POMODORO elapsed vs planned** — `focusMinutes` now uses `Math.round(pom.elapsed / 60)` instead of `pom.duration`. Stats reflect actual focus time, not planned duration. Partial sessions and early stops are recorded accurately.
+
+### Changed
+
+- **Code-split with React.lazy** — 8 less-frequently-used pages (Timer, Matrix, Stats, Settings, Templates, WeeklyReview, ReadLater, FocusMode) are now lazy-loaded with Suspense. Reduces initial JS bundle size significantly. Frequently-used pages (DailyPlanner, Tasks, Reminders) remain eagerly loaded.
+- **Playwright E2E in CI** — `pnpm test:e2e` step added to GitHub Actions workflow. Runs after unit tests with Chromium in headless mode.
+- **278 unit tests + 20 E2E tests** — 24 new tests covering H7 dedup logic, H9 elapsed time calculations, serialization of recurrence/elapsed fields, and code-split module verification.
+
+---
+
 ## [1.8.6] - 2026-02-21
 
 ### Fixed
@@ -21,7 +37,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - **Backward compatible** — all fixes work with pre-V1.8.5 data. Old markdown files without `statusChangedAt`, `reminders`, or `preferences` sections load correctly with safe defaults.
-- **228 tests passing** (35 new in `v186-bugfixes.test.ts`) covering Zod validation, zero-safe parsing, corrupt file handling, default state completeness, serialization consistency, and backward compatibility.
+- **254 unit tests + 20 E2E tests** covering Zod validation, zero-safe parsing, corrupt file handling, default state completeness, serialization consistency, backward compatibility, context filtering edge cases, monitored task lifecycle, and all critical UI flows.
+- **Playwright E2E tests** added for all critical flows: app loading, page navigation, task CRUD, context filtering, data persistence, responsive layout, and error handling.
+
+### Added
+
+- **Edit button on Today task cards** — inline edit (pencil icon) now available on Today view task cards, matching Tasks page functionality.
+- **Playwright E2E test suite** — `e2e/critical-flows.spec.ts` with 20 tests covering all critical user flows.
 
 ---
 

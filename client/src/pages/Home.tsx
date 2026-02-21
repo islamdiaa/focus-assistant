@@ -13,20 +13,29 @@
  * - F: Enter Focus Mode
  * - Esc: Close sidebar on mobile / Exit focus mode
  */
-import { useState, useMemo, useEffect, useCallback } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Sidebar, { type Page } from "@/components/Sidebar";
+// Eagerly loaded — frequently used pages
 import TasksPage from "./TasksPage";
-import TimerPage from "./TimerPage";
-import MatrixPage from "./MatrixPage";
-import StatsPage from "./StatsPage";
-import SettingsPage from "./SettingsPage";
 import DailyPlannerPage from "./DailyPlannerPage";
-import TemplatesPage from "./TemplatesPage";
-import WeeklyReviewPage from "./WeeklyReviewPage";
-import ReadLaterPage from "./ReadLaterPage";
 import RemindersPage from "./RemindersPage";
-import FocusModePage from "./FocusModePage";
+// Lazy loaded — heavier or less-frequently used pages
+const TimerPage = lazy(() => import("./TimerPage"));
+const MatrixPage = lazy(() => import("./MatrixPage"));
+const StatsPage = lazy(() => import("./StatsPage"));
+const SettingsPage = lazy(() => import("./SettingsPage"));
+const TemplatesPage = lazy(() => import("./TemplatesPage"));
+const WeeklyReviewPage = lazy(() => import("./WeeklyReviewPage"));
+const ReadLaterPage = lazy(() => import("./ReadLaterPage"));
+const FocusModePage = lazy(() => import("./FocusModePage"));
 import { useApp } from "@/contexts/AppContext";
 import {
   Smile,
@@ -182,7 +191,17 @@ export default function Home() {
   return (
     <>
       {/* Focus Mode Overlay */}
-      {focusMode && <FocusModePage onExit={() => setFocusMode(false)} />}
+      {focusMode && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 bg-background flex items-center justify-center z-50">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-sage" />
+            </div>
+          }
+        >
+          <FocusModePage onExit={() => setFocusMode(false)} />
+        </Suspense>
+      )}
 
       {/* Main Layout */}
       <div
@@ -278,24 +297,32 @@ export default function Home() {
 
           {/* Page content */}
           <main className="flex-1 overflow-y-auto">
-            {activePage === "planner" && <DailyPlannerPage />}
-            {activePage === "tasks" && (
-              <TasksPage
-                newTaskTrigger={newTaskTrigger}
-                searchTrigger={searchTrigger}
-                reminderTrigger={reminderTrigger}
-              />
-            )}
-            {activePage === "timer" && <TimerPage />}
-            {activePage === "matrix" && <MatrixPage />}
-            {activePage === "stats" && <StatsPage />}
-            {activePage === "reading" && <ReadLaterPage />}
-            {activePage === "reminders" && (
-              <RemindersPage reminderTrigger={reminderTrigger} />
-            )}
-            {activePage === "templates" && <TemplatesPage />}
-            {activePage === "review" && <WeeklyReviewPage />}
-            {activePage === "settings" && <SettingsPage />}
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-sage" />
+                </div>
+              }
+            >
+              {activePage === "planner" && <DailyPlannerPage />}
+              {activePage === "tasks" && (
+                <TasksPage
+                  newTaskTrigger={newTaskTrigger}
+                  searchTrigger={searchTrigger}
+                  reminderTrigger={reminderTrigger}
+                />
+              )}
+              {activePage === "timer" && <TimerPage />}
+              {activePage === "matrix" && <MatrixPage />}
+              {activePage === "stats" && <StatsPage />}
+              {activePage === "reading" && <ReadLaterPage />}
+              {activePage === "reminders" && (
+                <RemindersPage reminderTrigger={reminderTrigger} />
+              )}
+              {activePage === "templates" && <TemplatesPage />}
+              {activePage === "review" && <WeeklyReviewPage />}
+              {activePage === "settings" && <SettingsPage />}
+            </Suspense>
           </main>
         </div>
       </div>

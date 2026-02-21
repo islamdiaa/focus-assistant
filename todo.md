@@ -280,3 +280,38 @@
 # V1.8.6 — Docker Fix
 
 - [x] Add HUSKY=0 to Dockerfile builder stage to skip git hooks during Docker build
+
+# V1.8.6 — GitHub Actions Matrix Build
+
+- [x] Set up matrix strategy for ARM64 + AMD64 in CI workflow
+- [x] Update Dockerfile for multi-arch native builds
+- [x] Update todo.md and docs
+
+# V1.8.6 — Full Code Audit
+
+- [x] Audit reducer: all action types, state transitions transitions
+- [x] Audit serialization: md round-trips, edge casese cases
+- [x] Audit data router: load/save/import/export flows
+- [x] Audit all page components: TasksPage, DailyPlannerPage, MatrixPage, StatsPage, TimerPage, RemindersPage, SettingsPage
+- [x] Fix any bugs found (edit button missing on Today task cards)
+- [x] Add missing unit tests (26 new)
+- [x] Install Playwright and add E2E tests for critical flows (20 E2E tests)
+- [x] Run full preflight and push to GitHub
+
+# V1.8.6 — Audit Fixes
+
+- [x] Add edit (pencil) button to TodayTaskCard with inline edit capability
+- [x] Add missing unit tests for edge cases (26 new tests, 254 total)
+- [x] Install Playwright and add E2E tests (20 E2E tests)
+- [x] Push to GitHub
+
+# V1.8.7 — CI + Code-Split + Audit Fixes
+
+- [x] Add Playwright E2E step to CI workflow
+- [x] Code-split heavy pages (Stats, Matrix, Timer, Settings, Templates, WeeklyReview, ReadLater, FocusMode) with React.lazy + Suspense
+- [x] H1: Fix AudioContext leak — add ctx.close() on cleanup
+- [x] H7: Fix duplicate recurrences on rapid toggle — add dedup check
+- [x] H9: Fix COMPLETE_POMODORO using actual elapsed time (pom.elapsed/60)
+- [x] Add tests for H1/H7/H9 fixes (24 new tests, 278 total)
+- [x] Version bump to 1.8.7, CHANGELOG, docs update
+- [x] Push to GitHub

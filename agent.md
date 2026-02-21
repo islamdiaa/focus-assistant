@@ -25,7 +25,7 @@ FocusAssist is a personal productivity web app with these features:
 - **Type System:** Zod schemas → inferred TypeScript types (single source of truth)
 - **Storage:** Local Markdown file (default) or Google Sheets (optional) + Obsidian vault sync
 - **Build:** Vite 7 (client) + esbuild (server)
-- **Tests:** Vitest (172+ tests across 15 files)
+- **Tests:** Vitest (278+ tests) + Playwright E2E (20 tests)
 - **CI/CD:** GitHub Actions → Docker Hub + GHCR (multi-arch: amd64 + arm64)
 - **Deployment:** Docker (single container, port 1992) on Unraid with Watchtower auto-updates
 - **Preflight:** `pnpm preflight` — automated pre-push checks (see below)
