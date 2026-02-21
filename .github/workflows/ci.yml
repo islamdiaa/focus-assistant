@@ -22,8 +22,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: npx tsc --noEmit
-      - run: pnpm test
+      - run: pnpm preflight
 
   docker:
     needs: test

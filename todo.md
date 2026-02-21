@@ -235,3 +235,7 @@
 # V1.8.5 — Version Auto-Read
 - [x] SettingsPage reads version from package.json instead of hardcoding
 - [x] Update preflight to remove SettingsPage version check (no longer needed)
+
+# V1.8.5 — Preflight Automation
+- [x] Install husky and configure pre-push hook to run pnpm preflight
+- [x] Update CI workflow to use pnpm preflight instead of separate tsc + test
