@@ -8,19 +8,19 @@ This session covered V1.8.1 through V1.8.4 — a mix of feature additions, a ful
 
 ## Issues Encountered
 
-| # | Issue | Severity | Category | Root Cause |
-|---|-------|----------|----------|------------|
-| 1 | Silent save failures → data loss on container restart | **Critical** | Data Integrity | Save errors swallowed silently; no retry, no user feedback |
-| 2 | Column format mismatch after upgrade (15-col → 18-col) | **High** | Migration | New fields added to serialization without backward-compatible deserialization |
-| 3 | Dockerfile ARM64 QEMU crash (`--ignore-scripts` broke esbuild) | **High** | Deployment | `--ignore-scripts` applied to builder stage, preventing esbuild binary download |
-| 4 | Analytics `URIError` on self-hosted (unresolved `%VITE_ANALYTICS_ENDPOINT%`) | **Medium** | Deployment | Platform-specific env var baked into HTML without conditional guard |
-| 5 | `OAUTH_SERVER_URL not configured` spam on self-hosted | **Medium** | Deployment | No concept of "self-hosted mode" — OAuth assumed always present |
-| 6 | Focus Mode exit ghost overlay | **Medium** | UI | `AnimatePresence` exit animation left DOM nodes behind |
-| 7 | TimerPage `getEffectiveElapsed` null type mismatch | **Low** | Types | Zod schema allows `null` but function signature didn't |
-| 8 | Version string stuck at v1.8.0 | **Low** | Process | Version not bumped in all locations |
-| 9 | Cmd+R triggering reminder dialog instead of browser refresh | **Low** | UX | Keyboard shortcut handler didn't check for modifier keys |
-| 10 | CHANGELOG not updated with all features before push | **Low** | Process | Features shipped incrementally without updating CHANGELOG each time |
-| 11 | GitHub push failures / "up-to-date" confusion | **Low** | Tooling | Token expiry, force-push needed after rebase |
+| #   | Issue                                                                        | Severity     | Category       | Root Cause                                                                      |
+| --- | ---------------------------------------------------------------------------- | ------------ | -------------- | ------------------------------------------------------------------------------- |
+| 1   | Silent save failures → data loss on container restart                        | **Critical** | Data Integrity | Save errors swallowed silently; no retry, no user feedback                      |
+| 2   | Column format mismatch after upgrade (15-col → 18-col)                       | **High**     | Migration      | New fields added to serialization without backward-compatible deserialization   |
+| 3   | Dockerfile ARM64 QEMU crash (`--ignore-scripts` broke esbuild)               | **High**     | Deployment     | `--ignore-scripts` applied to builder stage, preventing esbuild binary download |
+| 4   | Analytics `URIError` on self-hosted (unresolved `%VITE_ANALYTICS_ENDPOINT%`) | **Medium**   | Deployment     | Platform-specific env var baked into HTML without conditional guard             |
+| 5   | `OAUTH_SERVER_URL not configured` spam on self-hosted                        | **Medium**   | Deployment     | No concept of "self-hosted mode" — OAuth assumed always present                 |
+| 6   | Focus Mode exit ghost overlay                                                | **Medium**   | UI             | `AnimatePresence` exit animation left DOM nodes behind                          |
+| 7   | TimerPage `getEffectiveElapsed` null type mismatch                           | **Low**      | Types          | Zod schema allows `null` but function signature didn't                          |
+| 8   | Version string stuck at v1.8.0                                               | **Low**      | Process        | Version not bumped in all locations                                             |
+| 9   | Cmd+R triggering reminder dialog instead of browser refresh                  | **Low**      | UX             | Keyboard shortcut handler didn't check for modifier keys                        |
+| 10  | CHANGELOG not updated with all features before push                          | **Low**      | Process        | Features shipped incrementally without updating CHANGELOG each time             |
+| 11  | GitHub push failures / "up-to-date" confusion                                | **Low**      | Tooling        | Token expiry, force-push needed after rebase                                    |
 
 ---
 
@@ -41,6 +41,7 @@ When we added `pinnedToday`, `recurrenceDayOfMonth`, and `recurrenceStartMonth` 
 ### 3. Silent Error Handling as Default
 
 The save pipeline had three layers of error swallowing:
+
 - `serverSave()` returned `false` on failure but the caller ignored it
 - `saveState()` caught errors and only logged a warning
 - `AppContext` debounced saves with no success/failure tracking
@@ -76,7 +77,7 @@ The `--ignore-scripts` flag was added to fix an ARM64 QEMU crash but broke the x
    - `CHANGELOG.md` → new section header
    - Run: `grep -rn "1\.8\." --include="*.ts" --include="*.tsx" --include="*.json" --include="Dockerfile" --include="*.md" | grep -v node_modules | grep -v CHANGELOG`
 
-3. **CHANGELOG-first development** — write the CHANGELOG entry *before* implementing the feature. Update it as you go. Never push without reviewing the CHANGELOG.
+3. **CHANGELOG-first development** — write the CHANGELOG entry _before_ implementing the feature. Update it as you go. Never push without reviewing the CHANGELOG.
 
 ### For Schema Changes
 
@@ -118,9 +119,10 @@ The `--ignore-scripts` flag was added to fix an ARM64 QEMU crash but broke the x
 ### For Testing
 
 12. **Self-hosted integration test** — add a test that:
-   - Starts the server with `SKIP_AUTH=true` and no OAuth env vars
-   - Verifies the app loads without errors
-   - Verifies save/load round-trip works
+
+- Starts the server with `SKIP_AUTH=true` and no OAuth env vars
+- Verifies the app loads without errors
+- Verifies save/load round-trip works
 
 13. **Column-count regression test** — maintain test fixtures with old-format markdown data (15-col, 17-col) and verify they deserialize correctly with the current code.
 

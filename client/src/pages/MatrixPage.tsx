@@ -6,15 +6,26 @@
  * Mobile: stacked layout, unassigned panel below matrix
  * Desktop: side-by-side layout
  */
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { useApp } from '@/contexts/AppContext';
-import { Info, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, GripVertical, Pencil, X, Check } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import type { QuadrantType, Priority } from '@/lib/types';
-import { filterTasksByContext } from '@/lib/contextFilter';
+import { useState, useMemo, useRef, useEffect } from "react";
+import { useApp } from "@/contexts/AppContext";
+import {
+  Info,
+  ChevronRight,
+  ChevronLeft,
+  ChevronDown,
+  ChevronUp,
+  GripVertical,
+  Pencil,
+  X,
+  Check,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import type { QuadrantType, Priority } from "@/lib/types";
+import { filterTasksByContext } from "@/lib/contextFilter";
 
-const EMPTY_MATRIX_IMG = 'https://private-us-east-1.manuscdn.com/sessionFile/PlXiEUsi6v4VD1JuecPpX3/sandbox/k4s8ZO93y8NMD02oOYn6TD-img-3_1771447502000_na1fn_ZW1wdHktbWF0cml4.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvUGxYaUVVc2k2djRWRDFKdWVjUHBYMy9zYW5kYm94L2s0czhaTzkzeThOTUQwMm9PWW42VEQtaW1nLTNfMTc3MTQ0NzUwMjAwMF9uYTFmbl9aVzF3ZEhrdGJXRjBjbWw0LnBuZz94LW9zcy1wcm9jZXNzPWltYWdlL3Jlc2l6ZSx3XzE5MjAsaF8xOTIwL2Zvcm1hdCx3ZWJwL3F1YWxpdHkscV84MCIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5ODc2MTYwMH19fV19&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=rAeoXHfOL1AQlur01UCUEB5-LTROSoOKnq3Qs7SOkYf3umtWoDqWmtBO1BRZsXP8mFXt8C9ofQqUp2JhAEv0C~dDO4PpJT8jur35ejs6lVF3IWJP5JxFTn-pr9m1Z7zfMcIVaCvV1q9zm3hsP9uvwgaMTabGHdQ5RVz3YOuYX-ZLFXWqJcRoz3D9qPjQBA5tmXs-3e4hhj6dBzPqeJNvOEeTuLsOs2nBmKxtf7y-5ns40Dgp9FAi2S5FEHDLtXb1IzasqjQKK6-iXu6wV7bJLawgEfaYOMXUHBZboobVUm8kmtmQ7ViCzd9xQrfx4aZ6b3KeCR7MeJmqCMAtVo1yIA__';
+const EMPTY_MATRIX_IMG =
+  "https://private-us-east-1.manuscdn.com/sessionFile/PlXiEUsi6v4VD1JuecPpX3/sandbox/k4s8ZO93y8NMD02oOYn6TD-img-3_1771447502000_na1fn_ZW1wdHktbWF0cml4.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvUGxYaUVVc2k2djRWRDFKdWVjUHBYMy9zYW5kYm94L2s0czhaTzkzeThOTUQwMm9PWW42VEQtaW1nLTNfMTc3MTQ0NzUwMjAwMF9uYTFmbl9aVzF3ZEhrdGJXRjBjbWw0LnBuZz94LW9zcy1wcm9jZXNzPWltYWdlL3Jlc2l6ZSx3XzE5MjAsaF8xOTIwL2Zvcm1hdCx3ZWJwL3F1YWxpdHkscV84MCIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5ODc2MTYwMH19fV19&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=rAeoXHfOL1AQlur01UCUEB5-LTROSoOKnq3Qs7SOkYf3umtWoDqWmtBO1BRZsXP8mFXt8C9ofQqUp2JhAEv0C~dDO4PpJT8jur35ejs6lVF3IWJP5JxFTn-pr9m1Z7zfMcIVaCvV1q9zm3hsP9uvwgaMTabGHdQ5RVz3YOuYX-ZLFXWqJcRoz3D9qPjQBA5tmXs-3e4hhj6dBzPqeJNvOEeTuLsOs2nBmKxtf7y-5ns40Dgp9FAi2S5FEHDLtXb1IzasqjQKK6-iXu6wV7bJLawgEfaYOMXUHBZboobVUm8kmtmQ7ViCzd9xQrfx4aZ6b3KeCR7MeJmqCMAtVo1yIA__";
 
 interface QuadrantConfig {
   id: QuadrantType;
@@ -28,55 +39,73 @@ interface QuadrantConfig {
 
 const QUADRANTS: QuadrantConfig[] = [
   {
-    id: 'do-first',
-    title: 'Do First',
-    subtitle: 'Urgent & Important',
-    description: 'Crises, deadlines, emergencies',
-    bgClass: 'bg-warm-terracotta-light',
-    borderClass: 'border-warm-terracotta/20',
-    iconBg: 'bg-warm-terracotta/20',
+    id: "do-first",
+    title: "Do First",
+    subtitle: "Urgent & Important",
+    description: "Crises, deadlines, emergencies",
+    bgClass: "bg-warm-terracotta-light",
+    borderClass: "border-warm-terracotta/20",
+    iconBg: "bg-warm-terracotta/20",
   },
   {
-    id: 'schedule',
-    title: 'Schedule',
-    subtitle: 'Important, Not Urgent',
-    description: 'Goals, planning, personal growth',
-    bgClass: 'bg-warm-sage-light',
-    borderClass: 'border-warm-sage/20',
-    iconBg: 'bg-warm-sage/20',
+    id: "schedule",
+    title: "Schedule",
+    subtitle: "Important, Not Urgent",
+    description: "Goals, planning, personal growth",
+    bgClass: "bg-warm-sage-light",
+    borderClass: "border-warm-sage/20",
+    iconBg: "bg-warm-sage/20",
   },
   {
-    id: 'delegate',
-    title: 'Delegate',
-    subtitle: 'Urgent, Not Important',
-    description: 'Interruptions, some meetings',
-    bgClass: 'bg-warm-amber-light',
-    borderClass: 'border-warm-amber/20',
-    iconBg: 'bg-warm-amber/20',
+    id: "delegate",
+    title: "Delegate",
+    subtitle: "Urgent, Not Important",
+    description: "Interruptions, some meetings",
+    bgClass: "bg-warm-amber-light",
+    borderClass: "border-warm-amber/20",
+    iconBg: "bg-warm-amber/20",
   },
   {
-    id: 'eliminate',
-    title: 'Eliminate',
-    subtitle: 'Not Urgent, Not Important',
-    description: 'Time-wasters, distractions',
-    bgClass: 'bg-warm-sand',
-    borderClass: 'border-border',
-    iconBg: 'bg-warm-charcoal/10',
+    id: "eliminate",
+    title: "Eliminate",
+    subtitle: "Not Urgent, Not Important",
+    description: "Time-wasters, distractions",
+    bgClass: "bg-warm-sand",
+    borderClass: "border-border",
+    iconBg: "bg-warm-charcoal/10",
   },
 ];
 
 const PRIORITY_OPTIONS: { value: Priority; label: string; color: string }[] = [
-  { value: 'low', label: 'Low', color: 'bg-warm-sage-light text-warm-sage border-warm-sage/30' },
-  { value: 'medium', label: 'Med', color: 'bg-warm-blue-light text-warm-blue border-warm-blue/30' },
-  { value: 'high', label: 'High', color: 'bg-warm-amber-light text-warm-amber border-warm-amber/30' },
-  { value: 'urgent', label: 'Urgent', color: 'bg-red-50 text-red-500 border-red-200' },
+  {
+    value: "low",
+    label: "Low",
+    color: "bg-warm-sage-light text-warm-sage border-warm-sage/30",
+  },
+  {
+    value: "medium",
+    label: "Med",
+    color: "bg-warm-blue-light text-warm-blue border-warm-blue/30",
+  },
+  {
+    value: "high",
+    label: "High",
+    color: "bg-warm-amber-light text-warm-amber border-warm-amber/30",
+  },
+  {
+    value: "urgent",
+    label: "Urgent",
+    color: "bg-red-50 text-red-500 border-red-200",
+  },
 ];
 
 function getPriorityBadge(priority: Priority) {
   const opt = PRIORITY_OPTIONS.find(p => p.value === priority);
   if (!opt) return null;
   return (
-    <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-medium ${opt.color}`}>
+    <span
+      className={`text-[9px] px-1.5 py-0.5 rounded-full border font-medium ${opt.color}`}
+    >
       {opt.label}
     </span>
   );
@@ -95,7 +124,12 @@ function InlineEditForm({
   initialTitle: string;
   initialPriority: Priority;
   initialDueDate: string;
-  onSave: (data: { id: string; title: string; priority: Priority; dueDate: string | null }) => void;
+  onSave: (data: {
+    id: string;
+    title: string;
+    priority: Priority;
+    dueDate: string | null;
+  }) => void;
   onCancel: () => void;
 }) {
   const [title, setTitle] = useState(initialTitle);
@@ -110,14 +144,19 @@ function InlineEditForm({
 
   function handleSave() {
     if (!title.trim()) return;
-    onSave({ id: taskId, title: title.trim(), priority, dueDate: dueDate || null });
+    onSave({
+      id: taskId,
+      title: title.trim(),
+      priority,
+      dueDate: dueDate || null,
+    });
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleSave();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       onCancel();
     }
   }
@@ -136,21 +175,25 @@ function InlineEditForm({
         placeholder="Task title..."
       />
       <div className="flex items-center gap-1.5">
-        <span className="text-[10px] text-muted-foreground mr-1">Priority:</span>
+        <span className="text-[10px] text-muted-foreground mr-1">
+          Priority:
+        </span>
         {PRIORITY_OPTIONS.map(opt => (
           <button
             key={opt.value}
             type="button"
             onClick={() => setPriority(opt.value)}
             className={`text-[10px] px-2 py-1 rounded-md border font-medium transition-all
-              ${priority === opt.value ? `${opt.color} scale-105 shadow-sm` : 'bg-background border-border text-muted-foreground hover:border-muted-foreground/40'}`}
+              ${priority === opt.value ? `${opt.color} scale-105 shadow-sm` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
           >
             {opt.label}
           </button>
         ))}
       </div>
       <div>
-        <label className="text-[10px] text-muted-foreground block mb-1">Due date</label>
+        <label className="text-[10px] text-muted-foreground block mb-1">
+          Due date
+        </label>
         <Input
           type="date"
           value={dueDate}
@@ -160,10 +203,20 @@ function InlineEditForm({
         />
       </div>
       <div className="flex items-center gap-2 justify-end">
-        <Button variant="ghost" size="sm" onClick={onCancel} className="h-7 text-xs gap-1 text-muted-foreground">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCancel}
+          className="h-7 text-xs gap-1 text-muted-foreground"
+        >
           <X className="w-3 h-3" /> Cancel
         </Button>
-        <Button size="sm" onClick={handleSave} disabled={!title.trim()} className="h-7 text-xs gap-1 bg-warm-sage hover:bg-warm-sage/90 text-white">
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={!title.trim()}
+          className="h-7 text-xs gap-1 bg-warm-sage hover:bg-warm-sage/90 text-white"
+        >
           <Check className="w-3 h-3" /> Save
         </Button>
       </div>
@@ -175,13 +228,23 @@ export default function MatrixPage() {
   const { state, dispatch } = useApp();
   const [showPanel, setShowPanel] = useState(true);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOverQuadrant, setDragOverQuadrant] = useState<QuadrantType | null>(null);
+  const [dragOverQuadrant, setDragOverQuadrant] = useState<QuadrantType | null>(
+    null
+  );
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
-  const activeContext = state.preferences?.activeContext || 'all';
-  const activeTasks = filterTasksByContext(state.tasks, activeContext).filter(t => t.status === 'active');
-  const unassigned = useMemo(() => activeTasks.filter(t => t.quadrant === 'unassigned'), [activeTasks]);
-  const assigned = useMemo(() => activeTasks.filter(t => t.quadrant !== 'unassigned'), [activeTasks]);
+  const activeContext = state.preferences?.activeContext || "all";
+  const activeTasks = filterTasksByContext(state.tasks, activeContext).filter(
+    t => t.status === "active"
+  );
+  const unassigned = useMemo(
+    () => activeTasks.filter(t => t.quadrant === "unassigned"),
+    [activeTasks]
+  );
+  const assigned = useMemo(
+    () => activeTasks.filter(t => t.quadrant !== "unassigned"),
+    [activeTasks]
+  );
 
   function handleDragStart(taskId: string) {
     setDraggingId(taskId);
@@ -198,7 +261,10 @@ export default function MatrixPage() {
 
   function handleDrop(quadrant: QuadrantType) {
     if (draggingId) {
-      dispatch({ type: 'MOVE_TASK_QUADRANT', payload: { id: draggingId, quadrant } });
+      dispatch({
+        type: "MOVE_TASK_QUADRANT",
+        payload: { id: draggingId, quadrant },
+      });
     }
     setDraggingId(null);
     setDragOverQuadrant(null);
@@ -207,7 +273,10 @@ export default function MatrixPage() {
   function handleDropUnassigned(e: React.DragEvent) {
     e.preventDefault();
     if (draggingId) {
-      dispatch({ type: 'MOVE_TASK_QUADRANT', payload: { id: draggingId, quadrant: 'unassigned' } });
+      dispatch({
+        type: "MOVE_TASK_QUADRANT",
+        payload: { id: draggingId, quadrant: "unassigned" },
+      });
     }
     setDraggingId(null);
     setDragOverQuadrant(null);
@@ -215,12 +284,17 @@ export default function MatrixPage() {
 
   // Mobile: tap to assign via select
   function handleMobileAssign(taskId: string, quadrant: QuadrantType) {
-    dispatch({ type: 'MOVE_TASK_QUADRANT', payload: { id: taskId, quadrant } });
+    dispatch({ type: "MOVE_TASK_QUADRANT", payload: { id: taskId, quadrant } });
   }
 
-  function handleInlineSave(data: { id: string; title: string; priority: Priority; dueDate: string | null }) {
+  function handleInlineSave(data: {
+    id: string;
+    title: string;
+    priority: Priority;
+    dueDate: string | null;
+  }) {
     dispatch({
-      type: 'UPDATE_TASK',
+      type: "UPDATE_TASK",
       payload: {
         id: data.id,
         title: data.title,
@@ -231,7 +305,10 @@ export default function MatrixPage() {
     setEditingTaskId(null);
   }
 
-  function renderTaskCard(task: typeof activeTasks[0], showMobileAssign = false) {
+  function renderTaskCard(
+    task: (typeof activeTasks)[0],
+    showMobileAssign = false
+  ) {
     if (editingTaskId === task.id) {
       return (
         <InlineEditForm
@@ -239,7 +316,7 @@ export default function MatrixPage() {
           taskId={task.id}
           initialTitle={task.title}
           initialPriority={task.priority}
-          initialDueDate={task.dueDate || ''}
+          initialDueDate={task.dueDate || ""}
           onSave={handleInlineSave}
           onCancel={() => setEditingTaskId(null)}
         />
@@ -273,7 +350,8 @@ export default function MatrixPage() {
             className="lg:hidden text-xs bg-transparent border border-border rounded px-1 py-0.5 text-muted-foreground"
             value=""
             onChange={e => {
-              if (e.target.value) handleMobileAssign(task.id, e.target.value as QuadrantType);
+              if (e.target.value)
+                handleMobileAssign(task.id, e.target.value as QuadrantType);
             }}
           >
             <option value="">Move to...</option>
@@ -291,16 +369,23 @@ export default function MatrixPage() {
     <div className="p-4 lg:p-8">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="font-serif text-2xl lg:text-3xl text-foreground">Eisenhower Matrix</h2>
-        <p className="text-sm text-muted-foreground mt-1">Drag tasks into quadrants to prioritize · Click <Pencil className="w-3 h-3 inline" /> to edit inline</p>
+        <h2 className="font-serif text-2xl lg:text-3xl text-foreground">
+          Eisenhower Matrix
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Drag tasks into quadrants to prioritize · Click{" "}
+          <Pencil className="w-3 h-3 inline" /> to edit inline
+        </p>
       </div>
 
       {/* Info banner */}
       <div className="bg-warm-sage-light rounded-xl border border-warm-sage/20 p-4 mb-6 flex gap-3">
         <Info className="w-4 h-4 text-warm-sage mt-0.5 shrink-0" />
         <p className="text-xs text-foreground/80 leading-relaxed">
-          <strong>How it works:</strong> Categorize your tasks based on two dimensions — <strong>Urgency</strong> (time-sensitive)
-          and <strong>Importance</strong> (contributes to long-term goals). Focus on Q1 first, then invest time in Q2 to prevent future crises.
+          <strong>How it works:</strong> Categorize your tasks based on two
+          dimensions — <strong>Urgency</strong> (time-sensitive) and{" "}
+          <strong>Importance</strong> (contributes to long-term goals). Focus on
+          Q1 first, then invest time in Q2 to prevent future crises.
         </p>
       </div>
 
@@ -326,7 +411,9 @@ export default function MatrixPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {QUADRANTS.map(q => {
-              const quadrantTasks = activeTasks.filter(t => t.quadrant === q.id);
+              const quadrantTasks = activeTasks.filter(
+                t => t.quadrant === q.id
+              );
               const isOver = dragOverQuadrant === q.id;
 
               return (
@@ -336,21 +423,35 @@ export default function MatrixPage() {
                   onDragLeave={handleDragLeave}
                   onDrop={() => handleDrop(q.id)}
                   className={`${q.bgClass} rounded-xl border ${q.borderClass} p-3 lg:p-4 min-h-[120px] lg:min-h-[180px] transition-all duration-200
-                    ${isOver ? 'ring-2 ring-warm-sage/40 scale-[1.01]' : ''}`}
+                    ${isOver ? "ring-2 ring-warm-sage/40 scale-[1.01]" : ""}`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <div className={`w-6 h-6 rounded-lg ${q.iconBg} flex items-center justify-center`}>
+                    <div
+                      className={`w-6 h-6 rounded-lg ${q.iconBg} flex items-center justify-center`}
+                    >
                       <span className="text-xs">
-                        {q.id === 'do-first' ? '🔥' : q.id === 'schedule' ? '📅' : q.id === 'delegate' ? '🤝' : '🪶'}
+                        {q.id === "do-first"
+                          ? "🔥"
+                          : q.id === "schedule"
+                            ? "📅"
+                            : q.id === "delegate"
+                              ? "🤝"
+                              : "🪶"}
                       </span>
                     </div>
-                    <h4 className="text-sm font-semibold text-foreground">{q.title}</h4>
+                    <h4 className="text-sm font-semibold text-foreground">
+                      {q.title}
+                    </h4>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-3">{q.subtitle}</p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {q.subtitle}
+                  </p>
 
                   {quadrantTasks.length === 0 ? (
                     <div className="border-2 border-dashed border-current/10 rounded-lg p-3 lg:p-4 text-center">
-                      <p className="text-xs text-muted-foreground/60">{q.description}</p>
+                      <p className="text-xs text-muted-foreground/60">
+                        {q.description}
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-1.5">
@@ -381,25 +482,39 @@ export default function MatrixPage() {
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   Unassigned
-                  <span className="text-xs bg-warm-sand px-2 py-0.5 rounded-full text-muted-foreground">{unassigned.length}</span>
+                  <span className="text-xs bg-warm-sand px-2 py-0.5 rounded-full text-muted-foreground">
+                    {unassigned.length}
+                  </span>
                 </h4>
-                <button onClick={() => setShowPanel(false)} className="text-muted-foreground hover:text-foreground">
-                  <span className="hidden lg:block"><ChevronRight className="w-4 h-4" /></span>
-                  <span className="lg:hidden"><ChevronUp className="w-4 h-4" /></span>
+                <button
+                  onClick={() => setShowPanel(false)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <span className="hidden lg:block">
+                    <ChevronRight className="w-4 h-4" />
+                  </span>
+                  <span className="lg:hidden">
+                    <ChevronUp className="w-4 h-4" />
+                  </span>
                 </button>
               </div>
 
               {unassigned.length === 0 ? (
                 <p className="text-xs text-muted-foreground/60 text-center py-4">
-                  All tasks have been assigned to quadrants! Add new tasks from the Tasks tab.
+                  All tasks have been assigned to quadrants! Add new tasks from
+                  the Tasks tab.
                 </p>
               ) : (
                 <div className="space-y-1.5">
                   {unassigned.map(task => renderTaskCard(task, true))}
                 </div>
               )}
-              <p className="text-xs text-muted-foreground/50 mt-3 text-center hidden lg:block">Drag tasks into quadrants above</p>
-              <p className="text-xs text-muted-foreground/50 mt-3 text-center lg:hidden">Use "Move to..." to assign tasks</p>
+              <p className="text-xs text-muted-foreground/50 mt-3 text-center hidden lg:block">
+                Drag tasks into quadrants above
+              </p>
+              <p className="text-xs text-muted-foreground/50 mt-3 text-center lg:hidden">
+                Use "Move to..." to assign tasks
+              </p>
             </div>
           </div>
         )}
@@ -428,10 +543,17 @@ export default function MatrixPage() {
       {/* Empty state when no tasks at all */}
       {activeTasks.length === 0 && (
         <div className="mt-8 bg-card rounded-2xl border border-border p-8 lg:p-12 text-center">
-          <img src={EMPTY_MATRIX_IMG} alt="No tasks" className="w-32 lg:w-40 h-32 lg:h-40 mx-auto mb-4 rounded-2xl object-cover opacity-90" />
-          <h3 className="font-serif text-lg lg:text-xl text-foreground mb-2">No tasks to prioritize</h3>
+          <img
+            src={EMPTY_MATRIX_IMG}
+            alt="No tasks"
+            className="w-32 lg:w-40 h-32 lg:h-40 mx-auto mb-4 rounded-2xl object-cover opacity-90"
+          />
+          <h3 className="font-serif text-lg lg:text-xl text-foreground mb-2">
+            No tasks to prioritize
+          </h3>
           <p className="text-sm text-muted-foreground">
-            Add some tasks in the Tasks tab first, then come back here to organize them by urgency and importance!
+            Add some tasks in the Tasks tab first, then come back here to
+            organize them by urgency and importance!
           </p>
         </div>
       )}

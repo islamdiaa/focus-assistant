@@ -12,7 +12,10 @@ import { vi } from "vitest";
 describe("sheetsStorage", () => {
   describe("loadFromSheets", () => {
     it("returns null when API calls fail", async () => {
-      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error"))
+      );
 
       const { loadFromSheets } = await import("./sheetsStorage");
       const result = await loadFromSheets("fake-id", "fake-key");
@@ -30,8 +33,32 @@ describe("sheetsStorage", () => {
       const mockResponses: Record<string, any> = {
         Tasks: {
           values: [
-            ["id", "title", "description", "priority", "status", "dueDate", "category", "energy", "quadrant", "createdAt", "completedAt"],
-            ["t1", "Test Task", "A description", "high", "active", "2026-03-01", "work", "high", "do-first", "2026-02-20T10:00:00Z", ""],
+            [
+              "id",
+              "title",
+              "description",
+              "priority",
+              "status",
+              "dueDate",
+              "category",
+              "energy",
+              "quadrant",
+              "createdAt",
+              "completedAt",
+            ],
+            [
+              "t1",
+              "Test Task",
+              "A description",
+              "high",
+              "active",
+              "2026-03-01",
+              "work",
+              "high",
+              "do-first",
+              "2026-02-20T10:00:00Z",
+              "",
+            ],
           ],
         },
         Pomodoros: { values: [] },
@@ -56,7 +83,7 @@ describe("sheetsStorage", () => {
       vi.stubGlobal(
         "fetch",
         vi.fn().mockImplementation((url: string) => {
-          const sheetName = Object.keys(mockResponses).find((name) =>
+          const sheetName = Object.keys(mockResponses).find(name =>
             url.includes(encodeURIComponent(name))
           );
           return Promise.resolve({
@@ -109,15 +136,20 @@ describe("sheetsStorage", () => {
           },
         ],
         pomodoros: [],
-        settings: { focusDuration: 25, shortBreak: 5, longBreak: 15, sessionsBeforeLongBreak: 4 },
+        settings: {
+          focusDuration: 25,
+          shortBreak: 5,
+          longBreak: 15,
+          sessionsBeforeLongBreak: 4,
+        },
         dailyStats: [],
         currentStreak: 0,
       });
 
       expect(result).toBe(true);
       expect(fetchCalls).toHaveLength(4); // Tasks, Pomodoros, Settings, DailyStats
-      expect(fetchCalls.some((u) => u.includes("Tasks"))).toBe(true);
-      expect(fetchCalls.some((u) => u.includes("Settings"))).toBe(true);
+      expect(fetchCalls.some(u => u.includes("Tasks"))).toBe(true);
+      expect(fetchCalls.some(u => u.includes("Settings"))).toBe(true);
 
       vi.unstubAllGlobals();
     });
@@ -138,7 +170,12 @@ describe("sheetsStorage", () => {
       const result = await saveToSheets("test-id", "test-key", {
         tasks: [],
         pomodoros: [],
-        settings: { focusDuration: 25, shortBreak: 5, longBreak: 15, sessionsBeforeLongBreak: 4 },
+        settings: {
+          focusDuration: 25,
+          shortBreak: 5,
+          longBreak: 15,
+          sessionsBeforeLongBreak: 4,
+        },
         dailyStats: [],
         currentStreak: 0,
       });

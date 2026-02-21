@@ -1,49 +1,135 @@
-import { createContext, useContext, useReducer, useEffect, useCallback, useRef, useState, type ReactNode } from 'react';
-import { nanoid } from 'nanoid';
-import type { Task, Pomodoro, PomodoroLink, TimerSettings, DailyStats, AppState, Priority, QuadrantType, Category, EnergyLevel, RecurrenceFrequency, Subtask, TaskTemplate, AppPreferences, ReadingItem, ReadingStatus, Reminder, ContextFilter } from '@/lib/types';
-import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from '@/lib/types';
-import { loadState, saveState, pollTimestamp, setSaveErrorHandler, setSaveSuccessHandler } from '@/lib/sheets';
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  useCallback,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { nanoid } from "nanoid";
+import type {
+  Task,
+  Pomodoro,
+  PomodoroLink,
+  TimerSettings,
+  DailyStats,
+  AppState,
+  Priority,
+  QuadrantType,
+  Category,
+  EnergyLevel,
+  RecurrenceFrequency,
+  Subtask,
+  TaskTemplate,
+  AppPreferences,
+  ReadingItem,
+  ReadingStatus,
+  Reminder,
+  ContextFilter,
+} from "@/lib/types";
+import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from "@/lib/types";
+import {
+  loadState,
+  saveState,
+  pollTimestamp,
+  setSaveErrorHandler,
+  setSaveSuccessHandler,
+} from "@/lib/sheets";
 
 // ---- Actions ----
 type Action =
-  | { type: 'LOAD_STATE'; payload: AppState }
-  | { type: 'ADD_TASK'; payload: { title: string; description?: string; priority: Priority; dueDate?: string; category?: Category; energy?: EnergyLevel; recurrence?: RecurrenceFrequency; recurrenceDayOfMonth?: number; recurrenceStartMonth?: number; subtasks?: Array<{ title: string }> } }
-  | { type: 'UPDATE_TASK'; payload: Partial<Task> & { id: string } }
-  | { type: 'DELETE_TASK'; payload: string }
-  | { type: 'TOGGLE_TASK'; payload: string }
-  | { type: 'MOVE_TASK_QUADRANT'; payload: { id: string; quadrant: QuadrantType } }
-  | { type: 'ADD_SUBTASK'; payload: { taskId: string; title: string } }
-  | { type: 'TOGGLE_SUBTASK'; payload: { taskId: string; subtaskId: string } }
-  | { type: 'DELETE_SUBTASK'; payload: { taskId: string; subtaskId: string } }
-  | { type: 'UPDATE_SUBTASK'; payload: { taskId: string; subtaskId: string; title: string } }
-  | { type: 'ADD_POMODORO'; payload: { title: string; duration: number; linkedTaskId?: string; linkedTasks?: PomodoroLink[] } }
-  | { type: 'UPDATE_POMODORO'; payload: Partial<Pomodoro> & { id: string } }
-  | { type: 'DELETE_POMODORO'; payload: string }
-  | { type: 'TICK_POMODORO'; payload: string }
-  | { type: 'COMPLETE_POMODORO'; payload: string }
-  | { type: 'UPDATE_SETTINGS'; payload: TimerSettings }
-  | { type: 'UPDATE_DAILY_STATS'; payload: Partial<DailyStats> }
-  | { type: 'SET_STREAK'; payload: number }
-  | { type: 'REORDER_TASKS'; payload: string[] }
-  | { type: 'ADD_TEMPLATE'; payload: TaskTemplate }
-  | { type: 'DELETE_TEMPLATE'; payload: string }
-  | { type: 'APPLY_TEMPLATE'; payload: string }
-  | { type: 'UPDATE_PREFERENCES'; payload: Partial<AppPreferences> }
-  | { type: 'ADD_READING_ITEM'; payload: { url: string; title: string; description?: string; tags?: string[] } }
-  | { type: 'UPDATE_READING_ITEM'; payload: Partial<ReadingItem> & { id: string } }
-  | { type: 'DELETE_READING_ITEM'; payload: string }
-  | { type: 'MARK_READING_STATUS'; payload: { id: string; status: ReadingStatus } }
-  | { type: 'ADD_REMINDER'; payload: { title: string; description?: string; date: string; time?: string; recurrence: Reminder['recurrence']; category: Reminder['category'] } }
-  | { type: 'UPDATE_REMINDER'; payload: Partial<Reminder> & { id: string } }
-  | { type: 'DELETE_REMINDER'; payload: string }
-  | { type: 'ACK_REMINDER'; payload: string }
-  | { type: 'UNACK_REMINDER'; payload: string }
-  | { type: 'PIN_TO_TODAY'; payload: string }
-  | { type: 'UNPIN_FROM_TODAY'; payload: string }
-  | { type: 'SET_CONTEXT'; payload: ContextFilter }
-  | { type: 'TOGGLE_MONITOR'; payload: string }
-  | { type: 'UNDO' }
-  | { type: 'REDO' };
+  | { type: "LOAD_STATE"; payload: AppState }
+  | {
+      type: "ADD_TASK";
+      payload: {
+        title: string;
+        description?: string;
+        priority: Priority;
+        dueDate?: string;
+        category?: Category;
+        energy?: EnergyLevel;
+        recurrence?: RecurrenceFrequency;
+        recurrenceDayOfMonth?: number;
+        recurrenceStartMonth?: number;
+        subtasks?: Array<{ title: string }>;
+      };
+    }
+  | { type: "UPDATE_TASK"; payload: Partial<Task> & { id: string } }
+  | { type: "DELETE_TASK"; payload: string }
+  | { type: "TOGGLE_TASK"; payload: string }
+  | {
+      type: "MOVE_TASK_QUADRANT";
+      payload: { id: string; quadrant: QuadrantType };
+    }
+  | { type: "ADD_SUBTASK"; payload: { taskId: string; title: string } }
+  | { type: "TOGGLE_SUBTASK"; payload: { taskId: string; subtaskId: string } }
+  | { type: "DELETE_SUBTASK"; payload: { taskId: string; subtaskId: string } }
+  | {
+      type: "UPDATE_SUBTASK";
+      payload: { taskId: string; subtaskId: string; title: string };
+    }
+  | {
+      type: "ADD_POMODORO";
+      payload: {
+        title: string;
+        duration: number;
+        linkedTaskId?: string;
+        linkedTasks?: PomodoroLink[];
+      };
+    }
+  | { type: "UPDATE_POMODORO"; payload: Partial<Pomodoro> & { id: string } }
+  | { type: "DELETE_POMODORO"; payload: string }
+  | { type: "TICK_POMODORO"; payload: string }
+  | { type: "COMPLETE_POMODORO"; payload: string }
+  | { type: "UPDATE_SETTINGS"; payload: TimerSettings }
+  | { type: "UPDATE_DAILY_STATS"; payload: Partial<DailyStats> }
+  | { type: "SET_STREAK"; payload: number }
+  | { type: "REORDER_TASKS"; payload: string[] }
+  | { type: "ADD_TEMPLATE"; payload: TaskTemplate }
+  | { type: "DELETE_TEMPLATE"; payload: string }
+  | { type: "APPLY_TEMPLATE"; payload: string }
+  | { type: "UPDATE_PREFERENCES"; payload: Partial<AppPreferences> }
+  | {
+      type: "ADD_READING_ITEM";
+      payload: {
+        url: string;
+        title: string;
+        description?: string;
+        tags?: string[];
+      };
+    }
+  | {
+      type: "UPDATE_READING_ITEM";
+      payload: Partial<ReadingItem> & { id: string };
+    }
+  | { type: "DELETE_READING_ITEM"; payload: string }
+  | {
+      type: "MARK_READING_STATUS";
+      payload: { id: string; status: ReadingStatus };
+    }
+  | {
+      type: "ADD_REMINDER";
+      payload: {
+        title: string;
+        description?: string;
+        date: string;
+        time?: string;
+        recurrence: Reminder["recurrence"];
+        category: Reminder["category"];
+      };
+    }
+  | { type: "UPDATE_REMINDER"; payload: Partial<Reminder> & { id: string } }
+  | { type: "DELETE_REMINDER"; payload: string }
+  | { type: "ACK_REMINDER"; payload: string }
+  | { type: "UNACK_REMINDER"; payload: string }
+  | { type: "PIN_TO_TODAY"; payload: string }
+  | { type: "UNPIN_FROM_TODAY"; payload: string }
+  | { type: "SET_CONTEXT"; payload: ContextFilter }
+  | { type: "TOGGLE_MONITOR"; payload: string }
+  | { type: "UNDO" }
+  | { type: "REDO" };
 
 const initialState: AppState = {
   tasks: [],
@@ -57,51 +143,76 @@ const initialState: AppState = {
 };
 
 function getToday(): string {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split("T")[0];
 }
 
 function getTodayStats(stats: DailyStats[]): DailyStats {
   const today = getToday();
-  return stats.find(s => s.date === today) || {
-    date: today,
-    tasksCompleted: 0,
-    focusMinutes: 0,
-    pomodorosCompleted: 0,
-  };
+  return (
+    stats.find(s => s.date === today) || {
+      date: today,
+      tasksCompleted: 0,
+      focusMinutes: 0,
+      pomodorosCompleted: 0,
+    }
+  );
 }
 
-function updateTodayStats(stats: DailyStats[], update: Partial<DailyStats>): DailyStats[] {
+function updateTodayStats(
+  stats: DailyStats[],
+  update: Partial<DailyStats>
+): DailyStats[] {
   const today = getToday();
   const existing = stats.find(s => s.date === today);
   if (existing) {
-    return stats.map(s => s.date === today ? { ...s, ...update } : s);
+    return stats.map(s => (s.date === today ? { ...s, ...update } : s));
   }
-  return [...stats, { date: today, tasksCompleted: 0, focusMinutes: 0, pomodorosCompleted: 0, ...update }];
+  return [
+    ...stats,
+    {
+      date: today,
+      tasksCompleted: 0,
+      focusMinutes: 0,
+      pomodorosCompleted: 0,
+      ...update,
+    },
+  ];
 }
 
-function computeNextDate(freq: RecurrenceFrequency, from: Date, task?: { recurrenceDayOfMonth?: number | null; recurrenceStartMonth?: number | null }): string | undefined {
+function computeNextDate(
+  freq: RecurrenceFrequency,
+  from: Date,
+  task?: {
+    recurrenceDayOfMonth?: number | null;
+    recurrenceStartMonth?: number | null;
+  }
+): string | undefined {
   const d = new Date(from);
   switch (freq) {
-    case 'daily':
+    case "daily":
       d.setDate(d.getDate() + 1);
       return d.toISOString();
-    case 'weekly':
+    case "weekly":
       d.setDate(d.getDate() + 7);
       return d.toISOString();
-    case 'monthly':
+    case "monthly":
       d.setMonth(d.getMonth() + 1);
       return d.toISOString();
-    case 'quarterly': {
+    case "quarterly": {
       // Quarterly: advance to the next quarter month (every 3 months)
       // Uses recurrenceStartMonth to determine the quarter cycle and recurrenceDayOfMonth for the day
       const dayOfMonth = task?.recurrenceDayOfMonth || d.getDate();
-      const startMonth = task?.recurrenceStartMonth || (d.getMonth() + 1); // 1-indexed
+      const startMonth = task?.recurrenceStartMonth || d.getMonth() + 1; // 1-indexed
       // Quarter months based on start: e.g., start=2 → [2, 5, 8, 11]
-      const quarterMonths = [0, 3, 6, 9].map(offset => ((startMonth - 1 + offset) % 12) + 1);
+      const quarterMonths = [0, 3, 6, 9].map(
+        offset => ((startMonth - 1 + offset) % 12) + 1
+      );
       const currentMonth = d.getMonth() + 1; // 1-indexed
       const currentDay = d.getDate();
       // Find the next quarter month after current date
-      let nextMonth = quarterMonths.find(m => m > currentMonth || (m === currentMonth && dayOfMonth > currentDay));
+      let nextMonth = quarterMonths.find(
+        m => m > currentMonth || (m === currentMonth && dayOfMonth > currentDay)
+      );
       let nextYear = d.getFullYear();
       if (!nextMonth) {
         // Wrap to next year's first quarter month
@@ -111,7 +222,7 @@ function computeNextDate(freq: RecurrenceFrequency, from: Date, task?: { recurre
       const next = new Date(nextYear, nextMonth - 1, dayOfMonth);
       return next.toISOString();
     }
-    case 'weekdays': {
+    case "weekdays": {
       d.setDate(d.getDate() + 1);
       while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
       return d.toISOString();
@@ -128,11 +239,18 @@ interface UndoableState {
 }
 
 const MAX_HISTORY = 50;
-const NON_UNDOABLE_ACTIONS = new Set(['LOAD_STATE', 'TICK_POMODORO', 'UNDO', 'REDO', 'UPDATE_DAILY_STATS', 'SET_STREAK']);
+const NON_UNDOABLE_ACTIONS = new Set([
+  "LOAD_STATE",
+  "TICK_POMODORO",
+  "UNDO",
+  "REDO",
+  "UPDATE_DAILY_STATS",
+  "SET_STREAK",
+]);
 
 function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'LOAD_STATE':
+    case "LOAD_STATE":
       return {
         ...action.payload,
         templates: action.payload.templates || [],
@@ -140,7 +258,7 @@ function appReducer(state: AppState, action: Action): AppState {
         readingList: action.payload.readingList || [],
       };
 
-    case 'ADD_TASK': {
+    case "ADD_TASK": {
       const subtasks: Subtask[] = (action.payload.subtasks || []).map(s => ({
         id: nanoid(),
         title: s.title,
@@ -151,59 +269,71 @@ function appReducer(state: AppState, action: Action): AppState {
         title: action.payload.title,
         description: action.payload.description,
         priority: action.payload.priority,
-        status: 'active',
+        status: "active",
         dueDate: action.payload.dueDate,
         category: action.payload.category,
         energy: action.payload.energy,
-        quadrant: 'unassigned',
+        quadrant: "unassigned",
         createdAt: new Date().toISOString(),
         recurrence: action.payload.recurrence,
         recurrenceDayOfMonth: action.payload.recurrenceDayOfMonth,
         recurrenceStartMonth: action.payload.recurrenceStartMonth,
-        recurrenceNextDate: action.payload.recurrence && action.payload.recurrence !== 'none'
-          ? computeNextDate(action.payload.recurrence, new Date(), {
-              recurrenceDayOfMonth: action.payload.recurrenceDayOfMonth,
-              recurrenceStartMonth: action.payload.recurrenceStartMonth,
-            })
-          : undefined,
+        recurrenceNextDate:
+          action.payload.recurrence && action.payload.recurrence !== "none"
+            ? computeNextDate(action.payload.recurrence, new Date(), {
+                recurrenceDayOfMonth: action.payload.recurrenceDayOfMonth,
+                recurrenceStartMonth: action.payload.recurrenceStartMonth,
+              })
+            : undefined,
         subtasks: subtasks.length > 0 ? subtasks : undefined,
       };
       return { ...state, tasks: [task, ...state.tasks] };
     }
 
-    case 'UPDATE_TASK':
+    case "UPDATE_TASK":
       return {
         ...state,
-        tasks: state.tasks.map(t => t.id === action.payload.id ? { ...t, ...action.payload } : t),
+        tasks: state.tasks.map(t =>
+          t.id === action.payload.id ? { ...t, ...action.payload } : t
+        ),
       };
 
-    case 'DELETE_TASK':
-      return { ...state, tasks: state.tasks.filter(t => t.id !== action.payload) };
+    case "DELETE_TASK":
+      return {
+        ...state,
+        tasks: state.tasks.filter(t => t.id !== action.payload),
+      };
 
-    case 'TOGGLE_TASK': {
+    case "TOGGLE_TASK": {
       const task = state.tasks.find(t => t.id === action.payload);
       if (!task) return state;
-      const newStatus = task.status === 'active' ? 'done' : 'active';
+      const newStatus = task.status === "active" ? "done" : "active";
       const todayStats = getTodayStats(state.dailyStats);
-      const delta = newStatus === 'done' ? 1 : -1;
+      const delta = newStatus === "done" ? 1 : -1;
 
       let tasks = state.tasks.map(t =>
         t.id === action.payload
           ? {
               ...t,
-              status: newStatus as Task['status'],
-              completedAt: newStatus === 'done' ? new Date().toISOString() : undefined,
-              pinnedToday: newStatus === 'done' ? null : t.pinnedToday, // Clear pin on completion
-              subtasks: newStatus === 'done' && t.subtasks
-                ? t.subtasks.map(s => ({ ...s, done: true }))
-                : newStatus === 'active' && t.subtasks
-                  ? t.subtasks.map(s => ({ ...s, done: false }))
-                  : t.subtasks,
+              status: newStatus as Task["status"],
+              completedAt:
+                newStatus === "done" ? new Date().toISOString() : undefined,
+              pinnedToday: newStatus === "done" ? null : t.pinnedToday, // Clear pin on completion
+              subtasks:
+                newStatus === "done" && t.subtasks
+                  ? t.subtasks.map(s => ({ ...s, done: true }))
+                  : newStatus === "active" && t.subtasks
+                    ? t.subtasks.map(s => ({ ...s, done: false }))
+                    : t.subtasks,
             }
           : t
       );
 
-      if (newStatus === 'done' && task.recurrence && task.recurrence !== 'none') {
+      if (
+        newStatus === "done" &&
+        task.recurrence &&
+        task.recurrence !== "none"
+      ) {
         const nextDate = computeNextDate(task.recurrence, new Date(), {
           recurrenceDayOfMonth: task.recurrenceDayOfMonth,
           recurrenceStartMonth: task.recurrenceStartMonth,
@@ -213,8 +343,8 @@ function appReducer(state: AppState, action: Action): AppState {
           title: task.title,
           description: task.description,
           priority: task.priority,
-          status: 'active',
-          dueDate: nextDate?.split('T')[0],
+          status: "active",
+          dueDate: nextDate?.split("T")[0],
           category: task.category,
           energy: task.energy,
           quadrant: task.quadrant,
@@ -224,7 +354,11 @@ function appReducer(state: AppState, action: Action): AppState {
           recurrenceStartMonth: task.recurrenceStartMonth,
           recurrenceParentId: task.id,
           recurrenceNextDate: nextDate,
-          subtasks: task.subtasks?.map(s => ({ id: nanoid(), title: s.title, done: false })),
+          subtasks: task.subtasks?.map(s => ({
+            id: nanoid(),
+            title: s.title,
+            done: false,
+          })),
         };
         tasks = [newTask, ...tasks];
       }
@@ -238,46 +372,52 @@ function appReducer(state: AppState, action: Action): AppState {
       };
     }
 
-    case 'TOGGLE_MONITOR': {
+    case "TOGGLE_MONITOR": {
       const task = state.tasks.find(t => t.id === action.payload);
       if (!task) return state;
       // Toggle between active and monitored. If done, move to monitored.
-      const newStatus = task.status === 'monitored' ? 'active' : 'monitored';
+      const newStatus = task.status === "monitored" ? "active" : "monitored";
       return {
         ...state,
         tasks: state.tasks.map(t =>
           t.id === action.payload
             ? {
                 ...t,
-                status: newStatus as Task['status'],
+                status: newStatus as Task["status"],
                 // Clear pin when moving to monitored (not actionable)
-                pinnedToday: newStatus === 'monitored' ? null : t.pinnedToday,
+                pinnedToday: newStatus === "monitored" ? null : t.pinnedToday,
               }
             : t
         ),
       };
     }
 
-    case 'MOVE_TASK_QUADRANT':
+    case "MOVE_TASK_QUADRANT":
       return {
         ...state,
         tasks: state.tasks.map(t =>
-          t.id === action.payload.id ? { ...t, quadrant: action.payload.quadrant } : t
+          t.id === action.payload.id
+            ? { ...t, quadrant: action.payload.quadrant }
+            : t
         ),
       };
 
-    case 'ADD_SUBTASK': {
+    case "ADD_SUBTASK": {
       return {
         ...state,
         tasks: state.tasks.map(t => {
           if (t.id !== action.payload.taskId) return t;
-          const newSubtask: Subtask = { id: nanoid(), title: action.payload.title, done: false };
+          const newSubtask: Subtask = {
+            id: nanoid(),
+            title: action.payload.title,
+            done: false,
+          };
           return { ...t, subtasks: [...(t.subtasks || []), newSubtask] };
         }),
       };
     }
 
-    case 'TOGGLE_SUBTASK': {
+    case "TOGGLE_SUBTASK": {
       return {
         ...state,
         tasks: state.tasks.map(t => {
@@ -292,20 +432,22 @@ function appReducer(state: AppState, action: Action): AppState {
       };
     }
 
-    case 'DELETE_SUBTASK': {
+    case "DELETE_SUBTASK": {
       return {
         ...state,
         tasks: state.tasks.map(t => {
           if (t.id !== action.payload.taskId) return t;
           return {
             ...t,
-            subtasks: (t.subtasks || []).filter(s => s.id !== action.payload.subtaskId),
+            subtasks: (t.subtasks || []).filter(
+              s => s.id !== action.payload.subtaskId
+            ),
           };
         }),
       };
     }
 
-    case 'UPDATE_SUBTASK': {
+    case "UPDATE_SUBTASK": {
       return {
         ...state,
         tasks: state.tasks.map(t => {
@@ -313,20 +455,22 @@ function appReducer(state: AppState, action: Action): AppState {
           return {
             ...t,
             subtasks: (t.subtasks || []).map(s =>
-              s.id === action.payload.subtaskId ? { ...s, title: action.payload.title } : s
+              s.id === action.payload.subtaskId
+                ? { ...s, title: action.payload.title }
+                : s
             ),
           };
         }),
       };
     }
 
-    case 'ADD_POMODORO': {
+    case "ADD_POMODORO": {
       const pom: Pomodoro = {
         id: nanoid(),
         title: action.payload.title,
         duration: action.payload.duration,
         elapsed: 0,
-        status: 'idle',
+        status: "idle",
         createdAt: new Date().toISOString(),
         linkedTaskId: action.payload.linkedTaskId,
         linkedTasks: action.payload.linkedTasks,
@@ -334,26 +478,31 @@ function appReducer(state: AppState, action: Action): AppState {
       return { ...state, pomodoros: [pom, ...state.pomodoros] };
     }
 
-    case 'UPDATE_POMODORO':
-      return {
-        ...state,
-        pomodoros: state.pomodoros.map(p => p.id === action.payload.id ? { ...p, ...action.payload } : p),
-      };
-
-    case 'DELETE_POMODORO':
-      return { ...state, pomodoros: state.pomodoros.filter(p => p.id !== action.payload) };
-
-    case 'TICK_POMODORO':
+    case "UPDATE_POMODORO":
       return {
         ...state,
         pomodoros: state.pomodoros.map(p =>
-          p.id === action.payload && p.status === 'running'
+          p.id === action.payload.id ? { ...p, ...action.payload } : p
+        ),
+      };
+
+    case "DELETE_POMODORO":
+      return {
+        ...state,
+        pomodoros: state.pomodoros.filter(p => p.id !== action.payload),
+      };
+
+    case "TICK_POMODORO":
+      return {
+        ...state,
+        pomodoros: state.pomodoros.map(p =>
+          p.id === action.payload && p.status === "running"
             ? { ...p, elapsed: p.elapsed + 1 }
             : p
         ),
       };
 
-    case 'COMPLETE_POMODORO': {
+    case "COMPLETE_POMODORO": {
       const pom = state.pomodoros.find(p => p.id === action.payload);
       if (!pom) return state;
       const todayStats = getTodayStats(state.dailyStats);
@@ -361,7 +510,13 @@ function appReducer(state: AppState, action: Action): AppState {
         ...state,
         pomodoros: state.pomodoros.map(p =>
           p.id === action.payload
-            ? { ...p, status: 'completed', completedAt: new Date().toISOString(), startedAt: undefined, accumulatedSeconds: undefined }
+            ? {
+                ...p,
+                status: "completed",
+                completedAt: new Date().toISOString(),
+                startedAt: undefined,
+                accumulatedSeconds: undefined,
+              }
             : p
         ),
         dailyStats: updateTodayStats(state.dailyStats, {
@@ -371,74 +526,95 @@ function appReducer(state: AppState, action: Action): AppState {
       };
     }
 
-    case 'UPDATE_SETTINGS':
+    case "UPDATE_SETTINGS":
       return { ...state, settings: action.payload };
 
-    case 'UPDATE_DAILY_STATS':
-      return { ...state, dailyStats: updateTodayStats(state.dailyStats, action.payload) };
+    case "UPDATE_DAILY_STATS":
+      return {
+        ...state,
+        dailyStats: updateTodayStats(state.dailyStats, action.payload),
+      };
 
-    case 'SET_STREAK':
+    case "SET_STREAK":
       return { ...state, currentStreak: action.payload };
 
-    case 'REORDER_TASKS': {
+    case "REORDER_TASKS": {
       const orderedIds = action.payload;
       const taskMap = new Map(state.tasks.map(t => [t.id, t]));
-      const reordered = orderedIds.map(id => taskMap.get(id)).filter(Boolean) as Task[];
+      const reordered = orderedIds
+        .map(id => taskMap.get(id))
+        .filter(Boolean) as Task[];
       const remaining = state.tasks.filter(t => !orderedIds.includes(t.id));
       return { ...state, tasks: [...reordered, ...remaining] };
     }
 
-    case 'ADD_TEMPLATE': {
+    case "ADD_TEMPLATE": {
       const templates = [...(state.templates || []), action.payload];
       return { ...state, templates };
     }
 
-    case 'DELETE_TEMPLATE': {
-      return { ...state, templates: (state.templates || []).filter(t => t.id !== action.payload) };
+    case "DELETE_TEMPLATE": {
+      return {
+        ...state,
+        templates: (state.templates || []).filter(t => t.id !== action.payload),
+      };
     }
 
-    case 'APPLY_TEMPLATE': {
-      const template = (state.templates || []).find(t => t.id === action.payload);
+    case "APPLY_TEMPLATE": {
+      const template = (state.templates || []).find(
+        t => t.id === action.payload
+      );
       if (!template) return state;
       const newTasks: Task[] = template.tasks.map(t => ({
         id: nanoid(),
         title: t.title,
         description: t.description,
         priority: t.priority,
-        status: 'active' as const,
+        status: "active" as const,
         category: t.category,
         energy: t.energy,
-        quadrant: 'unassigned' as const,
+        quadrant: "unassigned" as const,
         createdAt: new Date().toISOString(),
-        subtasks: t.subtasks?.map(s => ({ id: nanoid(), title: s.title, done: false })),
+        subtasks: t.subtasks?.map(s => ({
+          id: nanoid(),
+          title: s.title,
+          done: false,
+        })),
       }));
       return { ...state, tasks: [...newTasks, ...state.tasks] };
     }
 
-    case 'UPDATE_PREFERENCES': {
+    case "UPDATE_PREFERENCES": {
       return {
         ...state,
-        preferences: { ...(state.preferences || DEFAULT_PREFERENCES), ...action.payload },
+        preferences: {
+          ...(state.preferences || DEFAULT_PREFERENCES),
+          ...action.payload,
+        },
       };
     }
 
-    case 'ADD_READING_ITEM': {
-      let domain = '';
-      try { domain = new URL(action.payload.url).hostname.replace('www.', ''); } catch { /* ignore */ }
+    case "ADD_READING_ITEM": {
+      let domain = "";
+      try {
+        domain = new URL(action.payload.url).hostname.replace("www.", "");
+      } catch {
+        /* ignore */
+      }
       const item: ReadingItem = {
         id: nanoid(),
         url: action.payload.url,
         title: action.payload.title,
         description: action.payload.description,
         tags: action.payload.tags || [],
-        status: 'unread',
+        status: "unread",
         domain,
         createdAt: new Date().toISOString(),
       };
       return { ...state, readingList: [item, ...(state.readingList || [])] };
     }
 
-    case 'UPDATE_READING_ITEM': {
+    case "UPDATE_READING_ITEM": {
       return {
         ...state,
         readingList: (state.readingList || []).map(r =>
@@ -447,22 +623,34 @@ function appReducer(state: AppState, action: Action): AppState {
       };
     }
 
-    case 'DELETE_READING_ITEM': {
-      return { ...state, readingList: (state.readingList || []).filter(r => r.id !== action.payload) };
+    case "DELETE_READING_ITEM": {
+      return {
+        ...state,
+        readingList: (state.readingList || []).filter(
+          r => r.id !== action.payload
+        ),
+      };
     }
 
-    case 'MARK_READING_STATUS': {
+    case "MARK_READING_STATUS": {
       return {
         ...state,
         readingList: (state.readingList || []).map(r =>
           r.id === action.payload.id
-            ? { ...r, status: action.payload.status, readAt: action.payload.status === 'read' ? new Date().toISOString() : r.readAt }
+            ? {
+                ...r,
+                status: action.payload.status,
+                readAt:
+                  action.payload.status === "read"
+                    ? new Date().toISOString()
+                    : r.readAt,
+              }
             : r
         ),
       };
     }
 
-    case 'ADD_REMINDER': {
+    case "ADD_REMINDER": {
       const reminder: Reminder = {
         id: nanoid(),
         title: action.payload.title,
@@ -476,7 +664,7 @@ function appReducer(state: AppState, action: Action): AppState {
       return { ...state, reminders: [reminder, ...(state.reminders || [])] };
     }
 
-    case 'UPDATE_REMINDER': {
+    case "UPDATE_REMINDER": {
       return {
         ...state,
         reminders: (state.reminders || []).map(r =>
@@ -485,42 +673,59 @@ function appReducer(state: AppState, action: Action): AppState {
       };
     }
 
-    case 'DELETE_REMINDER': {
-      return { ...state, reminders: (state.reminders || []).filter(r => r.id !== action.payload) };
+    case "DELETE_REMINDER": {
+      return {
+        ...state,
+        reminders: (state.reminders || []).filter(r => r.id !== action.payload),
+      };
     }
 
-    case 'ACK_REMINDER': {
-      const reminder = (state.reminders || []).find(r => r.id === action.payload);
+    case "ACK_REMINDER": {
+      const reminder = (state.reminders || []).find(
+        r => r.id === action.payload
+      );
       if (!reminder) return state;
-      if (reminder.recurrence === 'none') {
+      if (reminder.recurrence === "none") {
         // One-off: mark acknowledged
         return {
           ...state,
           reminders: (state.reminders || []).map(r =>
             r.id === action.payload
-              ? { ...r, acknowledged: true, acknowledgedAt: new Date().toISOString() }
+              ? {
+                  ...r,
+                  acknowledged: true,
+                  acknowledgedAt: new Date().toISOString(),
+                }
               : r
           ),
         };
       }
       // Recurring: advance to next occurrence
       const d = new Date(reminder.date);
-      if (reminder.recurrence === 'yearly') d.setFullYear(d.getFullYear() + 1);
-      else if (reminder.recurrence === 'quarterly') d.setMonth(d.getMonth() + 3);
-      else if (reminder.recurrence === 'monthly') d.setMonth(d.getMonth() + 1);
-      else if (reminder.recurrence === 'weekly') d.setDate(d.getDate() + 7);
+      if (reminder.recurrence === "yearly") d.setFullYear(d.getFullYear() + 1);
+      else if (reminder.recurrence === "quarterly")
+        d.setMonth(d.getMonth() + 3);
+      else if (reminder.recurrence === "monthly") d.setMonth(d.getMonth() + 1);
+      else if (reminder.recurrence === "weekly") d.setDate(d.getDate() + 7);
       return {
         ...state,
         reminders: (state.reminders || []).map(r =>
           r.id === action.payload
-            ? { ...r, date: d.toISOString().split('T')[0], acknowledged: false, acknowledgedAt: undefined }
+            ? {
+                ...r,
+                date: d.toISOString().split("T")[0],
+                acknowledged: false,
+                acknowledgedAt: undefined,
+              }
             : r
         ),
       };
     }
 
-    case 'UNACK_REMINDER': {
-      const reminder = (state.reminders || []).find(r => r.id === action.payload);
+    case "UNACK_REMINDER": {
+      const reminder = (state.reminders || []).find(
+        r => r.id === action.payload
+      );
       if (!reminder) return state;
       return {
         ...state,
@@ -532,8 +737,8 @@ function appReducer(state: AppState, action: Action): AppState {
       };
     }
 
-    case 'PIN_TO_TODAY': {
-      const todayDate = new Date().toISOString().split('T')[0];
+    case "PIN_TO_TODAY": {
+      const todayDate = new Date().toISOString().split("T")[0];
       return {
         ...state,
         tasks: state.tasks.map(t =>
@@ -542,14 +747,17 @@ function appReducer(state: AppState, action: Action): AppState {
       };
     }
 
-    case 'SET_CONTEXT': {
+    case "SET_CONTEXT": {
       return {
         ...state,
-        preferences: { ...(state.preferences || DEFAULT_PREFERENCES), activeContext: action.payload },
+        preferences: {
+          ...(state.preferences || DEFAULT_PREFERENCES),
+          activeContext: action.payload,
+        },
       };
     }
 
-    case 'UNPIN_FROM_TODAY': {
+    case "UNPIN_FROM_TODAY": {
       return {
         ...state,
         tasks: state.tasks.map(t =>
@@ -564,7 +772,7 @@ function appReducer(state: AppState, action: Action): AppState {
 }
 
 function undoableReducer(state: UndoableState, action: Action): UndoableState {
-  if (action.type === 'UNDO') {
+  if (action.type === "UNDO") {
     if (state.past.length === 0) return state;
     const previous = state.past[state.past.length - 1];
     return {
@@ -574,7 +782,7 @@ function undoableReducer(state: UndoableState, action: Action): UndoableState {
     };
   }
 
-  if (action.type === 'REDO') {
+  if (action.type === "REDO") {
     if (state.future.length === 0) return state;
     const next = state.future[0];
     return {
@@ -607,7 +815,7 @@ interface AppContextType {
   canRedo: boolean;
   undo: () => void;
   redo: () => void;
-  saveStatus: 'ok' | 'saving' | 'error';
+  saveStatus: "ok" | "saving" | "error";
   saveError: string | null;
 }
 
@@ -629,7 +837,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   stateRef.current = state;
 
-  const [saveStatus, setSaveStatus] = useState<'ok' | 'saving' | 'error'>('ok');
+  const [saveStatus, setSaveStatus] = useState<"ok" | "saving" | "error">("ok");
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const dispatch = useCallback((action: Action) => {
@@ -639,11 +847,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Register save error/success handlers
   useEffect(() => {
     setSaveErrorHandler((error, failures) => {
-      setSaveStatus('error');
+      setSaveStatus("error");
       setSaveError(`Save failed (${failures}x): ${error}`);
     });
     setSaveSuccessHandler(() => {
-      setSaveStatus('ok');
+      setSaveStatus("ok");
       setSaveError(null);
     });
   }, []);
@@ -652,8 +860,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (loadedRef.current) return;
     loadedRef.current = true;
     loadState().then(loaded => {
-      dispatch({ type: 'LOAD_STATE', payload: loaded });
-      pollTimestamp().then(ts => { lastTimestampRef.current = ts; }).catch(() => {});
+      dispatch({ type: "LOAD_STATE", payload: loaded });
+      pollTimestamp()
+        .then(ts => {
+          lastTimestampRef.current = ts;
+        })
+        .catch(() => {});
     });
   }, [dispatch]);
 
@@ -661,13 +873,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!loadedRef.current) return;
     clearTimeout(saveTimeoutRef.current);
-    setSaveStatus('saving');
+    setSaveStatus("saving");
     saveTimeoutRef.current = setTimeout(() => {
-      saveState(stateRef.current).then((ok) => {
+      saveState(stateRef.current).then(ok => {
         if (ok) {
-          setSaveStatus('ok');
+          setSaveStatus("ok");
           setSaveError(null);
-          pollTimestamp().then(ts => { lastTimestampRef.current = ts; }).catch(() => {});
+          pollTimestamp()
+            .then(ts => {
+              lastTimestampRef.current = ts;
+            })
+            .catch(() => {});
         }
         // Error state is set by the error handler in sheets.ts
       });
@@ -679,9 +895,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const interval = setInterval(async () => {
       try {
         const serverTs = await pollTimestamp();
-        if (serverTs > 0 && lastTimestampRef.current > 0 && serverTs > lastTimestampRef.current + 1000) {
+        if (
+          serverTs > 0 &&
+          lastTimestampRef.current > 0 &&
+          serverTs > lastTimestampRef.current + 1000
+        ) {
           const loaded = await loadState();
-          dispatch({ type: 'LOAD_STATE', payload: loaded });
+          dispatch({ type: "LOAD_STATE", payload: loaded });
           lastTimestampRef.current = serverTs;
         }
       } catch {
@@ -697,25 +917,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const reloadState = useCallback(async () => {
     const loaded = await loadState();
-    dispatch({ type: 'LOAD_STATE', payload: loaded });
+    dispatch({ type: "LOAD_STATE", payload: loaded });
   }, [dispatch]);
 
-  const undo = useCallback(() => dispatch({ type: 'UNDO' }), [dispatch]);
-  const redo = useCallback(() => dispatch({ type: 'REDO' }), [dispatch]);
+  const undo = useCallback(() => dispatch({ type: "UNDO" }), [dispatch]);
+  const redo = useCallback(() => dispatch({ type: "REDO" }), [dispatch]);
 
   return (
-    <AppContext.Provider value={{
-      state,
-      dispatch,
-      syncToCloud,
-      reloadState,
-      canUndo: undoState.past.length > 0,
-      canRedo: undoState.future.length > 0,
-      undo,
-      redo,
-      saveStatus,
-      saveError,
-    }}>
+    <AppContext.Provider
+      value={{
+        state,
+        dispatch,
+        syncToCloud,
+        reloadState,
+        canUndo: undoState.past.length > 0,
+        canRedo: undoState.future.length > 0,
+        undo,
+        redo,
+        saveStatus,
+        saveError,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );
@@ -727,7 +949,9 @@ export function useApp(): AppContextType {
     // During Vite HMR, the context can temporarily be null when modules are invalidated.
     // Return a safe fallback instead of crashing — the component will re-render once HMR settles.
     if (import.meta.hot) {
-      console.warn('[AppContext] Context unavailable during HMR, returning fallback state');
+      console.warn(
+        "[AppContext] Context unavailable during HMR, returning fallback state"
+      );
       const noop = () => {};
       return {
         state: initialState,
@@ -738,11 +962,11 @@ export function useApp(): AppContextType {
         canRedo: false,
         undo: noop,
         redo: noop,
-        saveStatus: 'ok' as const,
+        saveStatus: "ok" as const,
         saveError: null,
       };
     }
-    throw new Error('useApp must be used within AppProvider');
+    throw new Error("useApp must be used within AppProvider");
   }
   return ctx;
 }

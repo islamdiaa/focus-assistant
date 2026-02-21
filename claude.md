@@ -33,31 +33,31 @@ Client (React SPA)  ──tRPC──►  Server (Express)  ──►  Storage (M
 
 ## Key Files to Know
 
-| File | What It Does |
-|------|-------------|
-| `shared/appTypes.ts` | **SINGLE SOURCE OF TRUTH** — Zod schemas → inferred TS types. All types defined here. Includes `taskStatusSchema` (`active`/`done`/`monitored`), `contextFilterSchema` (`all`/`work`/`personal`), and category constants (`WORK_CATEGORIES`, `PERSONAL_CATEGORIES`). |
-| `server/dataRouter.ts` | tRPC router with `load`, `save`, `getConfig`, `setConfig` procedures. Imports schemas from shared. |
-| `server/mdStorage.ts` | Serializes/deserializes `AppState` ↔ Markdown tables. Uses `col()` safe accessor for backward compat. |
-| `server/obsidianSync.ts` | Writes Obsidian-compatible markdown to configured vault path |
-| `server/sheetsStorage.ts` | Google Sheets API v4 read/write |
-| `server/storageConfig.ts` | Reads/writes `data/config.json` for storage mode |
-| `client/src/contexts/AppContext.tsx` | React Context + useReducer — the global state store. Includes save status tracking. |
-| `client/src/lib/sheets.ts` | Client-side API bridge (calls tRPC endpoints). **Includes retry logic (3x) and error reporting.** |
-| `client/src/lib/types.ts` | Re-exports from `shared/appTypes.ts` (do not add types here) |
-| `client/src/lib/contextFilter.ts` | Context filter utility — filters tasks/reminders by Work/Personal/All. Work = `work` category. Personal = everything else + uncategorized. |
-| `client/src/pages/Home.tsx` | Main layout shell (sidebar + header + page content + save error banner) |
-| `client/src/pages/DailyPlannerPage.tsx` | Today view: reminders, due tasks, pinned tasks ("My Today"), energy suggestions, monitoring section |
-| `client/src/pages/TasksPage.tsx` | Tasks CRUD with filters (All/Open/Monitored/Done + priority sort), inline edit, recurrence, monitor toggle (Eye icon), R shortcut for reminders |
-| `client/src/pages/TimerPage.tsx` | Pomodoro timers with multi-task/subtask linking |
-| `client/src/pages/RemindersPage.tsx` | Reminders with yearly/quarterly/monthly/weekly recurrence, edit + undo-ack |
-| `client/src/pages/ReadLaterPage.tsx` | Read-later pocket with tags, status, notes |
-| `client/src/pages/MatrixPage.tsx` | Eisenhower Matrix with drag-and-drop + inline task editing |
-| `client/src/pages/StatsPage.tsx` | Statistics dashboard with charts |
-| `client/src/pages/TemplatesPage.tsx` | Reusable task templates |
-| `client/src/pages/WeeklyReviewPage.tsx` | End-of-week summary and planning |
-| `client/src/pages/FocusModePage.tsx` | Distraction-free focus view (direct conditional render, no AnimatePresence) |
-| `client/src/pages/SettingsPage.tsx` | Timer presets, storage config, Obsidian, about section |
-| `scripts/preflight.mjs` | Automated pre-push checks — version, tsc, tests, env guards, shortcuts, schema compat |
+| File                                    | What It Does                                                                                                                                                                                                                                                         |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shared/appTypes.ts`                    | **SINGLE SOURCE OF TRUTH** — Zod schemas → inferred TS types. All types defined here. Includes `taskStatusSchema` (`active`/`done`/`monitored`), `contextFilterSchema` (`all`/`work`/`personal`), and category constants (`WORK_CATEGORIES`, `PERSONAL_CATEGORIES`). |
+| `server/dataRouter.ts`                  | tRPC router with `load`, `save`, `getConfig`, `setConfig` procedures. Imports schemas from shared.                                                                                                                                                                   |
+| `server/mdStorage.ts`                   | Serializes/deserializes `AppState` ↔ Markdown tables. Uses `col()` safe accessor for backward compat.                                                                                                                                                               |
+| `server/obsidianSync.ts`                | Writes Obsidian-compatible markdown to configured vault path                                                                                                                                                                                                         |
+| `server/sheetsStorage.ts`               | Google Sheets API v4 read/write                                                                                                                                                                                                                                      |
+| `server/storageConfig.ts`               | Reads/writes `data/config.json` for storage mode                                                                                                                                                                                                                     |
+| `client/src/contexts/AppContext.tsx`    | React Context + useReducer — the global state store. Includes save status tracking.                                                                                                                                                                                  |
+| `client/src/lib/sheets.ts`              | Client-side API bridge (calls tRPC endpoints). **Includes retry logic (3x) and error reporting.**                                                                                                                                                                    |
+| `client/src/lib/types.ts`               | Re-exports from `shared/appTypes.ts` (do not add types here)                                                                                                                                                                                                         |
+| `client/src/lib/contextFilter.ts`       | Context filter utility — filters tasks/reminders by Work/Personal/All. Work = `work` category. Personal = everything else + uncategorized.                                                                                                                           |
+| `client/src/pages/Home.tsx`             | Main layout shell (sidebar + header + page content + save error banner)                                                                                                                                                                                              |
+| `client/src/pages/DailyPlannerPage.tsx` | Today view: reminders, due tasks, pinned tasks ("My Today"), energy suggestions, monitoring section                                                                                                                                                                  |
+| `client/src/pages/TasksPage.tsx`        | Tasks CRUD with filters (All/Open/Monitored/Done + priority sort), inline edit, recurrence, monitor toggle (Eye icon), R shortcut for reminders                                                                                                                      |
+| `client/src/pages/TimerPage.tsx`        | Pomodoro timers with multi-task/subtask linking                                                                                                                                                                                                                      |
+| `client/src/pages/RemindersPage.tsx`    | Reminders with yearly/quarterly/monthly/weekly recurrence, edit + undo-ack                                                                                                                                                                                           |
+| `client/src/pages/ReadLaterPage.tsx`    | Read-later pocket with tags, status, notes                                                                                                                                                                                                                           |
+| `client/src/pages/MatrixPage.tsx`       | Eisenhower Matrix with drag-and-drop + inline task editing                                                                                                                                                                                                           |
+| `client/src/pages/StatsPage.tsx`        | Statistics dashboard with charts                                                                                                                                                                                                                                     |
+| `client/src/pages/TemplatesPage.tsx`    | Reusable task templates                                                                                                                                                                                                                                              |
+| `client/src/pages/WeeklyReviewPage.tsx` | End-of-week summary and planning                                                                                                                                                                                                                                     |
+| `client/src/pages/FocusModePage.tsx`    | Distraction-free focus view (direct conditional render, no AnimatePresence)                                                                                                                                                                                          |
+| `client/src/pages/SettingsPage.tsx`     | Timer presets, storage config, Obsidian, about section                                                                                                                                                                                                               |
+| `scripts/preflight.mjs`                 | Automated pre-push checks — version, tsc, tests, env guards, shortcuts, schema compat                                                                                                                                                                                |
 
 ## Files You Should NOT Edit
 
@@ -70,17 +70,20 @@ Client (React SPA)  ──tRPC──►  Server (Express)  ──►  Storage (M
 These rules exist because we hit real bugs in V1.8.x. **Do not skip them.**
 
 ### 1. Save Operations Must Be Visible
+
 - Save errors are tracked with retry (3x exponential backoff) in `sheets.ts`
 - On failure, a red error banner with Retry button appears in the header (`Home.tsx`)
 - Save status (`saving`/`saved`/`error`) is in AppContext and displayed in UI
 - NEVER catch save errors silently — the user must know if data isn't persisting
 
 ### 2. Backward-Compatible Deserialization
+
 - Every new column in mdStorage gets a safe `col(index)` accessor that returns `''` for missing columns
 - ALWAYS add a test that deserializes OLD format data (fewer columns) with NEW code
 - Test both: old data → new code, and new data → new code
 
 ### 3. Version Bump Atomically (ALL 4 files)
+
 - `package.json` (version field)
 - `client/src/pages/SettingsPage.tsx` (display version)
 - `Dockerfile` (image version label)
@@ -88,14 +91,19 @@ These rules exist because we hit real bugs in V1.8.x. **Do not skip them.**
 - `pnpm preflight` verifies consistency
 
 ### 4. Keyboard Shortcuts Must Check Modifier Keys
+
 ```typescript
 // CORRECT — every single-key shortcut checks !isMod
 const isMod = e.metaKey || e.ctrlKey;
-if (e.key === 'r' && !isMod && !isInput) { /* open reminder */ }
+if (e.key === "r" && !isMod && !isInput) {
+  /* open reminder */
+}
 ```
+
 Without this, Cmd+R (refresh), Cmd+F (find), Cmd+N (new window) get intercepted.
 
 ### 5. Trigger Props Must Skip Initial Mount
+
 ```typescript
 // CORRECT — useRef tracks previous value, only fires on actual change
 const prevTrigger = useRef(trigger);
@@ -106,18 +114,22 @@ useEffect(() => {
   }
 }, [trigger]);
 ```
+
 Without this, navigating to a page with a stale counter > 0 auto-opens dialogs.
 
 ### 6. Environment Variables in HTML Must Be Guarded
+
 - `%VITE_*%` in `client/index.html` must be wrapped in JS conditionals
 - Unset vars become literal strings, causing URIError in self-hosted deployments
 
 ### 7. Docker: Never Use --ignore-scripts in Builder Stage
+
 - `--ignore-scripts` prevents esbuild from downloading its platform binary
 - Only use it in the production stage (no build tools needed there)
 - Always test with `docker build .` before pushing Dockerfile changes
 
 ### 8. Focus Mode: No AnimatePresence
+
 - Use direct conditional rendering (`{focusMode && <FocusModePage />}`)
 - AnimatePresence exit animations leave ghost DOM nodes with `fixed inset-0 z-50`
 
@@ -127,19 +139,22 @@ Without this, navigating to a page with a stale counter > 0 auto-opens dialogs.
 
 ```typescript
 // shared/appTypes.ts — the ONLY place to define data shapes
-export const taskSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  priority: prioritySchema,
-  status: taskStatusSchema,
-  // ... all fields
-}).strict();
+export const taskSchema = z
+  .object({
+    id: z.string(),
+    title: z.string(),
+    priority: prioritySchema,
+    status: taskStatusSchema,
+    // ... all fields
+  })
+  .strict();
 
 // TS type is auto-derived — NEVER define manually
 export type Task = z.infer<typeof taskSchema>;
 ```
 
 **When adding a new field:**
+
 1. Add it to the Zod schema in `shared/appTypes.ts` — that's it for types
 2. The TS type updates automatically via `z.infer<>`
 3. The save endpoint validates automatically via `appStateSchema.strict()`
@@ -202,6 +217,7 @@ pnpm preflight                         # Full pre-push validation
 ```
 
 Test files (15 files, 172+ tests):
+
 - `server/schema-integrity.test.ts` — **Most important.** Schema drift detection + full persistence round-trips
 - `server/v182-pintoday.test.ts` — Pin-to-today, unpin, completion clearing, energy suggestion dedup
 - `server/v182-features.test.ts` — Edit reminder, inline matrix editing
@@ -215,6 +231,7 @@ Test files (15 files, 172+ tests):
 - `server/auth.logout.test.ts` — Auth cookie clearing
 
 **When adding features, you MUST:**
+
 1. Add a round-trip test for any new entity/field
 2. Add a backward-compat test (old format data → new code)
 3. Run `pnpm preflight` and ensure all checks pass
@@ -222,6 +239,7 @@ Test files (15 files, 172+ tests):
 ## Common Tasks
 
 **Add a new field to an entity:**
+
 1. Add to the Zod schema in `shared/appTypes.ts` (TS type auto-updates)
 2. Update `stateToMarkdown` and `markdownToState` in `server/mdStorage.ts` — **use `col()` accessor**
 3. Update the relevant page component
@@ -229,12 +247,14 @@ Test files (15 files, 172+ tests):
 5. Run `pnpm preflight`
 
 **Add a new page:**
+
 1. Create `client/src/pages/NewPage.tsx`
 2. Add navigation item in `client/src/components/Sidebar.tsx`
 3. Add page rendering in `client/src/pages/Home.tsx`
 4. Update keyboard shortcut numbers if needed
 
 **Add a new entity type:**
+
 1. Define Zod schema in `shared/appTypes.ts`
 2. Add to `appStateSchema`
 3. Add serialization in `mdStorage.ts` (both directions, with `col()` accessors)
@@ -243,6 +263,7 @@ Test files (15 files, 172+ tests):
 6. Add comprehensive round-trip tests + backward-compat tests
 
 **Add a keyboard shortcut:**
+
 1. Add handler in `Home.tsx` `handleKeyDown` callback
 2. **MUST check `!isMod`** (metaKey || ctrlKey)
 3. **MUST check `!isInput`** (not typing in text fields)
@@ -251,28 +272,29 @@ Test files (15 files, 172+ tests):
 
 ## Keyboard Shortcuts
 
-| Key | Action | Context | Modifier Check |
-|-----|--------|---------|----------------|
-| N | New task dialog | Tasks page | !isMod |
-| R | New reminder dialog | Tasks/Reminders page | !isMod |
-| / | Focus search bar | Tasks page | !isMod |
-| F | Enter focus mode | Any page | !isMod |
-| Esc | Exit focus mode | Focus mode | N/A |
-| 1-9 | Switch pages | Global | N/A |
-| Ctrl+Z | Undo | Global | N/A |
-| Ctrl+Shift+Z | Redo | Global | N/A |
+| Key          | Action              | Context              | Modifier Check |
+| ------------ | ------------------- | -------------------- | -------------- |
+| N            | New task dialog     | Tasks page           | !isMod         |
+| R            | New reminder dialog | Tasks/Reminders page | !isMod         |
+| /            | Focus search bar    | Tasks page           | !isMod         |
+| F            | Enter focus mode    | Any page             | !isMod         |
+| Esc          | Exit focus mode     | Focus mode           | N/A            |
+| 1-9          | Switch pages        | Global               | N/A            |
+| Ctrl+Z       | Undo                | Global               | N/A            |
+| Ctrl+Shift+Z | Redo                | Global               | N/A            |
 
 ## Ports
 
-| Port | Purpose |
-|------|---------|
-| 1992 | Main app |
+| Port | Purpose                     |
+| ---- | --------------------------- |
+| 1992 | Main app                    |
 | 1993 | Reserved (future WebSocket) |
-| 1994 | Reserved (future admin) |
+| 1994 | Reserved (future admin)     |
 
 ## Environment Variables
 
 The app runs without any required env vars for basic functionality. For self-hosted Docker:
+
 ```
 PORT=1992
 DATA_DIR=/app/data
@@ -284,6 +306,7 @@ JWT_SECRET=any-string   # Required but value doesn't matter with SKIP_AUTH
 ## CI/CD
 
 GitHub Actions CI (`.github/workflows/ci.yml`):
+
 - Triggers on push to `main` and version tags (`v*`)
 - Test job: `pnpm install → tsc --noEmit → pnpm test`
 - Docker job: builds multi-arch (amd64 + arm64), pushes to Docker Hub (`islamdiaa/focus-assistant`) + GHCR
@@ -292,6 +315,7 @@ GitHub Actions CI (`.github/workflows/ci.yml`):
 ## Pre-Push Checklist
 
 Run `pnpm preflight` before every push. It automates:
+
 1. Version consistency across 4 files
 2. TypeScript compilation
 3. All vitest tests

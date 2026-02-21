@@ -3,7 +3,11 @@
  * Tests for subtasks, templates, preferences, linkedTaskId, and data integrity
  */
 import { describe, expect, it } from "vitest";
-import { stateToMarkdown, markdownToState, checkDataIntegrity } from "./mdStorage";
+import {
+  stateToMarkdown,
+  markdownToState,
+  checkDataIntegrity,
+} from "./mdStorage";
 import type { AppState } from "../shared/appTypes";
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from "../shared/appTypes";
 
@@ -198,7 +202,9 @@ _No stats yet._
 `;
     const parsed = markdownToState(md);
     expect(parsed.preferences).toBeDefined();
-    expect(parsed.preferences!.notificationSound).toBe(DEFAULT_PREFERENCES.notificationSound);
+    expect(parsed.preferences!.notificationSound).toBe(
+      DEFAULT_PREFERENCES.notificationSound
+    );
   });
 });
 
@@ -306,7 +312,12 @@ describe("full V1.2 round-trip", () => {
         obsidianAutoSync: false,
       },
       dailyStats: [
-        { date: "2026-02-20", tasksCompleted: 5, focusMinutes: 120, pomodorosCompleted: 4 },
+        {
+          date: "2026-02-20",
+          tasksCompleted: 5,
+          focusMinutes: 120,
+          pomodorosCompleted: 4,
+        },
       ],
       currentStreak: 7,
     });

@@ -63,20 +63,22 @@ async function startServer() {
 
   // Graceful shutdown — ensure in-flight requests complete before exit
   const shutdown = (signal: string) => {
-    console.log(`\n[Shutdown] Received ${signal}. Closing server gracefully...`);
+    console.log(
+      `\n[Shutdown] Received ${signal}. Closing server gracefully...`
+    );
     server.close(() => {
-      console.log('[Shutdown] Server closed. Exiting.');
+      console.log("[Shutdown] Server closed. Exiting.");
       process.exit(0);
     });
     // Force exit after 10 seconds if graceful shutdown stalls
     setTimeout(() => {
-      console.error('[Shutdown] Forced exit after timeout.');
+      console.error("[Shutdown] Forced exit after timeout.");
       process.exit(1);
     }, 10_000);
   };
 
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }
 
 startServer().catch(console.error);

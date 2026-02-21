@@ -18,8 +18,12 @@ describe("appTypes constants", () => {
     });
 
     it("break durations are shorter than focus duration", () => {
-      expect(DEFAULT_SETTINGS.shortBreak).toBeLessThan(DEFAULT_SETTINGS.focusDuration);
-      expect(DEFAULT_SETTINGS.longBreak).toBeLessThan(DEFAULT_SETTINGS.focusDuration);
+      expect(DEFAULT_SETTINGS.shortBreak).toBeLessThan(
+        DEFAULT_SETTINGS.focusDuration
+      );
+      expect(DEFAULT_SETTINGS.longBreak).toBeLessThan(
+        DEFAULT_SETTINGS.focusDuration
+      );
     });
   });
 

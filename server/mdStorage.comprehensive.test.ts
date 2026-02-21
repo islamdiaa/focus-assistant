@@ -268,7 +268,9 @@ _No stats yet._
     const parsed = markdownToState(md);
 
     expect(parsed.tasks[0].title).toBe("Option A | Option B | Option C");
-    expect(parsed.tasks[0].description).toBe("Choose one | or another\nNew line here");
+    expect(parsed.tasks[0].description).toBe(
+      "Choose one | or another\nNew line here"
+    );
     expect(parsed.pomodoros[0].title).toBe("Work on A | B project");
   });
 
@@ -370,9 +372,24 @@ describe("round-trip integrity", () => {
         sessionsBeforeLongBreak: 3,
       },
       dailyStats: [
-        { date: "2026-02-18", tasksCompleted: 3, focusMinutes: 90, pomodorosCompleted: 3 },
-        { date: "2026-02-19", tasksCompleted: 5, focusMinutes: 150, pomodorosCompleted: 6 },
-        { date: "2026-02-20", tasksCompleted: 2, focusMinutes: 50, pomodorosCompleted: 1 },
+        {
+          date: "2026-02-18",
+          tasksCompleted: 3,
+          focusMinutes: 90,
+          pomodorosCompleted: 3,
+        },
+        {
+          date: "2026-02-19",
+          tasksCompleted: 5,
+          focusMinutes: 150,
+          pomodorosCompleted: 6,
+        },
+        {
+          date: "2026-02-20",
+          tasksCompleted: 2,
+          focusMinutes: 50,
+          pomodorosCompleted: 1,
+        },
       ],
       currentStreak: 14,
     };
@@ -442,7 +459,9 @@ describe("round-trip integrity", () => {
       title: `Task number ${i}`,
       priority: (["low", "medium", "high", "urgent"] as const)[i % 4],
       status: (i % 3 === 0 ? "done" : "active") as "active" | "done",
-      quadrant: (["do-first", "schedule", "delegate", "eliminate", "unassigned"] as const)[i % 5],
+      quadrant: (
+        ["do-first", "schedule", "delegate", "eliminate", "unassigned"] as const
+      )[i % 5],
       createdAt: `2026-02-${String(1 + (i % 28)).padStart(2, "0")}T10:00:00Z`,
     }));
 

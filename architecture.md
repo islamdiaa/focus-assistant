@@ -45,24 +45,24 @@ FocusAssist is a full-stack productivity web application designed for ADHD-frien
 
 ## Tech Stack
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Frontend | React 19, TypeScript, Tailwind CSS 4 | SPA with warm Scandinavian design |
-| UI Components | shadcn/ui (Radix primitives) | Accessible, composable components |
-| Animations | Framer Motion | Page transitions, card animations, layout animations |
-| State Management | React Context + useReducer | Client-side state with server sync |
-| API Layer | tRPC 11 | End-to-end type-safe RPC |
-| Server | Express 4, Node.js 22 | HTTP server, static file serving |
-| Serialization | superjson | Preserves Date, Map, Set over the wire |
-| Type System | Zod → TypeScript (inferred) | Single source of truth: Zod schemas define runtime validation, TS types are auto-derived |
-| Primary Storage | Local Markdown file | Human-readable, git-friendly persistence |
-| Cloud Storage | Google Sheets API v4 | Optional cloud sync backend |
-| Build | Vite 7 (client), esbuild (server) | Fast builds, HMR in dev |
-| Testing | Vitest (172+ tests) | Unit tests, schema integrity, persistence round-trips |
-| Container | Docker (Alpine-based) | Single container deployment |
-| CI/CD | GitHub Actions | Test → Docker build → push to Docker Hub + GHCR |
-| Auth | Manus OAuth (optional) | Session-based authentication |
-| Database | MySQL/TiDB via Drizzle ORM | User table for auth (not used for app data) |
+| Layer            | Technology                           | Purpose                                                                                  |
+| ---------------- | ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Frontend         | React 19, TypeScript, Tailwind CSS 4 | SPA with warm Scandinavian design                                                        |
+| UI Components    | shadcn/ui (Radix primitives)         | Accessible, composable components                                                        |
+| Animations       | Framer Motion                        | Page transitions, card animations, layout animations                                     |
+| State Management | React Context + useReducer           | Client-side state with server sync                                                       |
+| API Layer        | tRPC 11                              | End-to-end type-safe RPC                                                                 |
+| Server           | Express 4, Node.js 22                | HTTP server, static file serving                                                         |
+| Serialization    | superjson                            | Preserves Date, Map, Set over the wire                                                   |
+| Type System      | Zod → TypeScript (inferred)          | Single source of truth: Zod schemas define runtime validation, TS types are auto-derived |
+| Primary Storage  | Local Markdown file                  | Human-readable, git-friendly persistence                                                 |
+| Cloud Storage    | Google Sheets API v4                 | Optional cloud sync backend                                                              |
+| Build            | Vite 7 (client), esbuild (server)    | Fast builds, HMR in dev                                                                  |
+| Testing          | Vitest (172+ tests)                  | Unit tests, schema integrity, persistence round-trips                                    |
+| Container        | Docker (Alpine-based)                | Single container deployment                                                              |
+| CI/CD            | GitHub Actions                       | Test → Docker build → push to Docker Hub + GHCR                                          |
+| Auth             | Manus OAuth (optional)               | Session-based authentication                                                             |
+| Database         | MySQL/TiDB via Drizzle ORM           | User table for auth (not used for app data)                                              |
 
 ## Directory Structure
 
@@ -135,17 +135,17 @@ focus-assist/
 
 All types are defined as Zod schemas in `shared/appTypes.ts`. TypeScript types are inferred automatically — never defined manually. This prevents schema drift between runtime validation and compile-time types.
 
-| Entity | Key Fields | Notes |
-|--------|-----------|-------|
-| Task | id, title, priority, status, dueDate, category, energy, quadrant, recurrence, subtasks, pinnedToday | Status: `active`/`done`/`monitored`. Supports daily/weekly/monthly/quarterly/weekdays recurrence. Monitored = waiting on external action. |
-| Subtask | id, title, done | Nested under parent task |
-| Pomodoro | id, title, duration, elapsed, status, linkedTasks | Links to multiple tasks/subtasks via `linkedTasks` array |
-| PomodoroLink | taskId, subtaskId? | Associates a pomodoro with a task and optionally a subtask |
-| Reminder | id, title, date, time?, recurrence, category, acknowledged | Birthdays, appointments, events. Optional time (HH:mm). Yearly/monthly/weekly recurrence. |
-| ReadingItem | id, url, title, tags, status, notes | Read-later pocket with unread/reading/read status |
-| TaskTemplate | id, name, tasks | Reusable task sets |
-| DailyStats | date, tasksCompleted, focusMinutes, pomodorosCompleted | Per-day aggregates |
-| AppPreferences | notificationSound, obsidianVaultPath, obsidianAutoSync, activeContext | User preferences. activeContext: `all`/`work`/`personal` for global context filtering. |
+| Entity         | Key Fields                                                                                          | Notes                                                                                                                                     |
+| -------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Task           | id, title, priority, status, dueDate, category, energy, quadrant, recurrence, subtasks, pinnedToday | Status: `active`/`done`/`monitored`. Supports daily/weekly/monthly/quarterly/weekdays recurrence. Monitored = waiting on external action. |
+| Subtask        | id, title, done                                                                                     | Nested under parent task                                                                                                                  |
+| Pomodoro       | id, title, duration, elapsed, status, linkedTasks                                                   | Links to multiple tasks/subtasks via `linkedTasks` array                                                                                  |
+| PomodoroLink   | taskId, subtaskId?                                                                                  | Associates a pomodoro with a task and optionally a subtask                                                                                |
+| Reminder       | id, title, date, time?, recurrence, category, acknowledged                                          | Birthdays, appointments, events. Optional time (HH:mm). Yearly/monthly/weekly recurrence.                                                 |
+| ReadingItem    | id, url, title, tags, status, notes                                                                 | Read-later pocket with unread/reading/read status                                                                                         |
+| TaskTemplate   | id, name, tasks                                                                                     | Reusable task sets                                                                                                                        |
+| DailyStats     | date, tasksCompleted, focusMinutes, pomodorosCompleted                                              | Per-day aggregates                                                                                                                        |
+| AppPreferences | notificationSound, obsidianVaultPath, obsidianAutoSync, activeContext                               | User preferences. activeContext: `all`/`work`/`personal` for global context filtering.                                                    |
 
 ## Data Flow
 
@@ -191,32 +191,41 @@ The primary storage is a human-readable Markdown file at `data/focus-assist-data
 
 ```markdown
 # Focus Assist Data
+
 > Auto-generated by Focus Assist. Edit with care.
 
 ## Settings
+
 - **Focus Duration:** 25 min
 - **Current Streak:** 7 days
 
 ## Tasks
+
 | ID | Title | Priority | Status | ... |
 
 ## Pomodoros
+
 | ID | Title | Duration | Status | LinkedTasks | ... |
 
 ## Daily Stats
+
 | Date | Tasks Completed | Focus Minutes | ... |
 
 ## Templates
+
 | ID | Name | Description | Tasks (JSON) | Created |
 
 ## Reading List
+
 | ID | URL | Title | Description | Tags | Status | Notes | ... |
 
 ## Reminders
+
 | ID | Title | Description | Date | Time | Recurrence | Category | Acknowledged | ... |
 ```
 
 This format is intentionally designed to be:
+
 - Readable in any text editor, Obsidian, or GitHub
 - Diffable in git (great for version control)
 - Editable by hand if needed
@@ -249,22 +258,22 @@ Watchtower on Unraid polls Docker Hub hourly and auto-pulls new images.
 
 ## Test Coverage
 
-| Test File | Tests | Coverage |
-|-----------|-------|----------|
-| mdStorage.comprehensive.test.ts | Tasks, pomodoros, settings, daily stats round-trips | Core serialization |
-| v18-features.test.ts | Reading list, Obsidian sync, templates, preferences | V1.8 features |
-| v181-persistence.test.ts | Full save/load round-trips for all entity types | Persistence integrity |
-| schema-integrity.test.ts | Zod schema drift detection, full state round-trips | Architecture safety |
-| appTypes.test.ts | Zod schema validation, type inference checks | Type system |
-| sheetsStorage.test.ts | Google Sheets API mocking | Cloud storage |
-| auth.logout.test.ts | Logout endpoint | Auth |
+| Test File                       | Tests                                               | Coverage              |
+| ------------------------------- | --------------------------------------------------- | --------------------- |
+| mdStorage.comprehensive.test.ts | Tasks, pomodoros, settings, daily stats round-trips | Core serialization    |
+| v18-features.test.ts            | Reading list, Obsidian sync, templates, preferences | V1.8 features         |
+| v181-persistence.test.ts        | Full save/load round-trips for all entity types     | Persistence integrity |
+| schema-integrity.test.ts        | Zod schema drift detection, full state round-trips  | Architecture safety   |
+| appTypes.test.ts                | Zod schema validation, type inference checks        | Type system           |
+| sheetsStorage.test.ts           | Google Sheets API mocking                           | Cloud storage         |
+| auth.logout.test.ts             | Logout endpoint                                     | Auth                  |
 
 ## Port Allocation
 
-| Port | Purpose | Status |
-|------|---------|--------|
-| 1992 | Main app (Express + React) | Active |
-| 1993 | Reserved for future use (e.g., WebSocket) | Reserved |
+| Port | Purpose                                     | Status   |
+| ---- | ------------------------------------------- | -------- |
+| 1992 | Main app (Express + React)                  | Active   |
+| 1993 | Reserved for future use (e.g., WebSocket)   | Reserved |
 | 1994 | Reserved for future use (e.g., admin panel) | Reserved |
 
 ## Key Design Decisions
@@ -283,13 +292,13 @@ Watchtower on Unraid polls Docker Hub hourly and auto-pulls new images.
 
 ## Keyboard Shortcuts
 
-| Key | Action | Context |
-|-----|--------|---------|
-| N | New task dialog | Tasks page |
-| R | New reminder dialog | Reminders page |
-| / | Focus search bar | Tasks page |
-| F | Enter focus mode | Any page |
-| Esc | Exit focus mode | Focus mode |
-| 1-9 | Switch pages | Global |
-| Ctrl+Z | Undo | Global |
-| Ctrl+Shift+Z | Redo | Global |
+| Key          | Action              | Context        |
+| ------------ | ------------------- | -------------- |
+| N            | New task dialog     | Tasks page     |
+| R            | New reminder dialog | Reminders page |
+| /            | Focus search bar    | Tasks page     |
+| F            | Enter focus mode    | Any page       |
+| Esc          | Exit focus mode     | Focus mode     |
+| 1-9          | Switch pages        | Global         |
+| Ctrl+Z       | Undo                | Global         |
+| Ctrl+Shift+Z | Redo                | Global         |

@@ -1,26 +1,64 @@
 /**
  * Read Later Page — Pocket-style link saving with tags, notes, and status tracking
  */
-import { useState, useMemo } from 'react';
-import { useApp } from '@/contexts/AppContext';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useState, useMemo } from "react";
+import { useApp } from "@/contexts/AppContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
-  BookmarkPlus, ExternalLink, Check, BookOpen, Trash2, Tag, StickyNote,
-  Search, Filter, Globe, Clock, CheckCircle2, ChevronDown, ChevronUp, X, Plus,
-} from 'lucide-react';
-import type { ReadingItem, ReadingStatus } from '@/lib/types';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  BookmarkPlus,
+  ExternalLink,
+  Check,
+  BookOpen,
+  Trash2,
+  Tag,
+  StickyNote,
+  Search,
+  Filter,
+  Globe,
+  Clock,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  X,
+  Plus,
+} from "lucide-react";
+import type { ReadingItem, ReadingStatus } from "@/lib/types";
 
-type FilterStatus = 'all' | ReadingStatus;
+type FilterStatus = "all" | ReadingStatus;
 
-const STATUS_CONFIG: Record<ReadingStatus, { label: string; icon: typeof BookOpen; color: string; bg: string }> = {
-  unread: { label: 'Unread', icon: Clock, color: 'text-warm-terracotta', bg: 'bg-warm-terracotta/10' },
-  reading: { label: 'Reading', icon: BookOpen, color: 'text-warm-blue', bg: 'bg-warm-blue/10' },
-  read: { label: 'Read', icon: CheckCircle2, color: 'text-warm-sage', bg: 'bg-warm-sage/10' },
+const STATUS_CONFIG: Record<
+  ReadingStatus,
+  { label: string; icon: typeof BookOpen; color: string; bg: string }
+> = {
+  unread: {
+    label: "Unread",
+    icon: Clock,
+    color: "text-warm-terracotta",
+    bg: "bg-warm-terracotta/10",
+  },
+  reading: {
+    label: "Reading",
+    icon: BookOpen,
+    color: "text-warm-blue",
+    bg: "bg-warm-blue/10",
+  },
+  read: {
+    label: "Read",
+    icon: CheckCircle2,
+    color: "text-warm-sage",
+    bg: "bg-warm-sage/10",
+  },
 };
 
 export default function ReadLaterPage() {
@@ -28,20 +66,20 @@ export default function ReadLaterPage() {
   const readingList = state.readingList || [];
 
   // Filters
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [filterTag, setFilterTag] = useState<string | null>(null);
 
   // Add dialog
   const [addOpen, setAddOpen] = useState(false);
-  const [addUrl, setAddUrl] = useState('');
-  const [addTitle, setAddTitle] = useState('');
-  const [addDescription, setAddDescription] = useState('');
-  const [addTags, setAddTags] = useState('');
+  const [addUrl, setAddUrl] = useState("");
+  const [addTitle, setAddTitle] = useState("");
+  const [addDescription, setAddDescription] = useState("");
+  const [addTags, setAddTags] = useState("");
 
   // Notes dialog
   const [notesItem, setNotesItem] = useState<ReadingItem | null>(null);
-  const [notesText, setNotesText] = useState('');
+  const [notesText, setNotesText] = useState("");
 
   // Expanded card
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -56,69 +94,100 @@ export default function ReadLaterPage() {
   // Filtered list
   const filtered = useMemo(() => {
     let list = [...readingList];
-    if (filterStatus !== 'all') list = list.filter(r => r.status === filterStatus);
+    if (filterStatus !== "all")
+      list = list.filter(r => r.status === filterStatus);
     if (filterTag) list = list.filter(r => r.tags.includes(filterTag));
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      list = list.filter(r =>
-        r.title.toLowerCase().includes(q) ||
-        r.url.toLowerCase().includes(q) ||
-        r.description?.toLowerCase().includes(q) ||
-        r.notes?.toLowerCase().includes(q) ||
-        r.tags.some(t => t.toLowerCase().includes(q))
+      list = list.filter(
+        r =>
+          r.title.toLowerCase().includes(q) ||
+          r.url.toLowerCase().includes(q) ||
+          r.description?.toLowerCase().includes(q) ||
+          r.notes?.toLowerCase().includes(q) ||
+          r.tags.some(t => t.toLowerCase().includes(q))
       );
     }
     return list;
   }, [readingList, filterStatus, filterTag, searchQuery]);
 
   // Stats
-  const unreadCount = readingList.filter(r => r.status === 'unread').length;
-  const readingCount = readingList.filter(r => r.status === 'reading').length;
-  const readCount = readingList.filter(r => r.status === 'read').length;
+  const unreadCount = readingList.filter(r => r.status === "unread").length;
+  const readingCount = readingList.filter(r => r.status === "reading").length;
+  const readCount = readingList.filter(r => r.status === "read").length;
 
   function handleAdd() {
     if (!addUrl.trim()) return;
     let title = addTitle.trim();
     if (!title) {
-      try { title = new URL(addUrl.trim()).hostname; } catch { title = addUrl.trim(); }
+      try {
+        title = new URL(addUrl.trim()).hostname;
+      } catch {
+        title = addUrl.trim();
+      }
     }
-    const tags = addTags.split(',').map(t => t.trim()).filter(Boolean);
+    const tags = addTags
+      .split(",")
+      .map(t => t.trim())
+      .filter(Boolean);
     dispatch({
-      type: 'ADD_READING_ITEM',
-      payload: { url: addUrl.trim(), title, description: addDescription.trim() || undefined, tags },
+      type: "ADD_READING_ITEM",
+      payload: {
+        url: addUrl.trim(),
+        title,
+        description: addDescription.trim() || undefined,
+        tags,
+      },
     });
-    setAddUrl('');
-    setAddTitle('');
-    setAddDescription('');
-    setAddTags('');
+    setAddUrl("");
+    setAddTitle("");
+    setAddDescription("");
+    setAddTags("");
     setAddOpen(false);
   }
 
   function handleStatusCycle(item: ReadingItem) {
-    const next: ReadingStatus = item.status === 'unread' ? 'reading' : item.status === 'reading' ? 'read' : 'unread';
-    dispatch({ type: 'MARK_READING_STATUS', payload: { id: item.id, status: next } });
+    const next: ReadingStatus =
+      item.status === "unread"
+        ? "reading"
+        : item.status === "reading"
+          ? "read"
+          : "unread";
+    dispatch({
+      type: "MARK_READING_STATUS",
+      payload: { id: item.id, status: next },
+    });
   }
 
   function handleSaveNotes() {
     if (!notesItem) return;
-    dispatch({ type: 'UPDATE_READING_ITEM', payload: { id: notesItem.id, notes: notesText } });
+    dispatch({
+      type: "UPDATE_READING_ITEM",
+      payload: { id: notesItem.id, notes: notesText },
+    });
     setNotesItem(null);
   }
 
   function handleDelete(id: string) {
-    dispatch({ type: 'DELETE_READING_ITEM', payload: id });
+    dispatch({ type: "DELETE_READING_ITEM", payload: id });
   }
 
   function handleRemoveTag(itemId: string, tag: string) {
     const item = readingList.find(r => r.id === itemId);
     if (!item) return;
-    dispatch({ type: 'UPDATE_READING_ITEM', payload: { id: itemId, tags: item.tags.filter(t => t !== tag) } });
+    dispatch({
+      type: "UPDATE_READING_ITEM",
+      payload: { id: itemId, tags: item.tags.filter(t => t !== tag) },
+    });
   }
 
   function handleAddTag(itemId: string, tag: string) {
     const item = readingList.find(r => r.id === itemId);
     if (!item || item.tags.includes(tag)) return;
-    dispatch({ type: 'UPDATE_READING_ITEM', payload: { id: itemId, tags: [...item.tags, tag] } });
+    dispatch({
+      type: "UPDATE_READING_ITEM",
+      payload: { id: itemId, tags: [...item.tags, tag] },
+    });
   }
 
   return (
@@ -127,7 +196,9 @@ export default function ReadLaterPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-serif text-2xl text-foreground">Read Later</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">Save links, add notes, read when ready</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Save links, add notes, read when ready
+          </p>
         </div>
         <Button
           onClick={() => setAddOpen(true)}
@@ -140,24 +211,32 @@ export default function ReadLaterPage() {
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <button
-          onClick={() => setFilterStatus(filterStatus === 'unread' ? 'all' : 'unread')}
-          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === 'unread' ? 'border-warm-terracotta/40 bg-warm-terracotta/10' : 'border-border bg-card hover:bg-warm-terracotta/5'}`}
+          onClick={() =>
+            setFilterStatus(filterStatus === "unread" ? "all" : "unread")
+          }
+          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "unread" ? "border-warm-terracotta/40 bg-warm-terracotta/10" : "border-border bg-card hover:bg-warm-terracotta/5"}`}
         >
           <Clock className="w-4 h-4 mx-auto mb-1 text-warm-terracotta" />
           <div className="text-xl font-bold text-foreground">{unreadCount}</div>
           <div className="text-xs text-muted-foreground">Unread</div>
         </button>
         <button
-          onClick={() => setFilterStatus(filterStatus === 'reading' ? 'all' : 'reading')}
-          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === 'reading' ? 'border-warm-blue/40 bg-warm-blue/10' : 'border-border bg-card hover:bg-warm-blue/5'}`}
+          onClick={() =>
+            setFilterStatus(filterStatus === "reading" ? "all" : "reading")
+          }
+          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "reading" ? "border-warm-blue/40 bg-warm-blue/10" : "border-border bg-card hover:bg-warm-blue/5"}`}
         >
           <BookOpen className="w-4 h-4 mx-auto mb-1 text-warm-blue" />
-          <div className="text-xl font-bold text-foreground">{readingCount}</div>
+          <div className="text-xl font-bold text-foreground">
+            {readingCount}
+          </div>
           <div className="text-xs text-muted-foreground">Reading</div>
         </button>
         <button
-          onClick={() => setFilterStatus(filterStatus === 'read' ? 'all' : 'read')}
-          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === 'read' ? 'border-warm-sage/40 bg-warm-sage/10' : 'border-border bg-card hover:bg-warm-sage/5'}`}
+          onClick={() =>
+            setFilterStatus(filterStatus === "read" ? "all" : "read")
+          }
+          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "read" ? "border-warm-sage/40 bg-warm-sage/10" : "border-border bg-card hover:bg-warm-sage/5"}`}
         >
           <CheckCircle2 className="w-4 h-4 mx-auto mb-1 text-warm-sage" />
           <div className="text-xl font-bold text-foreground">{readCount}</div>
@@ -185,15 +264,18 @@ export default function ReadLaterPage() {
                 onClick={() => setFilterTag(filterTag === tag ? null : tag)}
                 className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
                   filterTag === tag
-                    ? 'bg-warm-lavender text-white border-warm-lavender'
-                    : 'bg-card text-muted-foreground border-border hover:border-warm-lavender/40'
+                    ? "bg-warm-lavender text-white border-warm-lavender"
+                    : "bg-card text-muted-foreground border-border hover:border-warm-lavender/40"
                 }`}
               >
                 {tag}
               </button>
             ))}
             {filterTag && (
-              <button onClick={() => setFilterTag(null)} className="text-xs text-muted-foreground hover:text-foreground">
+              <button
+                onClick={() => setFilterTag(null)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -206,10 +288,14 @@ export default function ReadLaterPage() {
         <div className="text-center py-16">
           <BookmarkPlus className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
           <p className="text-muted-foreground font-medium">
-            {readingList.length === 0 ? 'No saved links yet' : 'No links match your filters'}
+            {readingList.length === 0
+              ? "No saved links yet"
+              : "No links match your filters"}
           </p>
           <p className="text-sm text-muted-foreground/70 mt-1">
-            {readingList.length === 0 ? 'Click "Save Link" to start your reading list' : 'Try adjusting your search or filters'}
+            {readingList.length === 0
+              ? 'Click "Save Link" to start your reading list'
+              : "Try adjusting your search or filters"}
           </p>
         </div>
       ) : (
@@ -256,14 +342,15 @@ export default function ReadLaterPage() {
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className="text-xs text-muted-foreground flex items-center gap-1">
                                 <Globe className="w-3 h-3" />
-                                {item.domain || 'link'}
+                                {item.domain || "link"}
                               </span>
                               <span className="text-xs text-muted-foreground">
                                 {new Date(item.createdAt).toLocaleDateString()}
                               </span>
                               {item.readAt && (
                                 <span className="text-xs text-warm-sage">
-                                  Read {new Date(item.readAt).toLocaleDateString()}
+                                  Read{" "}
+                                  {new Date(item.readAt).toLocaleDateString()}
                                 </span>
                               )}
                             </div>
@@ -271,16 +358,24 @@ export default function ReadLaterPage() {
 
                           {/* Expand toggle */}
                           <button
-                            onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                            onClick={() =>
+                              setExpandedId(isExpanded ? null : item.id)
+                            }
                             className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
                           >
-                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            {isExpanded ? (
+                              <ChevronUp className="w-4 h-4" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
 
                         {/* Description */}
                         {item.description && (
-                          <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">{item.description}</p>
+                          <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">
+                            {item.description}
+                          </p>
                         )}
 
                         {/* Tags */}
@@ -314,7 +409,7 @@ export default function ReadLaterPage() {
                       {isExpanded && (
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
+                          animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
@@ -324,24 +419,36 @@ export default function ReadLaterPage() {
                               <div className="bg-warm-sand/30 rounded-lg p-3">
                                 <div className="flex items-center gap-1.5 mb-1.5">
                                   <StickyNote className="w-3.5 h-3.5 text-warm-lavender" />
-                                  <span className="text-xs font-medium text-foreground">Notes</span>
+                                  <span className="text-xs font-medium text-foreground">
+                                    Notes
+                                  </span>
                                 </div>
-                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{item.notes}</p>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                  {item.notes}
+                                </p>
                               </div>
                             )}
 
                             {/* Tag management */}
                             <div className="flex items-center gap-2 flex-wrap">
                               {item.tags.map(tag => (
-                                <span key={tag} className="inline-flex items-center gap-1 text-xs bg-warm-lavender/10 text-warm-lavender px-2 py-1 rounded-full">
+                                <span
+                                  key={tag}
+                                  className="inline-flex items-center gap-1 text-xs bg-warm-lavender/10 text-warm-lavender px-2 py-1 rounded-full"
+                                >
                                   {tag}
-                                  <button onClick={() => handleRemoveTag(item.id, tag)} className="hover:text-red-500">
+                                  <button
+                                    onClick={() =>
+                                      handleRemoveTag(item.id, tag)
+                                    }
+                                    className="hover:text-red-500"
+                                  >
                                     <X className="w-3 h-3" />
                                   </button>
                                 </span>
                               ))}
                               <AddTagInline
-                                onAdd={(tag) => handleAddTag(item.id, tag)}
+                                onAdd={tag => handleAddTag(item.id, tag)}
                                 existingTags={allTags}
                               />
                             </div>
@@ -351,11 +458,14 @@ export default function ReadLaterPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => { setNotesItem(item); setNotesText(item.notes || ''); }}
+                                onClick={() => {
+                                  setNotesItem(item);
+                                  setNotesText(item.notes || "");
+                                }}
                                 className="gap-1.5 text-xs"
                               >
                                 <StickyNote className="w-3.5 h-3.5" />
-                                {item.notes ? 'Edit Notes' : 'Add Notes'}
+                                {item.notes ? "Edit Notes" : "Add Notes"}
                               </Button>
                               <Button
                                 size="sm"
@@ -364,7 +474,12 @@ export default function ReadLaterPage() {
                                 className={`gap-1.5 text-xs ${cfg.color}`}
                               >
                                 <StatusIcon className="w-3.5 h-3.5" />
-                                Mark as {item.status === 'unread' ? 'Reading' : item.status === 'reading' ? 'Read' : 'Unread'}
+                                Mark as{" "}
+                                {item.status === "unread"
+                                  ? "Reading"
+                                  : item.status === "reading"
+                                    ? "Read"
+                                    : "Unread"}
                               </Button>
                               <Button
                                 size="sm"
@@ -395,18 +510,22 @@ export default function ReadLaterPage() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">URL *</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                URL *
+              </label>
               <Input
                 value={addUrl}
                 onChange={e => setAddUrl(e.target.value)}
                 placeholder="https://example.com/article"
                 className="bg-background"
                 autoFocus
-                onKeyDown={e => e.key === 'Enter' && handleAdd()}
+                onKeyDown={e => e.key === "Enter" && handleAdd()}
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Title</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                Title
+              </label>
               <Input
                 value={addTitle}
                 onChange={e => setAddTitle(e.target.value)}
@@ -415,7 +534,9 @@ export default function ReadLaterPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Description</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                Description
+              </label>
               <Textarea
                 value={addDescription}
                 onChange={e => setAddDescription(e.target.value)}
@@ -425,7 +546,9 @@ export default function ReadLaterPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Tags (comma-separated)</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                Tags (comma-separated)
+              </label>
               <Input
                 value={addTags}
                 onChange={e => setAddTags(e.target.value)}
@@ -435,8 +558,14 @@ export default function ReadLaterPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-            <Button onClick={handleAdd} disabled={!addUrl.trim()} className="bg-warm-lavender hover:bg-warm-lavender/90 text-white gap-1.5">
+            <Button variant="outline" onClick={() => setAddOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAdd}
+              disabled={!addUrl.trim()}
+              className="bg-warm-lavender hover:bg-warm-lavender/90 text-white gap-1.5"
+            >
               <BookmarkPlus className="w-4 h-4" /> Save
             </Button>
           </DialogFooter>
@@ -444,14 +573,21 @@ export default function ReadLaterPage() {
       </Dialog>
 
       {/* Notes Dialog */}
-      <Dialog open={!!notesItem} onOpenChange={(open) => { if (!open) setNotesItem(null); }}>
+      <Dialog
+        open={!!notesItem}
+        onOpenChange={open => {
+          if (!open) setNotesItem(null);
+        }}
+      >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-serif">
-              {notesItem?.notes ? 'Edit Notes' : 'Add Notes'}
+              {notesItem?.notes ? "Edit Notes" : "Add Notes"}
             </DialogTitle>
             {notesItem && (
-              <p className="text-sm text-muted-foreground line-clamp-1">{notesItem.title}</p>
+              <p className="text-sm text-muted-foreground line-clamp-1">
+                {notesItem.title}
+              </p>
             )}
           </DialogHeader>
           <Textarea
@@ -462,8 +598,13 @@ export default function ReadLaterPage() {
             autoFocus
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setNotesItem(null)}>Cancel</Button>
-            <Button onClick={handleSaveNotes} className="bg-warm-lavender hover:bg-warm-lavender/90 text-white gap-1.5">
+            <Button variant="outline" onClick={() => setNotesItem(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveNotes}
+              className="bg-warm-lavender hover:bg-warm-lavender/90 text-white gap-1.5"
+            >
               <Check className="w-4 h-4" /> Save Notes
             </Button>
           </DialogFooter>
@@ -474,14 +615,20 @@ export default function ReadLaterPage() {
 }
 
 /** Inline tag adder component */
-function AddTagInline({ onAdd, existingTags }: { onAdd: (tag: string) => void; existingTags: string[] }) {
+function AddTagInline({
+  onAdd,
+  existingTags,
+}: {
+  onAdd: (tag: string) => void;
+  existingTags: string[];
+}) {
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState("");
 
   function handleSubmit() {
     if (value.trim()) {
       onAdd(value.trim());
-      setValue('');
+      setValue("");
       setOpen(false);
     }
   }
@@ -502,19 +649,30 @@ function AddTagInline({ onAdd, existingTags }: { onAdd: (tag: string) => void; e
       <Input
         value={value}
         onChange={e => setValue(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); if (e.key === 'Escape') setOpen(false); }}
+        onKeyDown={e => {
+          if (e.key === "Enter") handleSubmit();
+          if (e.key === "Escape") setOpen(false);
+        }}
         placeholder="tag name"
         className="h-6 text-xs w-24 px-2"
         autoFocus
         list="existing-tags"
       />
       <datalist id="existing-tags">
-        {existingTags.map(t => <option key={t} value={t} />)}
+        {existingTags.map(t => (
+          <option key={t} value={t} />
+        ))}
       </datalist>
-      <button onClick={handleSubmit} className="text-warm-lavender hover:text-warm-lavender/80">
+      <button
+        onClick={handleSubmit}
+        className="text-warm-lavender hover:text-warm-lavender/80"
+      >
         <Check className="w-3.5 h-3.5" />
       </button>
-      <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
+      <button
+        onClick={() => setOpen(false)}
+        className="text-muted-foreground hover:text-foreground"
+      >
         <X className="w-3.5 h-3.5" />
       </button>
     </div>

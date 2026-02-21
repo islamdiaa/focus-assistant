@@ -4,7 +4,11 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import fs from "fs/promises";
 import path from "path";
-import { createDailySnapshot, saveToMdFile, stateToMarkdown } from "./mdStorage";
+import {
+  createDailySnapshot,
+  saveToMdFile,
+  stateToMarkdown,
+} from "./mdStorage";
 import type { AppState } from "../shared/appTypes";
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from "../shared/appTypes";
 

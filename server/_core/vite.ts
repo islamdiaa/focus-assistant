@@ -14,11 +14,18 @@ export async function setupVite(app: Express, server: Server) {
   const { nanoid } = await import("nanoid");
 
   // Load vite config dynamically via file path to prevent esbuild from bundling it
-  const configPath = path.resolve(import.meta.dirname, "../..", "vite.config.ts");
-  const viteConfig = (await vite.loadConfigFromFile(
-    { command: "serve", mode: "development" },
-    configPath
-  ))?.config ?? {};
+  const configPath = path.resolve(
+    import.meta.dirname,
+    "../..",
+    "vite.config.ts"
+  );
+  const viteConfig =
+    (
+      await vite.loadConfigFromFile(
+        { command: "serve", mode: "development" },
+        configPath
+      )
+    )?.config ?? {};
 
   const serverOptions = {
     middlewareMode: true,

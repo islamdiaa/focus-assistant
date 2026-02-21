@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.8.5] - 2026-02-20
 
 ### Added
+
 - **Work/Personal context filtering** — global toggle in sidebar (All/Work/Personal) filters tasks, reminders, and stats by context. Work = `work` category tasks + `appointment` reminders. Personal = everything else. Persisted in preferences.
 - **Monitored task status** — new `monitored` state for tasks where you've done your part but are waiting on external action (e.g., waiting for NPC response on a ticket appeal). Clean state machine: Active ↔ Monitored ↔ Done.
 - **Monitor toggle on task cards** — Eye icon button to send tasks to monitoring; EyeOff to reactivate. Visual distinction with dashed border and muted opacity.
@@ -20,6 +21,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **50 new tests** — comprehensive test suite for context filtering (tasks + reminders), monitored status lifecycle, serialization round-trips, data integrity, combined scenarios, and stress tests (172+ total).
 
 ### Changed
+
 - **Data integrity check** — `checkDataIntegrity()` now accepts `monitored` as a valid task status alongside `active` and `done`.
 - **Preferences serialization** — `activeContext` field added to Markdown preferences section.
 
@@ -28,11 +30,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.8.4] - 2026-02-20
 
 ### Fixed
+
 - **Silent save failures causing data loss** — save errors were silently swallowed; now tracked with up to 3 retries, exponential backoff, and a red error banner in the UI with a Retry button. Data is always cached in localStorage as a safety net.
 - **Column format resilience** — task deserialization now safely handles old markdown formats with fewer columns (15-col V1.8.0, 17-col V1.8.1) without crashing or losing data
 - **Analytics URIError on self-hosted** — analytics script tag now only loads when `VITE_ANALYTICS_ENDPOINT` env var is actually set, preventing `URIError: URI malformed` on self-hosted deployments
 
 ### Added
+
 - **Save status indicator** — red error banner appears when saves fail, with error details and a manual Retry button; clears automatically when saves recover
 - **Graceful shutdown** — server now handles SIGTERM/SIGINT signals, closing HTTP connections cleanly before exit; Dockerfile includes `STOPSIGNAL SIGTERM`
 - **Save retry with backoff** — failed saves retry up to 3 times with increasing delays (2s, 4s, 6s) before reporting failure
@@ -42,6 +46,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.8.3] - 2026-02-20
 
 ### Fixed
+
 - **Focus Mode ghost overlay** — exiting Focus Mode left timer circle, play/reset buttons, and task selector visible on top of the main layout; replaced `AnimatePresence` wrapper with direct conditional rendering to ensure clean unmount
 - **TimerPage TypeScript error** — `getEffectiveElapsed` function signature didn't accept `null` for `startedAt` and `accumulatedSeconds`, causing TS2345 when called with Zod-inferred types that include `null`
 - **Version string mismatch** — Settings page showed v1.8.0 instead of current version
@@ -50,6 +55,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Dockerfile ARM64 QEMU crash** — `--ignore-scripts` only applied to production stage; builder stage now runs scripts normally so esbuild binary installs correctly
 
 ### Added
+
 - **Pin-to-Today task picker** — "My Today" section on the Today page with an "+ Add Task" button that opens a searchable picker to pin any active task; pinned tasks show with unpin buttons and completion toggles
 - **Undo-acknowledge reminders** — acknowledged reminders now show an "Undo" button to reverse the acknowledgment and restore the reminder to active state
 - **Reminder creation from Tasks page** — new Reminder button in Tasks page header + **R** keyboard shortcut opens a full reminder creation dialog without leaving the Tasks view
@@ -62,6 +68,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **v182-pintoday.test.ts** — 6 tests covering pinnedToday field serialization, Zod validation, null handling, and completion clearing
 
 ### Changed
+
 - **Tasks page defaults** — Tasks page now defaults to showing Open (active) tasks with priority sort, instead of All tasks with manual order
 - **Analytics script conditional** — `index.html` analytics tag only loads when `VITE_ANALYTICS_ENDPOINT` is set, preventing URIError on self-hosted
 - Test count increased from 104 to 122 across 14 test files
@@ -71,6 +78,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.8.1] - 2026-02-20
 
 ### Added
+
 - **Task-linked pomodoros** — select multiple tasks and/or subtasks when starting a focus session; linked tasks displayed on timer card and in stats
 - **Quarterly recurring tasks** — new recurrence frequency with configurable day-of-month and start month (e.g., 16th of Feb/May/Aug/Nov)
 - **Reminders system** — separate sidebar tab for managing birthdays, appointments, and events with optional time-of-day; recurring support (yearly, monthly, weekly); acknowledge to dismiss or advance to next occurrence
@@ -80,6 +88,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **README screenshots** — Today and Tasks page screenshots added to README
 
 ### Changed
+
 - **Architecture: Zod-first single source of truth** — all type definitions now live as Zod schemas in `shared/appTypes.ts` with inferred TypeScript types; eliminated duplicate Zod schema from `dataRouter.ts` and duplicate type file `client/src/lib/types.ts`
 - **Strict Zod validation** — `appStateSchema.strict()` now rejects unknown fields with errors instead of silently stripping them
 - **CI/CD pipeline** — now pushes to both Docker Hub (`islamdiaa/focus-assistant`) and GHCR; supports semver tags from GitHub Releases (e.g., `v1.8.1` → Docker tags `1.8.1` + `1.8`)
@@ -88,6 +97,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Updated architecture.md, claude.md, agent.md with V1.8.1 changes
 
 ### Fixed
+
 - **Critical persistence bug** — state changes (marking tasks done, adding reminders, etc.) were silently stripped by outdated Zod validation schema on save, causing data loss on refresh
 - **`acknowledged: false` serialization** — boolean `false` values were lost during MD serialization round-trip
 
@@ -96,6 +106,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.8.0] - 2026-02-20
 
 ### Added
+
 - **Read Later Pocket** — save links with URL, title, description, and tags; mark as unread/reading/read; add freeform notes; filter by status and tags; search across titles and notes
 - **Reading Queue on Today page** — Daily Digest section showing unread/in-progress reading items with domain badges and tag previews
 - **Obsidian Vault Sync** — server-side write of `FocusAssist.md` to configured vault path on every save; YAML frontmatter, Obsidian-compatible task checkboxes, #hashtag tags, reading list with links, stats table; fire-and-forget async (doesn't block saves)
@@ -107,6 +118,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 8 new V1.8 tests (58 total across 9 test files) covering reading list serialization, Obsidian markdown generation, and edge cases
 
 ### Changed
+
 - Sidebar navigation expanded from 8 to 9 items with new "Knowledge" section
 - Version bumped to 1.8.0 in package.json and Settings About section
 - AppState model extended with `readingList: ReadingItem[]`
@@ -118,6 +130,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.7.0] - 2026-02-20
 
 ### Added
+
 - **Subtasks** — parent/child task relationships with inline add/toggle/delete and progress bars on task cards
 - **Task Templates** — save reusable task sets, apply them to create multiple tasks at once, manage from dedicated Templates page
 - **Daily Planner** ("Today" page) — time-of-day greeting, due/overdue tasks, high-priority tasks, energy-matched suggestions, completed today section
@@ -134,6 +147,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 10 new V1.2 tests (46 total across 7 test files) covering subtasks, templates, preferences, and integrity check serialization
 
 ### Changed
+
 - Default landing page changed from Tasks to Daily Planner ("Today")
 - Sidebar expanded from 5 to 8 navigation items with section grouping
 - Version bumped to 1.7.0 in package.json and Settings About section
@@ -145,6 +159,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.6.0] - 2026-02-20 (V1.1 Release)
 
 ### Added
+
 - Custom app icon from Flaticon (checklist icon by Freepik) — favicon.ico, apple-touch-icon, PWA icons (16/32/64/192/512px)
 - PWA manifest.json for installable web app support
 - Docker LABEL metadata for Unraid (icon, webui URL, managed flag)
@@ -160,11 +175,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Updated agent.md and claude.md with changelog maintenance instructions
 
 ### Changed
+
 - Migrated from @dnd-kit/core to @dnd-kit/react for React 19 compatibility
 - CI workflow enhanced with GHCR login, metadata extraction, and conditional push
 - Theme system wired up as switchable (light/dark) via ThemeProvider
 
 ### Fixed
+
 - dnd-kit React 19 hooks compatibility error (useSensor crash)
 
 ---
@@ -172,6 +189,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.5.0] - 2026-02-20
 
 ### Added
+
 - Comprehensive unit test suite — 36 tests across 6 files covering MD storage serialization, round-trip integrity, Google Sheets API mocking, storage config logic, auth logout, and shared type constants
 - CHANGELOG.md for tracking all changes
 - Updated agent.md and claude.md with changelog maintenance instructions
@@ -181,6 +199,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.4.0] - 2026-02-20
 
 ### Added
+
 - GitHub Actions CI workflow (`.github/workflows/ci.yml`) with two jobs: Test (tsc + vitest) and Docker Build (BuildX + GHA caching)
 - Concurrency groups to auto-cancel stale CI runs
 - Runs on every push and PR to `main`
@@ -190,6 +209,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.3.0] - 2026-02-20
 
 ### Added
+
 - Auto-backup rotation — keeps last 5 versions of the MD file (`.bak.1` through `.bak.5`)
 - Timer persistence across page refresh — saves `startedAt` timestamp and `accumulatedSeconds` to resume running timers
 - Search bar on Tasks page with `/` keyboard shortcut to focus
@@ -206,12 +226,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.2.0] - 2026-02-20
 
 ### Changed
+
 - **Architecture upgrade**: Migrated from static frontend to full-stack Express + tRPC backend
 - Storage moved from browser File System Access API to server-side MD file read/write
 - Data persists at `./data/focus-assist-data.md` (Docker volume mount point)
 - Google Sheets integration moved to server-side with toggle in Settings
 
 ### Added
+
 - `Dockerfile` for multi-stage production build
 - `docker-compose.yml` with volume mounts for data persistence
 - `DOCKER-GUIDE.md` with three Unraid deployment methods
@@ -229,6 +251,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.1.0] - 2026-02-20
 
 ### Added
+
 - Mobile responsive layout with hamburger menu (sidebar collapses below 1024px)
 - Responsive padding and grid layouts across all 5 pages
 - Matrix page stacks quadrants vertically on mobile with "Move to..." dropdown
@@ -237,6 +260,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Status badge showing active storage mode
 
 ### Changed
+
 - Category field added to tasks (Work, Personal, Health, Learning, Errands, Other)
 - Energy Required field added to tasks (Low, Medium, High)
 - Priority switched from dropdown to button group
@@ -249,6 +273,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.0.0] - 2026-02-20
 
 ### Added
+
 - Initial release with 5 pages: Tasks, Focus Timer, Eisenhower Matrix, Stats, Settings
 - Warm Scandinavian "Warm Productivity" design with DM Serif Display + DM Sans typography
 - Earth-tone color palette (cream, sand, terracotta, sage green)

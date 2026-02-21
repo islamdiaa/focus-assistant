@@ -1,6 +1,6 @@
 /**
  * Client-side types — re-exported from the single source of truth.
- * 
+ *
  * DO NOT define types here. All types live in shared/appTypes.ts.
  * This file exists only for backward compatibility with @/lib/types imports.
  */
@@ -38,4 +38,4 @@ export {
   NOTIFICATION_SOUNDS,
   WORK_CATEGORIES,
   PERSONAL_CATEGORIES,
-} from '@shared/appTypes';
+} from "@shared/appTypes";

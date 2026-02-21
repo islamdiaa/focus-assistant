@@ -70,25 +70,25 @@ docker run -d \
 1. Go to **Docker** → **Add Container**
 2. Fill in the following:
 
-| Field | Value |
-|-------|-------|
-| **Name** | `focus-assist` |
-| **Repository** | `focus-assist` (after building locally) |
-| **Network Type** | `bridge` |
-| **Port Mapping** | Host: `1992` → Container: `1992` (TCP) |
+| Field            | Value                                   |
+| ---------------- | --------------------------------------- |
+| **Name**         | `focus-assist`                          |
+| **Repository**   | `focus-assist` (after building locally) |
+| **Network Type** | `bridge`                                |
+| **Port Mapping** | Host: `1992` → Container: `1992` (TCP)  |
 
 3. Add a **Path** mapping:
 
-| Container Path | Host Path | Access Mode |
-|----------------|-----------|-------------|
-| `/app/data` | `/mnt/user/appdata/focus-assist` | Read/Write |
+| Container Path | Host Path                        | Access Mode |
+| -------------- | -------------------------------- | ----------- |
+| `/app/data`    | `/mnt/user/appdata/focus-assist` | Read/Write  |
 
 4. Add **Environment Variables**:
 
-| Key | Value |
-|-----|-------|
+| Key        | Value        |
+| ---------- | ------------ |
 | `NODE_ENV` | `production` |
-| `PORT` | `3000` |
+| `PORT`     | `3000`       |
 
 5. Click **Apply**
 
@@ -121,10 +121,10 @@ docker run -d \
 
 All app data is stored in the `/app/data` volume:
 
-| File | Purpose |
-|------|---------|
+| File                   | Purpose                                                              |
+| ---------------------- | -------------------------------------------------------------------- |
 | `focus-assist-data.md` | All tasks, pomodoros, stats, and settings in human-readable Markdown |
-| `config.json` | Storage mode configuration (file vs. Google Sheets) |
+| `config.json`          | Storage mode configuration (file vs. Google Sheets)                  |
 
 ### Backup
 
@@ -203,12 +203,14 @@ This only needs to be done once — Docker saves the credentials.
 Watchtower monitors your running containers and automatically pulls new images when available.
 
 **Option A: Community Applications (Easiest)**
+
 1. Go to **Apps** in Unraid
 2. Search for **Watchtower**
 3. Install it with default settings
 4. It will automatically check for updates every 24 hours
 
 **Option B: Docker Run**
+
 ```bash
 docker run -d \
   --name watchtower \
@@ -221,6 +223,7 @@ docker run -d \
 ```
 
 **Option C: Docker Compose** — Add to your `docker-compose.yml`:
+
 ```yaml
 services:
   focus-assist:
@@ -275,13 +278,13 @@ Your data persists in the Docker volume ✓
 
 ### Watchtower Configuration
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `WATCHTOWER_POLL_INTERVAL` | `86400` | Check interval in seconds (86400 = 24h) |
-| `WATCHTOWER_CLEANUP` | `true` | Remove old images after update |
-| `WATCHTOWER_INCLUDE_STOPPED` | `false` | Only update running containers |
-| `WATCHTOWER_SCHEDULE` | — | Cron schedule (alternative to poll interval), e.g. `0 0 4 * * *` for 4am daily |
-| `WATCHTOWER_NOTIFICATIONS` | — | Set to `email` or `slack` for update notifications |
+| Variable                     | Default | Description                                                                    |
+| ---------------------------- | ------- | ------------------------------------------------------------------------------ |
+| `WATCHTOWER_POLL_INTERVAL`   | `86400` | Check interval in seconds (86400 = 24h)                                        |
+| `WATCHTOWER_CLEANUP`         | `true`  | Remove old images after update                                                 |
+| `WATCHTOWER_INCLUDE_STOPPED` | `false` | Only update running containers                                                 |
+| `WATCHTOWER_SCHEDULE`        | —       | Cron schedule (alternative to poll interval), e.g. `0 0 4 * * *` for 4am daily |
+| `WATCHTOWER_NOTIFICATIONS`   | —       | Set to `email` or `slack` for update notifications                             |
 
 ### Manual Update (Alternative)
 
@@ -311,19 +314,19 @@ Your data persists in the volume — it survives container rebuilds and image up
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Container won't start | Check logs: `docker logs focus-assist` |
-| Port 1992 in use | Change the host port: `-p 8080:1992` |
-| Data not persisting | Verify volume mount: `docker inspect focus-assist` |
-| Blank page | Clear browser cache, check `docker logs` for build errors |
+| Issue                     | Solution                                                  |
+| ------------------------- | --------------------------------------------------------- |
+| Container won't start     | Check logs: `docker logs focus-assist`                    |
+| Port 1992 in use          | Change the host port: `-p 8080:1992`                      |
+| Data not persisting       | Verify volume mount: `docker inspect focus-assist`        |
+| Blank page                | Clear browser cache, check `docker logs` for build errors |
 | Google Sheets not syncing | Verify API key has Sheets API enabled and Sheet is shared |
 
 ## Environment Variables Reference
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `NODE_ENV` | `production` | Set to `production` for Docker |
-| `PORT` | `1992` | Server port (inside container) |
-| `DATA_DIR` | `/app/data` | Path to data directory |
-| `JWT_SECRET` | auto-generated | Session cookie secret |
+| Variable     | Default        | Description                    |
+| ------------ | -------------- | ------------------------------ |
+| `NODE_ENV`   | `production`   | Set to `production` for Docker |
+| `PORT`       | `1992`         | Server port (inside container) |
+| `DATA_DIR`   | `/app/data`    | Path to data directory         |
+| `JWT_SECRET` | auto-generated | Session cookie secret          |

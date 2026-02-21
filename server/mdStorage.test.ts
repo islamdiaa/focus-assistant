@@ -113,15 +113,17 @@ describe("mdStorage", () => {
 
   it("handles pipe characters in task titles", () => {
     const stateWithPipes: AppState = {
-      tasks: [{
-        id: "t1",
-        title: "Option A | Option B",
-        description: "Choose one | or the other",
-        priority: "medium",
-        status: "active",
-        quadrant: "unassigned",
-        createdAt: "2026-02-20T10:00:00.000Z",
-      }],
+      tasks: [
+        {
+          id: "t1",
+          title: "Option A | Option B",
+          description: "Choose one | or the other",
+          priority: "medium",
+          status: "active",
+          quadrant: "unassigned",
+          createdAt: "2026-02-20T10:00:00.000Z",
+        },
+      ],
       pomodoros: [],
       settings: { ...DEFAULT_SETTINGS },
       dailyStats: [],

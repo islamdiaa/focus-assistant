@@ -111,7 +111,7 @@
 - [x] CHANGELOG + version bump to 1.8.0
 - [x] Fix Dockerfile — client/dist path not found after template upgrade to tRPC/Express
 - [x] Fix Docker production error — vite imported at runtime in dist/index.js but not in prod dependencies
-- [x] Fix Docker standalone mode — Invalid URL error when VITE_ OAuth env vars are missing
+- [x] Fix Docker standalone mode — Invalid URL error when VITE\_ OAuth env vars are missing
 
 # CI Workflow Update
 
@@ -157,6 +157,7 @@
 # V1.8.2 — Full Code & Functionality Audit
 
 ## Audit Findings
+
 - [x] Layer 1: Types, Zod schemas, serialization audit
 - [x] Layer 2: Reducer actions and state mutations audit
 - [x] Layer 3: UI components — all pages, forms, views, data bindings audit
@@ -199,6 +200,7 @@
 - [x] BUG: TasksPage new task/search/reminder dialogs auto-open on page navigate
 
 # V1.8.5 — Work/Personal Context Switcher
+
 - [x] Add activeContext ('all' | 'work' | 'personal') to preferences schema
 - [x] Add SET_CONTEXT reducer action
 - [x] Build context switcher toggle in Sidebar
@@ -212,6 +214,7 @@
 - [x] Version bump to 1.8.5
 
 # V1.8.5 — Monitored Task Status
+
 - [x] Add 'monitored' to taskStatusSchema enum in appTypes.ts
 - [x] Add TOGGLE_MONITOR reducer action (active ↔ monitored)
 - [x] Update TasksPage filter tabs: All | Open | Monitored | Done
@@ -226,6 +229,7 @@
 - [x] Comprehensive tests for context filtering across all pages
 
 # V1.8.5 — Docs Update
+
 - [x] Update claude.md with V1.8.5 features
 - [x] Update agent.md with V1.8.5 features
 - [x] Update architecture.md with monitored status + context filtering
@@ -233,9 +237,16 @@
 - [x] Update CHANGELOG.md for V1.8.5
 
 # V1.8.5 — Version Auto-Read
+
 - [x] SettingsPage reads version from package.json instead of hardcoding
 - [x] Update preflight to remove SettingsPage version check (no longer needed)
 
 # V1.8.5 — Preflight Automation
+
 - [x] Install husky and configure pre-push hook to run pnpm preflight
 - [x] Update CI workflow to use pnpm preflight instead of separate tsc + test
+
+# V1.8.5 — Pre-commit Lint + Release Tag
+
+- [x] Add pre-commit hook for pnpm format:check
+- [ ] Tag V1.8.5 and push to GitHub

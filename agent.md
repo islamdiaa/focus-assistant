@@ -51,16 +51,19 @@ FocusAssist is a personal productivity web app with these features:
 These rules exist because we hit real bugs. **Do not skip them.**
 
 ### 1. Fail Loud, Recover Gracefully
+
 - Save operations MUST show visible success/failure in the UI (see `sheets.ts` retry logic + error banner in `Home.tsx`)
 - NEVER catch errors and continue silently — if a save fails, the user must know
 - Client-side saves retry 3x with exponential backoff before showing error
 
 ### 2. Backward-Compatible Deserialization
+
 - Every new column in mdStorage gets a safe `col(index)` accessor that returns `''` for missing columns
 - ALWAYS add a round-trip test that deserializes OLD format data (fewer columns) with the NEW code
 - Test both: old data → new code, and new data → new code
 
 ### 3. Version Bump Atomically
+
 - ALL 4 files must be updated together in one commit:
   - `package.json` (version field)
   - `client/src/pages/SettingsPage.tsx` (display version)
@@ -69,26 +72,31 @@ These rules exist because we hit real bugs. **Do not skip them.**
 - Run `pnpm preflight` to verify consistency before pushing
 
 ### 4. Keyboard Shortcuts Must Check Modifier Keys
+
 - Every single-key shortcut (F, N, R, /) MUST check `!isMod` where `isMod = e.metaKey || e.ctrlKey`
 - Without this, Cmd+R (refresh), Cmd+F (find), Cmd+N (new window) get intercepted
 - The preflight script checks for this automatically
 
 ### 5. Trigger Props Must Skip Initial Mount
+
 - When passing a counter prop (e.g., `reminderTrigger`) to trigger an action on increment:
   - Use `useRef(initialValue)` to track the previous value
   - Only fire the action when `current !== prev`, then update the ref
   - Without this, navigating to a page with a stale counter > 0 auto-opens dialogs
 
 ### 6. Environment Variables in HTML Must Be Guarded
+
 - `%VITE_*%` references in `client/index.html` must be wrapped in conditionals
 - Unset vars become literal strings like `%VITE_ANALYTICS_ENDPOINT%`, causing URIError in self-hosted
 
 ### 7. Docker Builds: Test Before Push
+
 - `--ignore-scripts` in the builder stage breaks esbuild (no platform binary)
 - Only use `--ignore-scripts` in the production stage (no build tools needed)
 - Always test with `docker build .` before pushing Dockerfile changes
 
 ### 8. Graceful Shutdown
+
 - The server handles SIGTERM/SIGINT for clean Docker container stops
 - Dockerfile includes `STOPSIGNAL SIGTERM`
 
@@ -168,6 +176,7 @@ Run `pnpm preflight` before every push. It checks:
 5. Run `pnpm preflight` to verify everything
 
 **DO NOT:**
+
 - Define types manually in `client/src/lib/types.ts`
 - Add a separate Zod schema in `server/dataRouter.ts`
 - Skip the round-trip test
@@ -211,19 +220,19 @@ The UI follows a "Warm Scandinavian" design language:
 
 ## Keyboard Shortcuts
 
-| Key | Action | Context | Modifier Check |
-|-----|--------|---------|----------------|
-| N | New task dialog | Tasks page | !isMod |
-| R | New reminder dialog | Tasks/Reminders page | !isMod |
-| / | Focus search bar | Tasks page | !isMod |
-| F | Enter focus mode | Any page | !isMod |
-| Esc | Exit focus mode | Focus mode | N/A |
+| Key | Action              | Context              | Modifier Check |
+| --- | ------------------- | -------------------- | -------------- |
+| N   | New task dialog     | Tasks page           | !isMod         |
+| R   | New reminder dialog | Tasks/Reminders page | !isMod         |
+| /   | Focus search bar    | Tasks page           | !isMod         |
+| F   | Enter focus mode    | Any page             | !isMod         |
+| Esc | Exit focus mode     | Focus mode           | N/A            |
 
 ## Ports
 
-| Port | Use |
-|------|-----|
-| 1992 | Main application |
+| Port | Use               |
+| ---- | ----------------- |
+| 1992 | Main application  |
 | 1993 | Reserved (future) |
 | 1994 | Reserved (future) |
 
@@ -232,6 +241,7 @@ The UI follows a "Warm Scandinavian" design language:
 When `SKIP_AUTH=true` (default in Dockerfile), the app bypasses Manus OAuth and injects a local admin user. This is for running on personal homeservers (e.g., Unraid) without Manus infrastructure.
 
 Key env vars for self-hosted:
+
 - `SKIP_AUTH=true` — bypass OAuth
 - `JWT_SECRET` — set to any random string
 - `DATABASE_URL` — only needed if using the users table
@@ -243,6 +253,7 @@ Key env vars for self-hosted:
 The changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
 
 **Rules:**
+
 1. Add all changes under the current version section or `[Unreleased]`
 2. Categorize changes: `Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, `Security`
 3. Be specific — "Added dark mode toggle in Settings" not "Updated UI"
@@ -265,6 +276,7 @@ Before submitting changes, run `pnpm preflight` which automates most of this:
 ## CI/CD
 
 GitHub Actions CI (`.github/workflows/ci.yml`):
+
 - Triggers on push to `main` and version tags (`v*`)
 - Test job: `pnpm install → tsc --noEmit → pnpm test`
 - Docker job: builds multi-arch (amd64 + arm64), pushes to Docker Hub (`islamdiaa/focus-assistant`) + GHCR
