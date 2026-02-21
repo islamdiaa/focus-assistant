@@ -274,5 +274,9 @@
 - [x] H8: Add reminders: [] to all fallback/default states (+ templates, preferences, readingList)
 - [x] Comprehensive tests for all 7 fixes (35 new tests, 228 total)
 - [x] Version bump to 1.8.6, CHANGELOG, docs update
-- [ ] Push to GitHub
+- [x] Push to GitHub (synced via checkpoint)
 - [x] Backward compatibility audit: verify all V1.8.6 fixes work with pre-V1.8.6 data
+
+# V1.8.6 — Docker Fix
+
+- [x] Add HUSKY=0 to Dockerfile builder stage to skip git hooks during Docker build

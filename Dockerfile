@@ -23,6 +23,9 @@ RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 
+# Skip husky git hooks during Docker build (no .git in container)
+ENV HUSKY=0
+
 # Install all dependencies (including devDependencies for build)
 # Scripts must run here so esbuild gets the correct platform binary
 RUN pnpm install --frozen-lockfile
