@@ -175,10 +175,12 @@ test.describe("Page Navigation", () => {
     const settingsLink = page.getByText(/settings/i).first();
     if (await settingsLink.isVisible()) {
       await settingsLink.click();
-      await page.waitForTimeout(500);
-      // Settings page should show version
-      const content = await page.textContent("body");
-      expect(content).toContain("1.8.6");
+      await page.waitForTimeout(1000);
+      // Settings page should show version in a visible element
+      const versionBadge = page.locator("text=/v\\d+\\.\\d+\\.\\d+/").first();
+      await expect(versionBadge).toBeVisible({ timeout: 5000 });
+      const versionText = await versionBadge.textContent();
+      expect(versionText).toMatch(/v1\.8\.\d+/);
     }
   });
 });

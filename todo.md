@@ -315,3 +315,7 @@
 - [x] Add tests for H1/H7/H9 fixes (24 new tests, 278 total)
 - [x] Version bump to 1.8.7, CHANGELOG, docs update
 - [x] Push to GitHub
+
+# V1.8.7 — CI Fix
+
+- [x] Fix Settings E2E test: hardcoded version "1.8.6" + body textContent matching bundled JS instead of visible element
