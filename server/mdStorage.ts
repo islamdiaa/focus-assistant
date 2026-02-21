@@ -38,6 +38,12 @@ function unescapeField(val: string): string {
   return val.replace(/\\n/g, "\n").replace(/\\\|/g, "|");
 }
 
+// C6 fix: NaN-safe parseInt that doesn't treat 0 as falsy
+function safeParseInt(val: string, fallback: number): number {
+  const n = parseInt(val, 10);
+  return isNaN(n) ? fallback : n;
+}
+
 export function stateToMarkdown(state: AppState): string {
   const lines: string[] = [];
 
@@ -235,6 +241,8 @@ export function markdownToState(md: string): AppState {
     currentStreak: 0,
     templates: [],
     preferences: { ...DEFAULT_PREFERENCES },
+    readingList: [],
+    reminders: [],
   };
 
   const sections = md.split(/^## /m);
@@ -250,18 +258,27 @@ export function markdownToState(md: string): AppState {
         const key = match[1].trim().toLowerCase();
         const val = match[2].trim();
         if (key === "focus duration")
-          state.settings.focusDuration =
-            parseInt(val) || DEFAULT_SETTINGS.focusDuration;
+          state.settings.focusDuration = safeParseInt(
+            val,
+            DEFAULT_SETTINGS.focusDuration
+          );
         if (key === "short break")
-          state.settings.shortBreak =
-            parseInt(val) || DEFAULT_SETTINGS.shortBreak;
+          state.settings.shortBreak = safeParseInt(
+            val,
+            DEFAULT_SETTINGS.shortBreak
+          );
         if (key === "long break")
-          state.settings.longBreak =
-            parseInt(val) || DEFAULT_SETTINGS.longBreak;
+          state.settings.longBreak = safeParseInt(
+            val,
+            DEFAULT_SETTINGS.longBreak
+          );
         if (key === "sessions before long break")
-          state.settings.sessionsBeforeLongBreak =
-            parseInt(val) || DEFAULT_SETTINGS.sessionsBeforeLongBreak;
-        if (key === "current streak") state.currentStreak = parseInt(val) || 0;
+          state.settings.sessionsBeforeLongBreak = safeParseInt(
+            val,
+            DEFAULT_SETTINGS.sessionsBeforeLongBreak
+          );
+        if (key === "current streak")
+          state.currentStreak = safeParseInt(val, 0);
       }
     }
 
@@ -341,13 +358,13 @@ export function markdownToState(md: string): AppState {
         state.pomodoros.push({
           id: r[0],
           title: r[1] || "",
-          duration: parseInt(r[2]) || 25,
-          elapsed: parseInt(r[3]) || 0,
+          duration: safeParseInt(r[2], 25),
+          elapsed: safeParseInt(r[3], 0),
           status: (r[4] as Pomodoro["status"]) || "idle",
           createdAt: r[5] || new Date().toISOString(),
           completedAt: r[6] || undefined,
           startedAt: r[7] || undefined,
-          accumulatedSeconds: r[8] ? parseInt(r[8]) : undefined,
+          accumulatedSeconds: r[8] ? safeParseInt(r[8], 0) : undefined,
           linkedTaskId: r[9] || undefined,
           linkedTasks,
         });
@@ -361,9 +378,9 @@ export function markdownToState(md: string): AppState {
         if (!r[0]) continue;
         state.dailyStats.push({
           date: r[0],
-          tasksCompleted: parseInt(r[1]) || 0,
-          focusMinutes: parseInt(r[2]) || 0,
-          pomodorosCompleted: parseInt(r[3]) || 0,
+          tasksCompleted: safeParseInt(r[1], 0),
+          focusMinutes: safeParseInt(r[2], 0),
+          pomodorosCompleted: safeParseInt(r[3], 0),
         });
       }
     }
@@ -454,8 +471,10 @@ export async function loadFromMdFile(): Promise<AppState | null> {
     return markdownToState(text);
   } catch (e: any) {
     if (e.code === "ENOENT") return null;
-    console.warn("Failed to read MD file:", e);
-    return null;
+    // H5 fix: throw on corrupt/unreadable file instead of silently returning null
+    // This prevents the caller from treating corrupt data as "no data" and saving empty state
+    console.error("Failed to read MD file (data may be corrupt):", e);
+    throw new Error(`Failed to load data file: ${e.message || e}`);
   }
 }
 
@@ -515,19 +534,38 @@ export async function createDailySnapshot(): Promise<void> {
   }
 }
 
+// C4 fix: simple promise-based write mutex to serialize concurrent saves
+let writeLock: Promise<void> = Promise.resolve();
+
 export async function saveToMdFile(state: AppState): Promise<boolean> {
-  try {
-    await ensureDataDir();
-    await rotateBackups();
-    await createDailySnapshot();
-    await fs.writeFile(DATA_FILE, stateToMarkdown(state), "utf-8");
-    // Obsidian vault sync (fire-and-forget, don't block save)
-    syncToObsidian(state).catch(e => console.warn("[ObsidianSync] Error:", e));
-    return true;
-  } catch (e) {
-    console.warn("Failed to write MD file:", e);
-    return false;
-  }
+  // Queue this write behind any in-progress write
+  return new Promise<boolean>(resolve => {
+    writeLock = writeLock.then(async () => {
+      try {
+        await ensureDataDir();
+        await rotateBackups();
+        await createDailySnapshot();
+        // C4 fix: atomic write — write to temp file then rename (atomic on POSIX)
+        const tmpFile = DATA_FILE + ".tmp";
+        await fs.writeFile(tmpFile, stateToMarkdown(state), "utf-8");
+        await fs.rename(tmpFile, DATA_FILE);
+        // Obsidian vault sync (fire-and-forget, don't block save)
+        syncToObsidian(state).catch(e =>
+          console.warn("[ObsidianSync] Error:", e)
+        );
+        resolve(true);
+      } catch (e) {
+        console.warn("Failed to write MD file:", e);
+        // Clean up temp file if it exists
+        try {
+          await fs.unlink(DATA_FILE + ".tmp");
+        } catch {
+          /* ignore */
+        }
+        resolve(false);
+      }
+    });
+  });
 }
 
 /** Get the file's last modified timestamp for polling */

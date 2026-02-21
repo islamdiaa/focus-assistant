@@ -45,6 +45,8 @@ export const dataRouter = router({
       const state = await loadFromSheets(config.sheetsId, config.sheetsApiKey);
       return state || emptyState;
     }
+    // H5 fix: loadFromMdFile now throws on corrupt files instead of returning null
+    // Let the error propagate — the client should show an error state, not silently use empty data
     const state = await loadFromMdFile();
     return state || emptyState;
   }),
@@ -116,7 +118,16 @@ export const dataRouter = router({
       let state: AppState;
       if (input.format === "json") {
         try {
-          state = JSON.parse(input.content);
+          const parsed = JSON.parse(input.content);
+          // C3 fix: validate JSON against Zod schema before accepting
+          const result = appStateSchema.safeParse(parsed);
+          if (!result.success) {
+            return {
+              success: false,
+              error: `Invalid data structure: ${result.error.issues.map(i => i.message).join(", ")}`,
+            };
+          }
+          state = result.data;
         } catch {
           return { success: false, error: "Invalid JSON" };
         }

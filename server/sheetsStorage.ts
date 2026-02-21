@@ -13,6 +13,12 @@ import type {
 } from "../shared/appTypes";
 import { DEFAULT_SETTINGS } from "../shared/appTypes";
 
+// C6 fix: NaN-safe parseInt that doesn't treat 0 as falsy
+function safeParseInt(val: string, fallback: number): number {
+  const n = parseInt(val, 10);
+  return isNaN(n) ? fallback : n;
+}
+
 const SHEETS_BASE = "https://sheets.googleapis.com/v4/spreadsheets";
 
 async function readSheet(
@@ -137,8 +143,8 @@ function rowsToPomodoros(rows: string[][]): Pomodoro[] {
     .map(r => ({
       id: r[0] || "",
       title: r[1] || "",
-      duration: parseInt(r[2]) || 25,
-      elapsed: parseInt(r[3]) || 0,
+      duration: safeParseInt(r[2], 25),
+      elapsed: safeParseInt(r[3], 0),
       status: (r[4] as Pomodoro["status"]) || "idle",
       createdAt: r[5] || new Date().toISOString(),
       completedAt: r[6] || undefined,
@@ -170,9 +176,9 @@ function rowsToStats(rows: string[][]): DailyStats[] {
     .slice(1)
     .map(r => ({
       date: r[0] || "",
-      tasksCompleted: parseInt(r[1]) || 0,
-      focusMinutes: parseInt(r[2]) || 0,
-      pomodorosCompleted: parseInt(r[3]) || 0,
+      tasksCompleted: safeParseInt(r[1], 0),
+      focusMinutes: safeParseInt(r[2], 0),
+      pomodorosCompleted: safeParseInt(r[3], 0),
     }))
     .filter(s => s.date);
 }
@@ -200,15 +206,18 @@ function rowsToSettings(rows: string[][]): {
   }
   return {
     settings: {
-      focusDuration:
-        parseInt(map.focusDuration) || DEFAULT_SETTINGS.focusDuration,
-      shortBreak: parseInt(map.shortBreak) || DEFAULT_SETTINGS.shortBreak,
-      longBreak: parseInt(map.longBreak) || DEFAULT_SETTINGS.longBreak,
-      sessionsBeforeLongBreak:
-        parseInt(map.sessionsBeforeLongBreak) ||
-        DEFAULT_SETTINGS.sessionsBeforeLongBreak,
+      focusDuration: safeParseInt(
+        map.focusDuration,
+        DEFAULT_SETTINGS.focusDuration
+      ),
+      shortBreak: safeParseInt(map.shortBreak, DEFAULT_SETTINGS.shortBreak),
+      longBreak: safeParseInt(map.longBreak, DEFAULT_SETTINGS.longBreak),
+      sessionsBeforeLongBreak: safeParseInt(
+        map.sessionsBeforeLongBreak,
+        DEFAULT_SETTINGS.sessionsBeforeLongBreak
+      ),
     },
-    streak: parseInt(map.currentStreak) || 0,
+    streak: safeParseInt(map.currentStreak, 0),
   };
 }
 

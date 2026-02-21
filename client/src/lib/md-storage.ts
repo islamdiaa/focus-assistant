@@ -80,6 +80,12 @@ function unescapeField(val: string): string {
   return val.replace(/\\n/g, "\n").replace(/\\\|/g, "|");
 }
 
+// C6 fix: NaN-safe parseInt that doesn't treat 0 as falsy
+function safeParseInt(val: string, fallback: number): number {
+  const n = parseInt(val, 10);
+  return isNaN(n) ? fallback : n;
+}
+
 function stateToMarkdown(state: AppState): string {
   const lines: string[] = [];
 
@@ -202,18 +208,27 @@ function markdownToState(md: string): AppState {
         const key = match[1].trim().toLowerCase();
         const val = match[2].trim();
         if (key === "focus duration")
-          state.settings.focusDuration =
-            parseInt(val) || DEFAULT_SETTINGS.focusDuration;
+          state.settings.focusDuration = safeParseInt(
+            val,
+            DEFAULT_SETTINGS.focusDuration
+          );
         if (key === "short break")
-          state.settings.shortBreak =
-            parseInt(val) || DEFAULT_SETTINGS.shortBreak;
+          state.settings.shortBreak = safeParseInt(
+            val,
+            DEFAULT_SETTINGS.shortBreak
+          );
         if (key === "long break")
-          state.settings.longBreak =
-            parseInt(val) || DEFAULT_SETTINGS.longBreak;
+          state.settings.longBreak = safeParseInt(
+            val,
+            DEFAULT_SETTINGS.longBreak
+          );
         if (key === "sessions before long break")
-          state.settings.sessionsBeforeLongBreak =
-            parseInt(val) || DEFAULT_SETTINGS.sessionsBeforeLongBreak;
-        if (key === "current streak") state.currentStreak = parseInt(val) || 0;
+          state.settings.sessionsBeforeLongBreak = safeParseInt(
+            val,
+            DEFAULT_SETTINGS.sessionsBeforeLongBreak
+          );
+        if (key === "current streak")
+          state.currentStreak = safeParseInt(val, 0);
       }
     }
 
@@ -247,8 +262,8 @@ function markdownToState(md: string): AppState {
         state.pomodoros.push({
           id: r[0],
           title: r[1] || "",
-          duration: parseInt(r[2]) || 25,
-          elapsed: parseInt(r[3]) || 0,
+          duration: safeParseInt(r[2], 25),
+          elapsed: safeParseInt(r[3], 0),
           status: (r[4] as Pomodoro["status"]) || "idle",
           createdAt: r[5] || new Date().toISOString(),
           completedAt: r[6] || undefined,
@@ -263,9 +278,9 @@ function markdownToState(md: string): AppState {
         if (!r[0]) continue;
         state.dailyStats.push({
           date: r[0],
-          tasksCompleted: parseInt(r[1]) || 0,
-          focusMinutes: parseInt(r[2]) || 0,
-          pomodorosCompleted: parseInt(r[3]) || 0,
+          tasksCompleted: safeParseInt(r[1], 0),
+          focusMinutes: safeParseInt(r[2], 0),
+          pomodorosCompleted: safeParseInt(r[3], 0),
         });
       }
     }

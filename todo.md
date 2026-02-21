@@ -262,3 +262,17 @@
 - [x] Add "Actioned Today" collapsible section (completed + monitored today)
 - [x] Comprehensive tests for statusChangedAt, Actioned Today logic, serialization
 - [x] Update docs (claude.md, agent.md, architecture.md, CHANGELOG)
+
+# V1.8.6 — Critical Bug Fixes (Audit)
+
+- [x] C1: Fix auto-save race — move loadedRef.current=true inside .then() after LOAD_STATE
+- [x] C2: Add dirty flag to prevent poll overwriting unsaved changes
+- [x] C3: Add Zod validation to JSON import in dataRouter
+- [x] C4: Write mutex + atomic write-then-rename for saveToMdFile
+- [x] C6: Replace all parseInt(val) || default with safeParseInt helper
+- [x] H5: Distinguish "no file" from "corrupt file" — throw error, block save
+- [x] H8: Add reminders: [] to all fallback/default states (+ templates, preferences, readingList)
+- [x] Comprehensive tests for all 7 fixes (35 new tests, 228 total)
+- [x] Version bump to 1.8.6, CHANGELOG, docs update
+- [ ] Push to GitHub
+- [x] Backward compatibility audit: verify all V1.8.6 fixes work with pre-V1.8.6 data

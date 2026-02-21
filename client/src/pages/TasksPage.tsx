@@ -1051,9 +1051,10 @@ export default function TasksPage({
                             min={1}
                             max={28}
                             value={newQuarterlyDay}
-                            onChange={e =>
-                              setNewQuarterlyDay(parseInt(e.target.value) || 16)
-                            }
+                            onChange={e => {
+                              const n = parseInt(e.target.value, 10);
+                              setNewQuarterlyDay(isNaN(n) ? 16 : n);
+                            }}
                             className="bg-background h-8 text-xs"
                           />
                         </div>

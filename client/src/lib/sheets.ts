@@ -12,7 +12,7 @@
  */
 
 import type { AppState, StorageConfig, StorageMode } from "./types";
-import { DEFAULT_SETTINGS } from "./types";
+import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from "./types";
 
 const STORAGE_KEY = "focus-assist-data";
 
@@ -52,6 +52,10 @@ function loadLocal(): AppState {
     settings: { ...DEFAULT_SETTINGS },
     dailyStats: [],
     currentStreak: 0,
+    templates: [],
+    preferences: { ...DEFAULT_PREFERENCES },
+    readingList: [],
+    reminders: [],
   };
 }
 

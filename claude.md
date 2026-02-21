@@ -8,12 +8,14 @@ FocusAssist is a full-stack productivity app (React 19 + Express 4 + tRPC 11) de
 
 **V1.8.5 additions:** Work/Personal context filtering (global toggle in sidebar), Monitored task status (active ↔ monitored ↔ done state machine for "waiting-on" tasks), `statusChangedAt` field for tracking when tasks change status, Today view overhaul (full task/reminder actions, "Actioned Today" section, no monitoring section).
 
+**V1.8.6 fixes:** Auto-save race condition (C1), poll overwrites unsaved changes (C2), JSON import Zod validation (C3), write mutex + atomic saves (C4), zero-safe integer parsing (C6), corrupt file handling (H5), missing default fields in fallback states (H8). All backward compatible.
+
 ## Quick Start (Development)
 
 ```bash
 pnpm install
 pnpm dev          # Starts Express + Vite dev server on port 3000
-pnpm test         # Runs vitest (193+ tests)
+pnpm test         # Runs vitest (228+ tests)
 pnpm build        # Production build (Vite + esbuild)
 pnpm preflight    # Pre-push checks (MUST pass before every push)
 pnpm db:push      # Drizzle schema migrations
@@ -205,6 +207,8 @@ Context is persisted in `preferences.activeContext` and serialized to the Markdo
 
 **Save reliability:** Client saves retry 3x with exponential backoff. On failure, error banner appears. Graceful SIGTERM shutdown ensures pending operations complete before Docker stop.
 
+**V1.8.6 data safety:** Server uses write mutex (prevents concurrent writes) + atomic write-then-rename (prevents partial writes on crash). Client uses `dirtyRef` flag to prevent poll from overwriting unsaved changes. `loadedRef` race fixed — auto-save only starts after initial load completes. Corrupt files throw instead of returning null (prevents empty-state overwrite). All fallback states include all required fields.
+
 ## Styling Conventions
 
 - **Design system:** Warm Scandinavian — cream, sand, terracotta, sage green palette
@@ -223,7 +227,7 @@ pnpm vitest run server/schema-integrity # Run schema integrity tests
 pnpm preflight                         # Full pre-push validation
 ```
 
-Test files (15 files, 172+ tests):
+Test files (16 files, 228+ tests):
 
 - `server/schema-integrity.test.ts` — **Most important.** Schema drift detection + full persistence round-trips
 - `server/v182-pintoday.test.ts` — Pin-to-today, unpin, completion clearing, energy suggestion dedup
@@ -233,6 +237,7 @@ Test files (15 files, 172+ tests):
 - `server/mdStorage.comprehensive.test.ts` — Core serialization round-trips
 - `server/v18-features.test.ts` — Reading list, Obsidian sync, templates
 - `server/v185-features.test.ts` — Context filtering (tasks + reminders), monitored status lifecycle, serialization, data integrity, combined scenarios
+- `server/v186-bugfixes.test.ts` — Zod import validation, zero-safe parsing, corrupt file handling, default state completeness, atomic write consistency, backward compatibility
 - `server/appTypes.test.ts` — Zod schema validation
 - `server/sheetsStorage.test.ts` — Google Sheets API mocking
 - `server/auth.logout.test.ts` — Auth cookie clearing

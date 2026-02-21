@@ -140,6 +140,7 @@ const initialState: AppState = {
   templates: [],
   preferences: { ...DEFAULT_PREFERENCES },
   readingList: [],
+  reminders: [],
 };
 
 function getToday(): string {
@@ -256,6 +257,7 @@ function appReducer(state: AppState, action: Action): AppState {
         templates: action.payload.templates || [],
         preferences: { ...DEFAULT_PREFERENCES, ...action.payload.preferences },
         readingList: action.payload.readingList || [],
+        reminders: action.payload.reminders || [],
       };
 
     case "ADD_TASK": {
@@ -836,6 +838,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const stateRef = useRef(state);
   const loadedRef = useRef(false);
   const lastTimestampRef = useRef(0);
+  const dirtyRef = useRef(false);
 
   stateRef.current = state;
 
@@ -843,6 +846,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const dispatch = useCallback((action: Action) => {
+    // Mark state as dirty for user-initiated actions (not loads/system actions)
+    if (!NON_UNDOABLE_ACTIONS.has(action.type)) {
+      dirtyRef.current = true;
+    }
     rawDispatch(action);
   }, []);
 
@@ -858,11 +865,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const loadStartedRef = useRef(false);
   useEffect(() => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
+    if (loadStartedRef.current) return;
+    loadStartedRef.current = true;
+    // C1 fix: set loadedRef AFTER load completes, not before
     loadState().then(loaded => {
       dispatch({ type: "LOAD_STATE", payload: loaded });
+      loadedRef.current = true;
       pollTimestamp()
         .then(ts => {
           lastTimestampRef.current = ts;
@@ -879,6 +889,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     saveTimeoutRef.current = setTimeout(() => {
       saveState(stateRef.current).then(ok => {
         if (ok) {
+          // C2 fix: clear dirty flag after successful save
+          dirtyRef.current = false;
           setSaveStatus("ok");
           setSaveError(null);
           pollTimestamp()
@@ -902,6 +914,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           lastTimestampRef.current > 0 &&
           serverTs > lastTimestampRef.current + 1000
         ) {
+          // C2 fix: skip poll reload if local changes are unsaved
+          if (dirtyRef.current) return;
           const loaded = await loadState();
           dispatch({ type: "LOAD_STATE", payload: loaded });
           lastTimestampRef.current = serverTs;

@@ -6,6 +6,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.8.6] - 2026-02-21
+
+### Fixed
+
+- **C1: Auto-save race condition** — `loadedRef.current` now set inside `.then()` after `LOAD_STATE` dispatch completes, preventing empty state from being saved before data loads. Added re-entry guard to prevent double-calling `loadState`.
+- **C2: Poll overwrites unsaved changes** — added `dirtyRef` flag that is set on user actions and cleared after save completes. Polling skips state replacement while dirty, preventing data loss during concurrent edits.
+- **C3: JSON import validation** — imported data now validated through Zod `appStateSchema.safeParse()` before acceptance. Invalid JSON imports are rejected with a descriptive error instead of silently corrupting state.
+- **C4: Write mutex + atomic saves** — `saveToMdFile` now uses a mutex to prevent concurrent writes and atomic write-then-rename (`fs.writeFile` to `.tmp`, then `fs.rename`) to prevent partial writes on crash.
+- **C6: Zero-safe integer parsing** — replaced all `parseInt(val) || default` patterns with `safeParseInt(val, fallback)` across server mdStorage, client md-storage, sheetsStorage, TasksPage, and TimerPage. Zero values (e.g., `focusDuration: 0`, `elapsed: 0`) are now preserved correctly instead of falling back to defaults.
+- **H5: Corrupt file handling** — `loadFromMdFile` now throws on unreadable/corrupt files instead of silently returning `null`. This prevents the caller from treating corrupt data as "no data" and overwriting with empty state.
+- **H8: Missing default fields** — added `reminders: []` to all fallback/default states (AppContext `initialState`, `LOAD_STATE` handler, `loadLocal()` in sheets.ts, `markdownToState` in mdStorage). Also added missing `templates`, `preferences`, `readingList` defaults where absent.
+
+### Changed
+
+- **Backward compatible** — all fixes work with pre-V1.8.5 data. Old markdown files without `statusChangedAt`, `reminders`, or `preferences` sections load correctly with safe defaults.
+- **228 tests passing** (35 new in `v186-bugfixes.test.ts`) covering Zod validation, zero-safe parsing, corrupt file handling, default state completeness, serialization consistency, and backward compatibility.
+
+---
+
 ## [1.8.5] - 2026-02-20
 
 ### Added

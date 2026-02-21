@@ -486,7 +486,10 @@ export default function TimerPage() {
                   min={1}
                   max={120}
                   value={newDuration}
-                  onChange={e => setNewDuration(parseInt(e.target.value) || 25)}
+                  onChange={e => {
+                    const n = parseInt(e.target.value, 10);
+                    setNewDuration(isNaN(n) ? 25 : n);
+                  }}
                   className="bg-background"
                 />
               </div>
