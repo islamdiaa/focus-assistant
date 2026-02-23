@@ -16,7 +16,8 @@ FocusAssist is a personal productivity web app with these features:
 8. **Templates** — Reusable task sets for recurring workflows.
 9. **Weekly Review** — End-of-week summary with reflection prompts.
 10. **Focus Mode** — Distraction-free view showing only the current task.
-11. **Settings** — Timer presets, storage backend toggle, Obsidian vault sync, about section.
+11. **Thoughts** — Always-accessible slide-out drawer for capturing ideas. Floating lightbulb button + `I` shortcut. Thoughts can be upgraded to tasks or reminders. Hidden during Focus Mode.
+12. **Settings** — Timer presets, storage backend toggle, Obsidian vault sync, about section.
 
 ## Stack
 

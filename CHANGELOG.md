@@ -6,6 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.8.8] - 2026-02-23
+
+### Added
+
+- **Thoughts Drawer** — Always-accessible slide-out panel for capturing ideas without losing context. Triggered by floating lightbulb button (bottom-right) or keyboard shortcut `I`. Thoughts can be upgraded to tasks ("Make Task") or reminders ("Make Reminder" with date picker dialog). Persisted as `## Scratch Pad` section in the data file. Hidden during Focus Mode.
+- **"Make Reminder" from Thoughts** — Converts a thought into a reminder with a date picker dialog. Pre-fills the thought text as the reminder title.
+- Sidebar "Thoughts" Quick Action button (next to Focus Mode)
+
+### Changed
+
+- Renamed "Scratch Pad" to "Thoughts" throughout the UI (drawer title, sidebar, button tooltip)
+- Icon changed from StickyNote to Lightbulb for better semantic meaning
+
+---
+
 ## [Unreleased]
 
 ### Fixed

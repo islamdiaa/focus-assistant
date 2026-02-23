@@ -74,7 +74,7 @@ focus-assist/
 │   │   │   ├── Sidebar.tsx    # Navigation sidebar with context switcher and daily tips
 │   │   │   └── ui/            # shadcn/ui primitives
 │   │   ├── contexts/
-│   │   │   └── AppContext.tsx  # Global state (tasks, pomodoros, settings, stats, reminders, reading list)
+│   │   │   └── AppContext.tsx  # Global state (tasks, pomodoros, settings, stats, reminders, reading list, thoughts)
 │   │   ├── lib/
 │   │   │   ├── sheets.ts      # Client → server API bridge
 │   │   │   ├── types.ts       # Re-exports from shared/appTypes.ts (single source of truth)
@@ -165,7 +165,7 @@ All types are defined as Zod schemas in `shared/appTypes.ts`. TypeScript types a
 1. `AppContext` mounts and calls `loadState()` which queries `trpc.data.load`
 2. `dataRouter.load` checks storage config
 3. Reads from MD file or Google Sheets
-4. Returns `AppState` (tasks, pomodoros, settings, dailyStats, currentStreak, templates, preferences, readingList, reminders)
+4. Returns `AppState` (tasks, pomodoros, settings, dailyStats, currentStreak, templates, preferences, readingList, reminders, scratchPad)
 5. `AppContext` dispatches `LOAD_STATE` to populate the reducer
 
 ### Type Safety Pipeline

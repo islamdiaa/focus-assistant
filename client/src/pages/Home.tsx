@@ -39,6 +39,15 @@ const FocusModePage = lazy(() => import("./FocusModePage"));
 import { useApp } from "@/contexts/AppContext";
 import ScratchPadDrawer from "@/components/ScratchPadDrawer";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
   Smile,
   Clock,
   Menu,
@@ -47,7 +56,7 @@ import {
   AlertTriangle,
   Cloud,
   CloudOff,
-  StickyNote,
+  Lightbulb,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -78,6 +87,12 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [scratchPadOpen, setScratchPadOpen] = useState(false);
+  const [thoughtReminderOpen, setThoughtReminderOpen] = useState(false);
+  const [thoughtReminderText, setThoughtReminderText] = useState("");
+  const [thoughtReminderDate, setThoughtReminderDate] = useState("");
+  const [thoughtReminderNoteId, setThoughtReminderNoteId] = useState<
+    string | null
+  >(null);
   const {
     state,
     dispatch,
@@ -338,22 +353,85 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Scratch Pad Floating Button — hidden during focus mode */}
+      {/* Thoughts Floating Button — hidden during focus mode */}
       {!focusMode && (
         <button
           onClick={() => setScratchPadOpen(o => !o)}
           className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full bg-warm-amber hover:bg-warm-amber/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
-          title="Scratch Pad (I)"
+          title="Thoughts (I)"
         >
-          <StickyNote className="w-5 h-5" />
+          <Lightbulb className="w-5 h-5" />
         </button>
       )}
 
-      {/* Scratch Pad Drawer */}
+      {/* Thoughts Drawer */}
       <ScratchPadDrawer
         open={scratchPadOpen}
         onClose={() => setScratchPadOpen(false)}
+        onMakeReminder={(text, noteId) => {
+          setThoughtReminderText(text);
+          setThoughtReminderNoteId(noteId);
+          setThoughtReminderOpen(true);
+        }}
       />
+
+      {/* Thought → Reminder Dialog */}
+      <Dialog open={thoughtReminderOpen} onOpenChange={setThoughtReminderOpen}>
+        <DialogContent className="bg-card max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-lg">
+              Make Reminder
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Set a date for this thought
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <p className="text-sm text-foreground bg-warm-amber-light/30 rounded-lg p-3 border border-warm-amber/20">
+              {thoughtReminderText}
+            </p>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                Date
+              </label>
+              <Input
+                type="date"
+                value={thoughtReminderDate}
+                onChange={e => setThoughtReminderDate(e.target.value)}
+                className="bg-background"
+              />
+            </div>
+            <Button
+              onClick={() => {
+                if (!thoughtReminderDate || !thoughtReminderText) return;
+                dispatch({
+                  type: "ADD_REMINDER",
+                  payload: {
+                    title: thoughtReminderText,
+                    date: thoughtReminderDate,
+                    recurrence: "none",
+                    category: "other",
+                  },
+                });
+                if (thoughtReminderNoteId) {
+                  dispatch({
+                    type: "DELETE_SCRATCH_NOTE",
+                    payload: thoughtReminderNoteId,
+                  });
+                }
+                setThoughtReminderOpen(false);
+                setThoughtReminderText("");
+                setThoughtReminderDate("");
+                setThoughtReminderNoteId(null);
+              }}
+              disabled={!thoughtReminderDate}
+              className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white"
+            >
+              Create Reminder
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

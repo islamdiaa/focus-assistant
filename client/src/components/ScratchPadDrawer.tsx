@@ -1,26 +1,28 @@
 /**
- * Scratch Pad Drawer — Always-accessible quick capture for ideas
+ * Thoughts Drawer — Always-accessible quick capture for ideas
  *
  * Slide-out drawer from the right edge. Captures freeform thoughts
- * that can later be converted to tasks. Designed for ADHD-friendly
- * quick capture without losing context.
+ * that can later be upgraded to tasks or reminders. Designed for
+ * ADHD-friendly quick capture without losing context.
  */
 import { useState, useRef, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
-import { X, CheckSquare, Trash2, StickyNote } from "lucide-react";
+import { X, CheckSquare, Bell, Trash2, Lightbulb } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface ScratchPadDrawerProps {
+interface ThoughtsDrawerProps {
   open: boolean;
   onClose: () => void;
+  onMakeReminder?: (text: string, noteId: string) => void;
 }
 
-export default function ScratchPadDrawer({
+export default function ThoughtsDrawer({
   open,
   onClose,
-}: ScratchPadDrawerProps) {
+  onMakeReminder,
+}: ThoughtsDrawerProps) {
   const { state, dispatch } = useApp();
   const [newText, setNewText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,8 +42,15 @@ export default function ScratchPadDrawer({
     inputRef.current?.focus();
   }
 
-  function handleConvert(id: string) {
+  function handleMakeTask(id: string) {
     dispatch({ type: "CONVERT_SCRATCH_TO_TASK", payload: id });
+  }
+
+  function handleMakeReminder(id: string) {
+    const note = notes.find(n => n.id === id);
+    if (note && onMakeReminder) {
+      onMakeReminder(note.text, note.id);
+    }
   }
 
   function handleDelete(id: string) {
@@ -89,10 +98,8 @@ export default function ScratchPadDrawer({
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
-                <StickyNote className="w-4 h-4 text-warm-amber" />
-                <h3 className="font-serif text-lg text-foreground">
-                  Scratch Pad
-                </h3>
+                <Lightbulb className="w-4 h-4 text-warm-amber" />
+                <h3 className="font-serif text-lg text-foreground">Thoughts</h3>
                 {notes.length > 0 && (
                   <span className="text-xs text-muted-foreground bg-warm-sand/50 px-1.5 py-0.5 rounded-full">
                     {notes.length}
@@ -140,7 +147,7 @@ export default function ScratchPadDrawer({
             <div className="flex-1 overflow-y-auto px-4 py-2">
               {notes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                  <StickyNote className="w-10 h-10 text-warm-amber/30 mb-3" />
+                  <Lightbulb className="w-10 h-10 text-warm-amber/30 mb-3" />
                   <p className="text-sm font-medium text-muted-foreground">
                     Your ideas land here
                   </p>
@@ -170,11 +177,18 @@ export default function ScratchPadDrawer({
                           </span>
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => handleConvert(note.id)}
+                              onClick={() => handleMakeTask(note.id)}
                               className="p-1.5 rounded text-muted-foreground/60 hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
-                              title="Convert to task"
+                              title="Make task"
                             >
                               <CheckSquare className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleMakeReminder(note.id)}
+                              className="p-1.5 rounded text-muted-foreground/60 hover:text-warm-blue hover:bg-warm-blue-light transition-colors"
+                              title="Make reminder"
+                            >
+                              <Bell className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDelete(note.id)}
