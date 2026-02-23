@@ -242,11 +242,11 @@ function TaskPicker({
                           onClick={() =>
                             onToggle({ taskId: task.id, subtaskId: subtask.id })
                           }
-                          className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-all
+                          className={`w-4.5 h-4.5 rounded border-2 flex items-center justify-center shrink-0 transition-all
                           ${subSelected ? "bg-warm-blue border-warm-blue" : "border-border hover:border-warm-blue"}`}
                         >
                           {subSelected && (
-                            <Check className="w-2 h-2 text-white" />
+                            <Check className="w-2.5 h-2.5 text-white" />
                           )}
                         </button>
                         <span className="text-xs text-muted-foreground truncate">

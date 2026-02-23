@@ -188,10 +188,10 @@ function SubtaskList({
                   payload: { taskId: task.id, subtaskId: sub.id },
                 })
               }
-              className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all
                 ${sub.done ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
             >
-              {sub.done && <Check className="w-2.5 h-2.5 text-white" />}
+              {sub.done && <Check className="w-3 h-3 text-white" />}
             </button>
             {editingId === sub.id ? (
               <div className="flex-1 flex gap-1">
@@ -200,6 +200,7 @@ function SubtaskList({
                   onChange={e => setEditTitle(e.target.value)}
                   onKeyDown={e => {
                     if (e.key === "Enter") {
+                      if (!editTitle.trim()) return;
                       dispatch({
                         type: "UPDATE_SUBTASK",
                         payload: {
@@ -212,13 +213,13 @@ function SubtaskList({
                     }
                     if (e.key === "Escape") setEditingId(null);
                   }}
-                  className="h-6 text-xs bg-background"
+                  className="h-7 text-xs bg-background"
                   autoFocus
                 />
               </div>
             ) : (
               <span
-                className={`flex-1 text-xs cursor-pointer ${sub.done ? "line-through text-muted-foreground" : "text-foreground"}`}
+                className={`flex-1 text-xs ${sub.done ? "line-through text-muted-foreground" : "text-foreground"}`}
                 onDoubleClick={() => {
                   setEditingId(sub.id);
                   setEditTitle(sub.title);
@@ -227,6 +228,18 @@ function SubtaskList({
                 {sub.title}
               </span>
             )}
+            {editingId !== sub.id && (
+              <button
+                onClick={() => {
+                  setEditingId(sub.id);
+                  setEditTitle(sub.title);
+                }}
+                className="p-1 rounded text-muted-foreground/40 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors opacity-0 group-hover/sub:opacity-100 hover-action"
+                title="Edit subtask"
+              >
+                <Pencil className="w-3 h-3" />
+              </button>
+            )}
             <button
               onClick={() =>
                 dispatch({
@@ -234,9 +247,9 @@ function SubtaskList({
                   payload: { taskId: task.id, subtaskId: sub.id },
                 })
               }
-              className="p-0.5 rounded text-muted-foreground/40 hover:text-warm-terracotta opacity-0 group-hover/sub:opacity-100 transition-opacity"
+              className="p-1 rounded text-muted-foreground/40 hover:text-warm-terracotta opacity-0 group-hover/sub:opacity-100 hover-action transition-opacity"
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </motion.div>
         ))}
@@ -545,7 +558,7 @@ function SortableTaskCard({
         </div>
 
         {/* Action Icons */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover-action transition-opacity">
           {/* Subtask toggle */}
           <button
             onClick={() => setSubtasksOpen(!subtasksOpen)}
@@ -1338,7 +1351,7 @@ export default function TasksPage({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           ref={searchInputRef}
-          placeholder="Search tasks... (press / to focus)"
+          placeholder="Search tasks..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className="pl-10 bg-card border-border"
@@ -1455,7 +1468,7 @@ export default function TasksPage({
       )}
 
       {/* Keyboard shortcuts hint */}
-      <div className="mt-8 text-center">
+      <div className="mt-8 text-center keyboard-hint">
         <p className="text-xs text-muted-foreground/60">
           <kbd className="px-1.5 py-0.5 bg-warm-sand/50 rounded text-[10px] font-mono">
             N

@@ -257,11 +257,15 @@ export default function RemindersPage({
             Reminders
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Birthdays, appointments, and events · Press{" "}
-            <kbd className="px-1 py-0.5 rounded bg-warm-sand/50 text-[10px] font-mono border border-border">
-              R
-            </kbd>{" "}
-            to add
+            Birthdays, appointments, and events
+            <span className="keyboard-hint">
+              {" "}
+              · Press{" "}
+              <kbd className="px-1 py-0.5 rounded bg-warm-sand/50 text-[10px] font-mono border border-border">
+                R
+              </kbd>{" "}
+              to add
+            </span>
           </p>
         </div>
         <Button

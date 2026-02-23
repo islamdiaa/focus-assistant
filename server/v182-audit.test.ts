@@ -108,7 +108,7 @@ describe("State integrity after round-trip", () => {
           date: "2026-03-01",
           time: "09:00",
           recurrence: "none",
-          category: "personal",
+          category: "other",
           createdAt: "2026-02-20T10:00:00.000Z",
         },
       ],
@@ -121,6 +121,6 @@ describe("State integrity after round-trip", () => {
     expect(parsed.reminders!).toHaveLength(1);
     expect(parsed.reminders![0].title).toBe("Test Reminder");
     expect(parsed.reminders![0].date).toBe("2026-03-01");
-    expect(parsed.reminders![0].category).toBe("personal");
+    expect(parsed.reminders![0].category).toBe("other");
   });
 });

@@ -6,6 +6,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- **Touch/Mobile: MatrixPage drag-drop** — Tasks in quadrants now have "Move to..." select dropdown on mobile (previously only unassigned tasks had this). Added "Unassigned" option for moving tasks back out of quadrants. Subtitle text adapts for touch ("Use Move to..." instead of "Drag tasks").
+- **Touch/Mobile: Subtask rename** — Added pencil edit button to subtasks for tap-friendly editing. `onDoubleClick` still works on desktop. Also fixed empty subtask title validation (M5 from audit).
+- **Touch/Mobile: Small touch targets** — Increased hit areas for subtask checkboxes (16px→20px), subtask delete buttons (16px→24px), MatrixPage edit pencil (20px→28px), ReadLaterPage tag remove (12px→22px), tag confirm/cancel (14px→28px), FocusMode/TimerPage subtask checkboxes (14px→20px), DailyPlanner action button spacing (gap-0.5→gap-1).
+- **Touch/Mobile: Keyboard shortcut hints** — Hidden on touch devices via `@media (hover: none)` CSS class. Affects TasksPage shortcuts footer, RemindersPage "Press R" hint. Search placeholder no longer mentions "press / to focus".
+- **Touch/Mobile: WeeklyReview grid** — Daily breakdown grid collapses from 7 columns to 4 on small screens (below 640px).
+
+### Added
+
+- `keyboard-hint` CSS utility class — hides elements on touch devices using `@media (hover: none)`
+- Mobile Playwright E2E tests (`e2e/mobile-touch.spec.ts`) — 7 tests covering mobile viewport behavior
+- `mobile-chromium` Playwright project using iPhone 13 device emulation
+
+---
+
 ## [1.8.7] - 2026-02-21
 
 ### Fixed

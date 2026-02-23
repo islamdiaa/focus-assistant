@@ -161,6 +161,16 @@
 }
 
 @layer components {
+  /* Show hover-only elements on touch devices (no hover capability) */
+  @media (hover: none) {
+    .hover-action {
+      opacity: 1 !important;
+    }
+    .keyboard-hint {
+      display: none !important;
+    }
+  }
+
   .container {
     width: 100%;
     margin-left: auto;

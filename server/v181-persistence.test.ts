@@ -477,125 +477,9 @@ describe("Full state round-trip", () => {
 // ---- Zod Schema Validation ----
 
 describe("Zod schema accepts all V1.8.1 fields", () => {
-  it("validates a complete state through the schema", async () => {
-    // Import the schema from dataRouter
-    const { z } = await import("zod");
-
-    // Recreate the schema to test it matches our types
-    const subtaskSchema = z.object({
-      id: z.string(),
-      title: z.string(),
-      done: z.boolean(),
-    });
-
-    const appStateSchema = z.object({
-      tasks: z.array(
-        z.object({
-          id: z.string(),
-          title: z.string(),
-          description: z.string().optional(),
-          priority: z.enum(["low", "medium", "high", "urgent"]),
-          status: z.enum(["active", "done"]),
-          dueDate: z.string().optional(),
-          category: z
-            .enum([
-              "work",
-              "personal",
-              "health",
-              "learning",
-              "errands",
-              "other",
-            ])
-            .optional(),
-          energy: z.enum(["low", "medium", "high"]).optional(),
-          quadrant: z.enum([
-            "do-first",
-            "schedule",
-            "delegate",
-            "eliminate",
-            "unassigned",
-          ]),
-          createdAt: z.string(),
-          completedAt: z.string().optional(),
-          recurrence: z
-            .enum([
-              "daily",
-              "weekly",
-              "monthly",
-              "weekdays",
-              "quarterly",
-              "none",
-            ])
-            .optional(),
-          recurrenceParentId: z.string().optional(),
-          recurrenceNextDate: z.string().optional(),
-          recurrenceDayOfMonth: z.number().optional(),
-          recurrenceStartMonth: z.number().optional(),
-          subtasks: z.array(subtaskSchema).optional(),
-        })
-      ),
-      pomodoros: z.array(
-        z.object({
-          id: z.string(),
-          title: z.string(),
-          duration: z.number(),
-          elapsed: z.number(),
-          status: z.enum(["idle", "running", "paused", "completed"]),
-          createdAt: z.string(),
-          completedAt: z.string().optional(),
-          startedAt: z.string().optional(),
-          accumulatedSeconds: z.number().optional(),
-          linkedTaskId: z.string().optional(),
-          linkedTasks: z
-            .array(
-              z.object({
-                taskId: z.string(),
-                subtaskId: z.string().optional(),
-              })
-            )
-            .optional(),
-        })
-      ),
-      settings: z.object({
-        focusDuration: z.number(),
-        shortBreak: z.number(),
-        longBreak: z.number(),
-        sessionsBeforeLongBreak: z.number(),
-      }),
-      dailyStats: z.array(
-        z.object({
-          date: z.string(),
-          tasksCompleted: z.number(),
-          focusMinutes: z.number(),
-          pomodorosCompleted: z.number(),
-        })
-      ),
-      currentStreak: z.number(),
-      templates: z.array(z.any()).optional(),
-      preferences: z
-        .object({
-          notificationSound: z.string().optional(),
-          obsidianVaultPath: z.string().optional(),
-          obsidianAutoSync: z.boolean().optional(),
-        })
-        .optional(),
-      readingList: z.array(z.any()).optional(),
-      reminders: z
-        .array(
-          z.object({
-            id: z.string(),
-            title: z.string(),
-            description: z.string().optional(),
-            date: z.string(),
-            category: z.enum(["birthday", "appointment", "event", "other"]),
-            recurrence: z.enum(["none", "yearly", "monthly", "weekly"]),
-            acknowledged: z.boolean().optional(),
-            acknowledgedAt: z.string().optional(),
-            createdAt: z.string(),
-          })
-        )
-        .optional(),
-    });
+  it("validates a complete state through the real appStateSchema", async () => {
+    // Use the REAL schema from shared/appTypes.ts — NOT a hand-written copy
+    const { appStateSchema } = await import("../shared/appTypes");
 
     const testState = {
       tasks: [
@@ -653,5 +537,45 @@ describe("Zod schema accepts all V1.8.1 fields", () => {
       // Verify reminders survive
       expect(result.data.reminders).toHaveLength(1);
     }
+  });
+
+  it("rejects invalid data through the real schema", async () => {
+    const { appStateSchema } = await import("../shared/appTypes");
+
+    const invalidState = {
+      tasks: [
+        {
+          id: "t1",
+          title: "Test",
+          priority: "INVALID_PRIORITY",
+          status: "active",
+          quadrant: "unassigned",
+          createdAt: "2026-01-01",
+        },
+      ],
+      pomodoros: [],
+      settings: { ...DEFAULT_SETTINGS },
+      dailyStats: [],
+      currentStreak: 0,
+    };
+
+    const result = appStateSchema.safeParse(invalidState);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects unknown top-level fields due to .strict()", async () => {
+    const { appStateSchema } = await import("../shared/appTypes");
+
+    const stateWithExtra = {
+      tasks: [],
+      pomodoros: [],
+      settings: { ...DEFAULT_SETTINGS },
+      dailyStats: [],
+      currentStreak: 0,
+      unknownField: "should be rejected",
+    };
+
+    const result = appStateSchema.safeParse(stateWithExtra);
+    expect(result.success).toBe(false);
   });
 });

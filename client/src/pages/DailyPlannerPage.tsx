@@ -339,7 +339,7 @@ function TodayTaskCard({ task, dispatch, showUnpin }: TodayTaskCardProps) {
         </div>
 
         {/* Action buttons — visible on hover */}
-        <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 hover-action transition-opacity">
           {/* Monitor toggle (only for active tasks) */}
           {task.status === "active" && (
             <button
@@ -573,7 +573,7 @@ function TodayReminderCard({
       </div>
 
       {/* Action buttons — visible on hover */}
-      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 hover-action transition-opacity">
         {!reminder.acknowledged ? (
           <button
             onClick={() =>
@@ -1145,7 +1145,7 @@ export default function DailyPlannerPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground group-hover:text-warm-lavender transition-colors line-clamp-1 flex items-center gap-1.5">
                       {item.title}
-                      <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 hover-action transition-opacity" />
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[10px] text-muted-foreground">

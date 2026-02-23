@@ -341,9 +341,9 @@ export default function MatrixPage() {
             setEditingTaskId(task.id);
           }}
           title="Edit task"
-          className="p-1 rounded text-muted-foreground/40 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors opacity-0 group-hover:opacity-100"
+          className="p-2 rounded text-muted-foreground/40 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors opacity-0 group-hover:opacity-100 hover-action"
         >
-          <Pencil className="w-3 h-3" />
+          <Pencil className="w-3.5 h-3.5" />
         </button>
         {showMobileAssign && (
           <select
@@ -355,10 +355,13 @@ export default function MatrixPage() {
             }}
           >
             <option value="">Move to...</option>
-            <option value="do-first">🔥 Do First</option>
-            <option value="schedule">📅 Schedule</option>
-            <option value="delegate">🤝 Delegate</option>
-            <option value="eliminate">🪶 Eliminate</option>
+            <option value="do-first">Do First</option>
+            <option value="schedule">Schedule</option>
+            <option value="delegate">Delegate</option>
+            <option value="eliminate">Eliminate</option>
+            {task.quadrant !== "unassigned" && (
+              <option value="unassigned">Unassigned</option>
+            )}
           </select>
         )}
       </div>
@@ -373,8 +376,11 @@ export default function MatrixPage() {
           Eisenhower Matrix
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Drag tasks into quadrants to prioritize · Click{" "}
-          <Pencil className="w-3 h-3 inline" /> to edit inline
+          <span className="hidden lg:inline">
+            Drag tasks into quadrants to prioritize
+          </span>
+          <span className="lg:hidden">Use "Move to..." to organize tasks</span>{" "}
+          · Click <Pencil className="w-3 h-3 inline" /> to edit inline
         </p>
       </div>
 
@@ -455,7 +461,7 @@ export default function MatrixPage() {
                     </div>
                   ) : (
                     <div className="space-y-1.5">
-                      {quadrantTasks.map(task => renderTaskCard(task))}
+                      {quadrantTasks.map(task => renderTaskCard(task, true))}
                     </div>
                   )}
                 </div>

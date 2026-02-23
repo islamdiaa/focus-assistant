@@ -194,7 +194,7 @@ export default function WeeklyReviewPage() {
         <h3 className="font-serif text-lg text-foreground mb-4">
           Daily Breakdown
         </h3>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => {
             const d = new Date(week.start);
             d.setDate(d.getDate() + i);

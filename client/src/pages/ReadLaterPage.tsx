@@ -441,9 +441,9 @@ export default function ReadLaterPage() {
                                     onClick={() =>
                                       handleRemoveTag(item.id, tag)
                                     }
-                                    className="hover:text-red-500"
+                                    className="p-1 rounded hover:text-red-500 transition-colors"
                                   >
-                                    <X className="w-3 h-3" />
+                                    <X className="w-3.5 h-3.5" />
                                   </button>
                                 </span>
                               ))}
@@ -665,15 +665,15 @@ function AddTagInline({
       </datalist>
       <button
         onClick={handleSubmit}
-        className="text-warm-lavender hover:text-warm-lavender/80"
+        className="p-1.5 rounded text-warm-lavender hover:text-warm-lavender/80 hover:bg-warm-lavender/10 transition-colors"
       >
-        <Check className="w-3.5 h-3.5" />
+        <Check className="w-4 h-4" />
       </button>
       <button
         onClick={() => setOpen(false)}
-        className="text-muted-foreground hover:text-foreground"
+        className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
       >
-        <X className="w-3.5 h-3.5" />
+        <X className="w-4 h-4" />
       </button>
     </div>
   );

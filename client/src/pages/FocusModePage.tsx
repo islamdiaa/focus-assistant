@@ -297,10 +297,10 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
                           },
                         })
                       }
-                      className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-all
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all
                         ${sub.done ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
                     >
-                      {sub.done && <Check className="w-2 h-2 text-white" />}
+                      {sub.done && <Check className="w-3 h-3 text-white" />}
                     </button>
                     <span
                       className={`text-sm ${sub.done ? "line-through text-muted-foreground" : "text-foreground"}`}
