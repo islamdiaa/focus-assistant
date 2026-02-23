@@ -56,6 +56,7 @@ function loadLocal(): AppState {
     preferences: { ...DEFAULT_PREFERENCES },
     readingList: [],
     reminders: [],
+    scratchPad: [],
   };
 }
 

@@ -26,6 +26,7 @@ export {
   type Reminder,
   type ReadingItem,
   type AppPreferences,
+  type ScratchNote,
   type ContextFilter,
   type AppState,
   type StorageMode,

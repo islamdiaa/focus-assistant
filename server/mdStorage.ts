@@ -187,6 +187,18 @@ export function stateToMarkdown(state: AppState): string {
     lines.push("");
   }
 
+  // Scratch Pad
+  if (state.scratchPad && state.scratchPad.length > 0) {
+    lines.push("## Scratch Pad");
+    lines.push("");
+    lines.push("| ID | Text | Created |");
+    lines.push("|----|------|---------|");
+    for (const n of state.scratchPad) {
+      lines.push(`| ${n.id} | ${escapeField(n.text)} | ${n.createdAt} |`);
+    }
+    lines.push("");
+  }
+
   // Templates
   if (state.templates && state.templates.length > 0) {
     lines.push("## Templates");
@@ -243,6 +255,7 @@ export function markdownToState(md: string): AppState {
     preferences: { ...DEFAULT_PREFERENCES },
     readingList: [],
     reminders: [],
+    scratchPad: [],
   };
 
   const sections = md.split(/^## /m);
@@ -430,6 +443,20 @@ export function markdownToState(md: string): AppState {
             r[7] === "true" ? true : r[7] === "false" ? false : undefined,
           acknowledgedAt: r[8] || undefined,
           createdAt: r[9] || new Date().toISOString(),
+        });
+      }
+    }
+
+    if (title === "scratch pad") {
+      state.scratchPad = [];
+      const rows = parseMarkdownTable(sectionLines);
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r[0]) continue;
+        state.scratchPad.push({
+          id: r[0],
+          text: r[1] || "",
+          createdAt: r[2] || new Date().toISOString(),
         });
       }
     }

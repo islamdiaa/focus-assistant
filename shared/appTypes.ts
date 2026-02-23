@@ -182,6 +182,12 @@ export const appPreferencesSchema = z.object({
   activeContext: contextFilterSchema.nullable().optional(), // 'all' | 'work' | 'personal' — global filter
 });
 
+export const scratchNoteSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  createdAt: z.string(),
+});
+
 /**
  * The main AppState schema — used for save endpoint validation.
  * .strict() ensures unknown fields cause errors instead of being silently stripped.
@@ -197,6 +203,7 @@ export const appStateSchema = z
     preferences: appPreferencesSchema.nullable().optional(),
     readingList: z.array(readingItemSchema).nullable().optional(),
     reminders: z.array(reminderSchema).nullable().optional(),
+    scratchPad: z.array(scratchNoteSchema).nullable().optional(),
   })
   .strict();
 
@@ -229,6 +236,7 @@ export type TaskTemplate = z.infer<typeof taskTemplateSchema>;
 export type Reminder = z.infer<typeof reminderSchema>;
 export type ReadingItem = z.infer<typeof readingItemSchema>;
 export type AppPreferences = z.infer<typeof appPreferencesSchema>;
+export type ScratchNote = z.infer<typeof scratchNoteSchema>;
 export type ContextFilter = z.infer<typeof contextFilterSchema>;
 export type AppState = z.infer<typeof appStateSchema>;
 export type StorageMode = z.infer<typeof storageConfigSchema>["mode"];

@@ -37,6 +37,7 @@ const WeeklyReviewPage = lazy(() => import("./WeeklyReviewPage"));
 const ReadLaterPage = lazy(() => import("./ReadLaterPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
 import { useApp } from "@/contexts/AppContext";
+import ScratchPadDrawer from "@/components/ScratchPadDrawer";
 import {
   Smile,
   Clock,
@@ -46,6 +47,7 @@ import {
   AlertTriangle,
   Cloud,
   CloudOff,
+  StickyNote,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -75,6 +77,7 @@ export default function Home() {
   const [activePage, setActivePage] = useState<Page>("planner");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [scratchPadOpen, setScratchPadOpen] = useState(false);
   const {
     state,
     dispatch,
@@ -146,6 +149,13 @@ export default function Home() {
         return;
       }
 
+      // I: Toggle scratch pad
+      if ((e.key === "i" || e.key === "I") && !isMod) {
+        e.preventDefault();
+        setScratchPadOpen(o => !o);
+        return;
+      }
+
       // Page switching: 1-8
       if (PAGE_MAP[e.key]) {
         e.preventDefault();
@@ -213,6 +223,7 @@ export default function Home() {
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           onFocusMode={() => setFocusMode(true)}
+          onScratchPad={() => setScratchPadOpen(o => !o)}
           activeContext={activeContext}
           onContextChange={ctx =>
             dispatch({ type: "SET_CONTEXT", payload: ctx })
@@ -326,6 +337,23 @@ export default function Home() {
           </main>
         </div>
       </div>
+
+      {/* Scratch Pad Floating Button — hidden during focus mode */}
+      {!focusMode && (
+        <button
+          onClick={() => setScratchPadOpen(o => !o)}
+          className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full bg-warm-amber hover:bg-warm-amber/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+          title="Scratch Pad (I)"
+        >
+          <StickyNote className="w-5 h-5" />
+        </button>
+      )}
+
+      {/* Scratch Pad Drawer */}
+      <ScratchPadDrawer
+        open={scratchPadOpen}
+        onClose={() => setScratchPadOpen(false)}
+      />
     </>
   );
 }

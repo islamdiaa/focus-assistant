@@ -28,6 +28,7 @@ import type {
   ReadingStatus,
   Reminder,
   ContextFilter,
+  ScratchNote,
 } from "@/lib/types";
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from "@/lib/types";
 import {
@@ -128,6 +129,9 @@ type Action =
   | { type: "UNPIN_FROM_TODAY"; payload: string }
   | { type: "SET_CONTEXT"; payload: ContextFilter }
   | { type: "TOGGLE_MONITOR"; payload: string }
+  | { type: "ADD_SCRATCH_NOTE"; payload: { text: string } }
+  | { type: "DELETE_SCRATCH_NOTE"; payload: string }
+  | { type: "CONVERT_SCRATCH_TO_TASK"; payload: string }
   | { type: "UNDO" }
   | { type: "REDO" };
 
@@ -141,6 +145,7 @@ const initialState: AppState = {
   preferences: { ...DEFAULT_PREFERENCES },
   readingList: [],
   reminders: [],
+  scratchPad: [],
 };
 
 function getToday(): string {
@@ -258,6 +263,7 @@ function appReducer(state: AppState, action: Action): AppState {
         preferences: { ...DEFAULT_PREFERENCES, ...action.payload.preferences },
         readingList: action.payload.readingList || [],
         reminders: action.payload.reminders || [],
+        scratchPad: action.payload.scratchPad || [],
       };
 
     case "ADD_TASK": {
@@ -773,6 +779,47 @@ function appReducer(state: AppState, action: Action): AppState {
         ...state,
         tasks: state.tasks.map(t =>
           t.id === action.payload ? { ...t, pinnedToday: null } : t
+        ),
+      };
+    }
+
+    case "ADD_SCRATCH_NOTE": {
+      const note: ScratchNote = {
+        id: nanoid(),
+        text: action.payload.text,
+        createdAt: new Date().toISOString(),
+      };
+      return {
+        ...state,
+        scratchPad: [note, ...(state.scratchPad || [])],
+      };
+    }
+
+    case "DELETE_SCRATCH_NOTE": {
+      return {
+        ...state,
+        scratchPad: (state.scratchPad || []).filter(
+          n => n.id !== action.payload
+        ),
+      };
+    }
+
+    case "CONVERT_SCRATCH_TO_TASK": {
+      const note = (state.scratchPad || []).find(n => n.id === action.payload);
+      if (!note) return state;
+      const task: Task = {
+        id: nanoid(),
+        title: note.text,
+        priority: "medium",
+        status: "active",
+        quadrant: "unassigned",
+        createdAt: new Date().toISOString(),
+      };
+      return {
+        ...state,
+        tasks: [task, ...state.tasks],
+        scratchPad: (state.scratchPad || []).filter(
+          n => n.id !== action.payload
         ),
       };
     }

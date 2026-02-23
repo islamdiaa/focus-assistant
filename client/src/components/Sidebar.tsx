@@ -17,6 +17,7 @@ import {
   FileText,
   CalendarCheck,
   Crosshair,
+  StickyNote,
   BookOpen,
   Bell,
   Briefcase,
@@ -45,6 +46,7 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   onFocusMode?: () => void;
+  onScratchPad?: () => void;
   activeContext: ContextFilter;
   onContextChange: (context: ContextFilter) => void;
 }
@@ -83,6 +85,7 @@ export default function Sidebar({
   isOpen,
   onClose,
   onFocusMode,
+  onScratchPad,
   activeContext,
   onContextChange,
 }: SidebarProps) {
@@ -215,6 +218,18 @@ export default function Sidebar({
                 <Crosshair className="w-[18px] h-[18px]" />
                 Focus Mode
               </button>
+              {onScratchPad && (
+                <button
+                  onClick={() => {
+                    onScratchPad();
+                    onClose();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-warm-amber hover:bg-warm-amber/10"
+                >
+                  <StickyNote className="w-[18px] h-[18px]" />
+                  Scratch Pad
+                </button>
+              )}
             </div>
           )}
         </nav>
