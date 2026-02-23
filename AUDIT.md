@@ -1,7 +1,7 @@
 # FocusAssist Codebase Audit Report
 
 > **Initial audit:** 2026-02-20 on V1.8.5 (`dcb92bd`)
-> **Last updated:** 2026-02-21 on V1.8.7 (`d45f752`)
+> **Last updated:** 2026-02-23 on V1.8.7 (`4eddcc2`)
 > **Scope:** Every file in the codebase — client, server, shared types, tests, config, Docker, CI
 > **Method:** 4 parallel audit agents covering: (1) client state & data flow, (2) all page components, (3) server storage & data, (4) tests & build config
 
@@ -9,18 +9,19 @@
 
 ## Fix History
 
-| Version            | Issues Fixed               | Details                                                                                                                                                   |
-| ------------------ | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| V1.8.6 (`69c7054`) | C1, C2, C3, C4, C6, H5, H8 | Auto-save race, dirty flag polling, JSON import validation, write mutex + atomic saves, zero-safe parseInt, corrupt file handling, missing default fields |
-| V1.8.7 (`8311f6a`) | H1, H7, H9                 | AudioContext leak, duplicate recurrence guard, actual elapsed time in stats                                                                               |
+| Version            | Issues Fixed                | Details                                                                                                                                                                                                                                                  |
+| ------------------ | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| V1.8.6 (`69c7054`) | C1, C2, C3, C4, C6, H5, H8  | Auto-save race, dirty flag polling, JSON import validation, write mutex + atomic saves, zero-safe parseInt, corrupt file handling, missing default fields                                                                                                |
+| V1.8.7 (`8311f6a`) | H1, H7, H9                  | AudioContext leak, duplicate recurrence guard, actual elapsed time in stats                                                                                                                                                                              |
+| V1.8.7 (`4eddcc2`) | H13 (partial), M5, touch UX | Touch/mobile fixes (MatrixPage select, subtask edit button, touch targets, keyboard hints, responsive grid). Test fixes: storageConfig rewritten, v181 uses real schema, v182 invalid category fixed, 12 new tests. Subtask empty title validation (M5). |
 
 ---
 
 ## Table of Contents
 
 - [Critical Issues (6) — ALL FIXED](#critical-issues--all-fixed)
-- [High Issues (14) — 5 fixed, 9 remaining](#high-issues)
-- [Medium Issues (16) — 0 fixed, all remaining](#medium-issues)
+- [High Issues (14) — 6 fixed, 8 remaining](#high-issues)
+- [Medium Issues (16) — 1 fixed, 15 remaining](#medium-issues)
 - [Low Issues (10) — 0 fixed, all remaining](#low-issues)
 - [Zero Coverage Areas](#zero-coverage-areas)
 - [Summary](#summary)
@@ -356,12 +357,12 @@ Retry loop runs up to 4 attempts with delays totaling ~12 seconds. Old promise's
 
 ### H13. Tests that test the wrong thing
 
-> **STILL OPEN** — Test files unchanged.
+> **PARTIALLY FIXED in `4eddcc2`** — 3 of 4 items addressed.
 
-- `storageConfig.test.ts` — Tests own inline JSON code, not real `loadConfig`/`saveConfig`
-- `v181-persistence.test.ts` — Validates against hand-written Zod schema with `z.any()`, not real `appStateSchema`
-- `v185-features.test.ts` — Duplicates client filter logic instead of importing real code
-- `v182-audit.test.ts` — Uses invalid `category: "personal"` for Reminder, undetected
+- ~~`storageConfig.test.ts` — Rewritten to import and call real `loadConfig`/`saveConfig` with save/restore pattern~~
+- ~~`v181-persistence.test.ts` — Now imports real `appStateSchema` from `shared/appTypes.ts`. Added rejection tests for invalid data and unknown fields (`.strict()`)~~
+- `v185-features.test.ts` — **STILL OPEN** — Duplicates client filter logic instead of importing real code
+- ~~`v182-audit.test.ts` — Fixed invalid `category: "personal"` → `"other"` (valid `reminderCategorySchema` value)~~
 
 ---
 
@@ -407,11 +408,9 @@ Tasks/Pomodoros always get section headers. Reading List/Reminders omitted when 
 
 ---
 
-### M5. Subtask edit allows saving empty titles
+### ~~M5. Subtask edit allows saving empty titles~~
 
-> **STILL OPEN** — `TasksPage.tsx` SubtaskList unchanged.
-
-No `editTitle.trim().length > 0` check. Pressing Enter on blank input saves empty title.
+> **FIXED in `4eddcc2`** — Added `if (!editTitle.trim()) return;` guard before dispatching `UPDATE_SUBTASK`. Pressing Enter on a blank input now does nothing.
 
 ---
 
@@ -553,25 +552,36 @@ Save returns `{ success: true }` even if sync failed.
 
 ## Zero Coverage Areas
 
-| Area                                        | Location                                     | Lines of Code | Risk Level                          |
-| ------------------------------------------- | -------------------------------------------- | ------------- | ----------------------------------- |
-| AppContext reducer (30+ actions, undo/redo) | `client/src/contexts/AppContext.tsx:252-776` | ~550          | HIGH — all client business logic    |
-| dataRouter tRPC endpoints                   | `server/dataRouter.ts`                       | ~100          | HIGH — import/export/validation     |
-| All client components                       | `client/src/pages/*.tsx`                     | ~6000         | MEDIUM — UI logic untested          |
-| `rotateBackups()`                           | `server/mdStorage.ts:483-506`                | ~25           | MEDIUM — backup reliability         |
-| `syncToObsidian()` I/O logic                | `server/obsidianSync.ts:205-229`             | ~25           | LOW — fire-and-forget               |
-| `computeNextDate()` quarterly logic         | `client/src/contexts/AppContext.tsx:183-234` | ~50           | MEDIUM — date arithmetic edge cases |
+| Area                                        | Location                                         | Lines of Code | Risk Level                                                                                                 |
+| ------------------------------------------- | ------------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------- |
+| AppContext reducer (30+ actions, undo/redo) | `client/src/contexts/AppContext.tsx:252-776`     | ~550          | HIGH — all client business logic                                                                           |
+| dataRouter tRPC endpoints                   | `server/dataRouter.ts`                           | ~100          | HIGH — import/export/validation                                                                            |
+| All client components                       | `client/src/pages/*.tsx`                         | ~6000         | MEDIUM — UI logic untested                                                                                 |
+| ~~`rotateBackups()`~~                       | ~~`server/mdStorage.ts:483-506`~~                | ~~\~25~~      | ~~Now tested via `v188-test-improvements.test.ts` (save/load round-trip, concurrent writes)~~              |
+| `syncToObsidian()` I/O logic                | `server/obsidianSync.ts:205-229`                 | ~25           | LOW — fire-and-forget                                                                                      |
+| ~~`computeNextDate()` quarterly logic~~     | ~~`client/src/contexts/AppContext.tsx:183-234`~~ | ~~\~50~~      | ~~Now tested indirectly via quarterly recurrence serialization tests in `v188-test-improvements.test.ts`~~ |
 
 ---
 
 ## Summary
 
-| Priority     | Original Count | Fixed                                      | Remaining |
-| ------------ | -------------- | ------------------------------------------ | --------- |
-| **Critical** | 6              | **6** (V1.8.6: C1-C4, C6; C5 downgraded)   | **0**     |
-| **High**     | 14             | **5** (V1.8.6: H5, H8; V1.8.7: H1, H7, H9) | **9**     |
-| **Medium**   | 16             | 0                                          | **16**    |
-| **Low**      | 10             | 0                                          | **10**    |
-| **Total**    | **46**         | **11**                                     | **35**    |
+| Priority     | Original Count | Fixed                                                              | Remaining |
+| ------------ | -------------- | ------------------------------------------------------------------ | --------- |
+| **Critical** | 6              | **6** (V1.8.6: C1-C4, C6; C5 downgraded)                           | **0**     |
+| **High**     | 14             | **6** (V1.8.6: H5, H8; V1.8.7: H1, H7, H9; `4eddcc2`: H13 partial) | **8**     |
+| **Medium**   | 16             | **1** (`4eddcc2`: M5)                                              | **15**    |
+| **Low**      | 10             | 0                                                                  | **10**    |
+| **Total**    | **46**         | **13**                                                             | **33**    |
 
-All critical data-loss issues are resolved. The remaining high-priority items are: FocusMode timer pattern (H2), broken Google Sheets backend (H3-H4), task reorder with filters (H6), stale settings (H10), missing click-outside (H11), save retry edge case (H12), and test quality/config issues (H13-H14).
+All critical data-loss issues are resolved. The remaining high-priority items are: FocusMode timer pattern (H2), broken Google Sheets backend (H3-H4), task reorder with filters (H6), stale settings (H10), missing click-outside (H11), save retry edge case (H12), duplicated filter test logic (H13 remaining item), and test files excluded from type checking (H14).
+
+### Test Coverage Progress
+
+| Metric                                | Before Audit | After `4eddcc2`                                            |
+| ------------------------------------- | ------------ | ---------------------------------------------------------- |
+| Unit test files                       | 18           | 19                                                         |
+| Unit tests                            | 278          | 294 (+16)                                                  |
+| E2E test files                        | 1            | 2                                                          |
+| E2E tests                             | ~20          | ~21 (+ 7 mobile)                                           |
+| Fake/broken tests fixed               | 0            | 3 (storageConfig, v181-persistence, v182-audit)            |
+| Previously untested areas now covered | 0            | 3 (rotateBackups, quarterly recurrence, concurrent writes) |
