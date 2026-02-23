@@ -1,5 +1,9 @@
 # FocusAssist
 
+[![CI](https://github.com/islamdiaa/focus-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/islamdiaa/focus-assistant/actions/workflows/ci.yml)
+[![Docker Pulls](https://img.shields.io/docker/pulls/islamdiaa/focus-assistant)](https://hub.docker.com/r/islamdiaa/focus-assistant)
+[![Docker Image](https://img.shields.io/docker/image-size/islamdiaa/focus-assistant/latest)](https://hub.docker.com/r/islamdiaa/focus-assistant)
+
 A warm, ADHD-friendly productivity app with task management, Pomodoro timers, Eisenhower Matrix, reminders, and statistics tracking. Runs as a single Docker container with data stored in a human-readable Markdown file.
 
 ## Screenshots
@@ -175,6 +179,10 @@ The UI follows a "Warm Scandinavian" design language with DM Serif Display + DM 
 | `F`            | Toggle focus mode |
 | `Ctrl+Z`       | Undo              |
 | `Ctrl+Shift+Z` | Redo              |
+
+## Author
+
+[Islam ElTayar](https://itayar.com)
 
 ## License
 
