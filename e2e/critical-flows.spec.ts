@@ -65,6 +65,16 @@ test.describe("Tasks Page", () => {
 });
 
 test.describe("Page Navigation", () => {
+  // These tests click sidebar nav items which are hidden behind a hamburger menu
+  // on mobile viewports. Only run on desktop-sized viewports.
+  test.beforeEach(async ({ page }) => {
+    const viewport = page.viewportSize();
+    test.skip(
+      !viewport || viewport.width < 1024,
+      "Sidebar navigation requires desktop viewport"
+    );
+  });
+
   test("can navigate to Timer page and see content", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");

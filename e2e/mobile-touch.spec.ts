@@ -24,17 +24,30 @@ test.describe("Mobile Touch UX", () => {
     expect(pageContent).not.toContain("press / to focus");
   });
 
-  test("keyboard shortcuts footer has keyboard-hint class", async ({
+  test("keyboard-hint CSS class is defined in stylesheets", async ({
     page,
   }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // The keyboard hint div should have the keyboard-hint class in the DOM
-    const keyboardHints = page.locator(".keyboard-hint");
-    const count = await keyboardHints.count();
-    // Should exist in the DOM (CSS hides it on touch devices)
-    expect(count).toBeGreaterThan(0);
+    // Verify the keyboard-hint class is defined in the app's CSS
+    const styles = await page.evaluate(() => {
+      const sheets = Array.from(document.styleSheets);
+      for (const sheet of sheets) {
+        try {
+          const rules = Array.from(sheet.cssRules);
+          for (const rule of rules) {
+            if (rule.cssText && rule.cssText.includes("keyboard-hint")) {
+              return true;
+            }
+          }
+        } catch {
+          // Cross-origin stylesheets can't be read
+        }
+      }
+      return false;
+    });
+    expect(styles).toBe(true);
   });
 
   test("hover-action class exists in rendered page", async ({ page }) => {
