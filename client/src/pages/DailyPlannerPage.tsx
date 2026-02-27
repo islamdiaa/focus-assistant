@@ -905,7 +905,13 @@ export default function DailyPlannerPage({
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newPriority, setNewPriority] = useState<Priority>("medium");
-  const [newCategory, setNewCategory] = useState<Category | "">("");
+  const defaultCategory: Category | "" =
+    activeContext === "work" || activeContext === "personal"
+      ? activeContext
+      : "";
+  const [newCategory, setNewCategory] = useState<Category | "">(
+    defaultCategory
+  );
   const [newEnergy, setNewEnergy] = useState<EnergyLevel | "">("");
   const [newDueDate, setNewDueDate] = useState("");
   const [newRecurrence, setNewRecurrence] =
@@ -985,7 +991,7 @@ export default function DailyPlannerPage({
     setNewTitle("");
     setNewDesc("");
     setNewPriority("medium");
-    setNewCategory("");
+    setNewCategory(defaultCategory);
     setNewEnergy("");
     setNewDueDate("");
     setNewRecurrence("none");

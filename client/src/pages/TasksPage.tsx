@@ -656,6 +656,7 @@ export default function TasksPage({
   reminderTrigger = 0,
 }: TasksPageProps) {
   const { state, dispatch } = useApp();
+  const activeContext = state.preferences?.activeContext || "all";
   const [filter, setFilter] = useState<Filter>("active");
   const [sort, setSort] = useState<Sort>("priority");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -667,7 +668,13 @@ export default function TasksPage({
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newPriority, setNewPriority] = useState<Priority>("medium");
-  const [newCategory, setNewCategory] = useState<Category | "">("");
+  const defaultCategory: Category | "" =
+    activeContext === "work" || activeContext === "personal"
+      ? activeContext
+      : "";
+  const [newCategory, setNewCategory] = useState<Category | "">(
+    defaultCategory
+  );
   const [newEnergy, setNewEnergy] = useState<EnergyLevel | "">("");
   const [newDueDate, setNewDueDate] = useState("");
   const [newRecurrence, setNewRecurrence] =
@@ -786,8 +793,6 @@ export default function TasksPage({
 
   const isDragDisabled = sort !== "manual" || !!searchQuery.trim();
 
-  const activeContext = state.preferences?.activeContext || "all";
-
   const filteredTasks = useMemo(() => {
     let tasks = filterTasksByContext([...state.tasks], activeContext);
 
@@ -871,7 +876,7 @@ export default function TasksPage({
     setNewTitle("");
     setNewDesc("");
     setNewPriority("medium");
-    setNewCategory("");
+    setNewCategory(defaultCategory);
     setNewEnergy("");
     setNewDueDate("");
     setNewRecurrence("none");
