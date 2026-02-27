@@ -178,9 +178,9 @@ export default function Home() {
         return;
       }
 
-      // N: New task (only on tasks page) — skip if Cmd/Ctrl held (new window)
+      // N: New task (on tasks or planner page) — skip if Cmd/Ctrl held (new window)
       if ((e.key === "n" || e.key === "N") && !isMod) {
-        if (activePage === "tasks") {
+        if (activePage === "tasks" || activePage === "planner") {
           e.preventDefault();
           setNewTaskTrigger(t => t + 1);
         }
@@ -189,7 +189,11 @@ export default function Home() {
 
       // R: New reminder (on tasks or reminders page) — skip if Cmd/Ctrl held (browser refresh)
       if ((e.key === "r" || e.key === "R") && !isMod) {
-        if (activePage === "tasks" || activePage === "reminders") {
+        if (
+          activePage === "tasks" ||
+          activePage === "reminders" ||
+          activePage === "planner"
+        ) {
           e.preventDefault();
           setReminderTrigger(t => t + 1);
         }
@@ -198,7 +202,7 @@ export default function Home() {
 
       // /: Focus search (only on tasks page)
       if (e.key === "/") {
-        if (activePage === "tasks") {
+        if (activePage === "tasks" || activePage === "planner") {
           e.preventDefault();
           setSearchTrigger(t => t + 1);
         }
@@ -330,7 +334,13 @@ export default function Home() {
                 </div>
               }
             >
-              {activePage === "planner" && <DailyPlannerPage />}
+              {activePage === "planner" && (
+                <DailyPlannerPage
+                  newTaskTrigger={newTaskTrigger}
+                  searchTrigger={searchTrigger}
+                  reminderTrigger={reminderTrigger}
+                />
+              )}
               {activePage === "tasks" && (
                 <TasksPage
                   newTaskTrigger={newTaskTrigger}

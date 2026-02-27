@@ -4,7 +4,7 @@
  * V1.8.5: Full task actions (monitor/complete/edit/delete), full reminder actions,
  *         "Actioned Today" section, no monitoring section (focus-only view)
  */
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
 import {
   CheckCircle2,
@@ -49,7 +49,15 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import type { Task, EnergyLevel, Reminder } from "@/lib/types";
+import type {
+  Task,
+  EnergyLevel,
+  Reminder,
+  Priority,
+  Category,
+  RecurrenceFrequency,
+} from "@/lib/types";
+import { Textarea } from "@/components/ui/textarea";
 import {
   filterTasksByContext,
   filterRemindersByContext,
@@ -61,6 +69,90 @@ const ENERGY_EMOJI: Record<EnergyLevel, string> = {
   medium: "⚡",
   high: "🔥",
 };
+
+const PRIORITY_COLORS: Record<Priority, string> = {
+  urgent:
+    "bg-warm-terracotta/15 text-warm-terracotta border-warm-terracotta/30",
+  high: "bg-warm-terracotta-light text-warm-terracotta border-warm-terracotta/20",
+  medium: "bg-warm-amber-light text-warm-amber border-warm-amber/20",
+  low: "bg-warm-sage-light text-warm-sage border-warm-sage/20",
+};
+
+const PRIORITY_LABELS: Record<Priority, string> = {
+  urgent: "Urgent",
+  high: "High",
+  medium: "Medium",
+  low: "Low",
+};
+
+const CATEGORY_CONFIG: Record<Category, { emoji: string; label: string }> = {
+  work: { emoji: "💼", label: "Work" },
+  personal: { emoji: "🏠", label: "Personal" },
+  health: { emoji: "💪", label: "Health" },
+  learning: { emoji: "📚", label: "Learning" },
+  errands: { emoji: "🛒", label: "Errands" },
+  other: { emoji: "📌", label: "Other" },
+};
+
+const ENERGY_CONFIG: Record<EnergyLevel, { emoji: string; label: string }> = {
+  low: { emoji: "🔋", label: "Low Energy" },
+  medium: { emoji: "⚡", label: "Medium Energy" },
+  high: { emoji: "🔥", label: "High Energy" },
+};
+
+const RECURRENCE_CONFIG: Record<RecurrenceFrequency, { label: string }> = {
+  none: { label: "No Repeat" },
+  daily: { label: "Daily" },
+  weekly: { label: "Weekly" },
+  monthly: { label: "Monthly" },
+  quarterly: { label: "Quarterly" },
+  weekdays: { label: "Weekdays" },
+};
+
+const REMINDER_CATEGORIES: Record<
+  Reminder["category"],
+  { icon: typeof Bell; label: string; color: string; bg: string }
+> = {
+  birthday: {
+    icon: Cake,
+    label: "Birthday",
+    color: "text-pink-500",
+    bg: "bg-pink-50",
+  },
+  appointment: {
+    icon: Calendar,
+    label: "Appointment",
+    color: "text-warm-blue",
+    bg: "bg-warm-blue-light",
+  },
+  event: {
+    icon: Star,
+    label: "Event",
+    color: "text-warm-amber",
+    bg: "bg-warm-amber-light",
+  },
+  other: {
+    icon: Bell,
+    label: "Other",
+    color: "text-warm-sage",
+    bg: "bg-warm-sage-light",
+  },
+};
+
+const REMINDER_RECURRENCE: { value: Reminder["recurrence"]; label: string }[] =
+  [
+    { value: "none", label: "One-time" },
+    { value: "yearly", label: "Yearly" },
+    { value: "quarterly", label: "Quarterly" },
+    { value: "monthly", label: "Monthly" },
+    { value: "weekly", label: "Weekly" },
+  ];
+
+interface DailyPlannerPageProps {
+  newTaskTrigger?: number;
+  searchTrigger?: number;
+  reminderTrigger?: number;
+}
 
 // ---- Curated motivational quotes ----
 const QUOTES: { text: string; author: string; source?: string }[] = [
@@ -613,7 +705,11 @@ function TodayReminderCard({
   );
 }
 
-export default function DailyPlannerPage() {
+export default function DailyPlannerPage({
+  newTaskTrigger = 0,
+  searchTrigger = 0,
+  reminderTrigger = 0,
+}: DailyPlannerPageProps) {
   const { state, dispatch } = useApp();
   const activeContext = state.preferences?.activeContext || "all";
   const timeOfDay = getTimeOfDay();
@@ -639,6 +735,10 @@ export default function DailyPlannerPage() {
     );
   }, [state.dailyStats, today]);
 
+  // --- Search ---
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   // Context-filtered tasks
   const contextTasks = useMemo(
     () => filterTasksByContext(state.tasks, activeContext),
@@ -649,11 +749,19 @@ export default function DailyPlannerPage() {
   const pinnedTasks = useMemo(() => {
     return contextTasks
       .filter(t => t.status === "active" && t.pinnedToday === today)
+      .filter(t => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+          t.title.toLowerCase().includes(q) ||
+          (t.description && t.description.toLowerCase().includes(q))
+        );
+      })
       .sort((a, b) => {
         const pOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
         return pOrder[a.priority] - pOrder[b.priority];
       });
-  }, [contextTasks, today]);
+  }, [contextTasks, today, searchQuery]);
 
   // Tasks due today or overdue (excluding already pinned)
   const dueTasks = useMemo(() => {
@@ -665,6 +773,14 @@ export default function DailyPlannerPage() {
           t.dueDate <= today &&
           t.pinnedToday !== today
       )
+      .filter(t => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+          t.title.toLowerCase().includes(q) ||
+          (t.description && t.description.toLowerCase().includes(q))
+        );
+      })
       .sort((a, b) => {
         // Overdue first, then by priority
         const aOverdue = a.dueDate! < today;
@@ -673,18 +789,27 @@ export default function DailyPlannerPage() {
         const pOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
         return pOrder[a.priority] - pOrder[b.priority];
       });
-  }, [contextTasks, today]);
+  }, [contextTasks, today, searchQuery]);
 
   // High-priority tasks (not due today but urgent/high, excluding pinned)
   const highPriorityTasks = useMemo(() => {
-    return contextTasks.filter(
-      t =>
-        t.status === "active" &&
-        (t.priority === "urgent" || t.priority === "high") &&
-        (!t.dueDate || t.dueDate > today) &&
-        t.pinnedToday !== today
-    );
-  }, [contextTasks, today]);
+    return contextTasks
+      .filter(
+        t =>
+          t.status === "active" &&
+          (t.priority === "urgent" || t.priority === "high") &&
+          (!t.dueDate || t.dueDate > today) &&
+          t.pinnedToday !== today
+      )
+      .filter(t => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+          t.title.toLowerCase().includes(q) ||
+          (t.description && t.description.toLowerCase().includes(q))
+        );
+      });
+  }, [contextTasks, today, searchQuery]);
 
   // Task picker state
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -728,8 +853,16 @@ export default function DailyPlannerPage() {
           t.pinnedToday !== today &&
           !(t.dueDate && t.dueDate <= today)
       )
+      .filter(t => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+          t.title.toLowerCase().includes(q) ||
+          (t.description && t.description.toLowerCase().includes(q))
+        );
+      })
       .slice(0, 5);
-  }, [contextTasks, timeOfDay]);
+  }, [contextTasks, timeOfDay, searchQuery]);
 
   // Actioned Today: tasks completed or moved to monitored today (using statusChangedAt)
   const actionedToday = useMemo(() => {
@@ -767,6 +900,130 @@ export default function DailyPlannerPage() {
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [reminders, today]);
 
+  // --- New Task dialog state ---
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newPriority, setNewPriority] = useState<Priority>("medium");
+  const [newCategory, setNewCategory] = useState<Category | "">("");
+  const [newEnergy, setNewEnergy] = useState<EnergyLevel | "">("");
+  const [newDueDate, setNewDueDate] = useState("");
+  const [newRecurrence, setNewRecurrence] =
+    useState<RecurrenceFrequency>("none");
+  const [newQuarterlyDay, setNewQuarterlyDay] = useState(16);
+  const [newQuarterlyStartMonth, setNewQuarterlyStartMonth] = useState(2);
+  const [newSubtasks, setNewSubtasks] = useState<string[]>([]);
+  const [newSubtaskInput, setNewSubtaskInput] = useState("");
+
+  // --- New Reminder dialog state ---
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [remTitle, setRemTitle] = useState("");
+  const [remDescription, setRemDescription] = useState("");
+  const [remDate, setRemDate] = useState("");
+  const [remTime, setRemTime] = useState("");
+  const [remRecurrence, setRemRecurrence] =
+    useState<Reminder["recurrence"]>("none");
+  const [remCategory, setRemCategory] = useState<Reminder["category"]>("other");
+
+  // --- Keyboard shortcut trigger detection (skip initial mount) ---
+  const prevNewTaskTrigger = useRef(newTaskTrigger);
+  const prevSearchTrigger = useRef(searchTrigger);
+  const prevReminderTrigger = useRef(reminderTrigger);
+
+  useEffect(() => {
+    if (newTaskTrigger !== prevNewTaskTrigger.current) {
+      prevNewTaskTrigger.current = newTaskTrigger;
+      if (newTaskTrigger > 0) setTaskDialogOpen(true);
+    }
+  }, [newTaskTrigger]);
+
+  useEffect(() => {
+    if (searchTrigger !== prevSearchTrigger.current) {
+      prevSearchTrigger.current = searchTrigger;
+      if (searchTrigger > 0) searchInputRef.current?.focus();
+    }
+  }, [searchTrigger]);
+
+  useEffect(() => {
+    if (reminderTrigger !== prevReminderTrigger.current) {
+      prevReminderTrigger.current = reminderTrigger;
+      if (reminderTrigger > 0) {
+        setRemTitle("");
+        setRemDescription("");
+        setRemDate("");
+        setRemTime("");
+        setRemRecurrence("none");
+        setRemCategory("other");
+        setReminderDialogOpen(true);
+      }
+    }
+  }, [reminderTrigger]);
+
+  // --- Handlers ---
+  function handleAddTask() {
+    if (!newTitle.trim()) return;
+    dispatch({
+      type: "ADD_TASK_AND_PIN_TODAY",
+      payload: {
+        title: newTitle.trim(),
+        description: newDesc.trim() || undefined,
+        priority: newPriority,
+        dueDate: newDueDate || undefined,
+        category: newCategory || undefined,
+        energy: newEnergy || undefined,
+        recurrence: newRecurrence !== "none" ? newRecurrence : undefined,
+        recurrenceDayOfMonth:
+          newRecurrence === "quarterly" ? newQuarterlyDay : undefined,
+        recurrenceStartMonth:
+          newRecurrence === "quarterly" ? newQuarterlyStartMonth : undefined,
+        subtasks:
+          newSubtasks.length > 0
+            ? newSubtasks.map(s => ({ title: s }))
+            : undefined,
+      },
+    });
+    setNewTitle("");
+    setNewDesc("");
+    setNewPriority("medium");
+    setNewCategory("");
+    setNewEnergy("");
+    setNewDueDate("");
+    setNewRecurrence("none");
+    setNewQuarterlyDay(16);
+    setNewQuarterlyStartMonth(2);
+    setNewSubtasks([]);
+    setNewSubtaskInput("");
+    setTaskDialogOpen(false);
+  }
+
+  function addNewSubtask() {
+    if (!newSubtaskInput.trim()) return;
+    setNewSubtasks([...newSubtasks, newSubtaskInput.trim()]);
+    setNewSubtaskInput("");
+  }
+
+  function handleAddReminder() {
+    if (!remTitle.trim() || !remDate) return;
+    dispatch({
+      type: "ADD_REMINDER",
+      payload: {
+        title: remTitle.trim(),
+        description: remDescription.trim() || undefined,
+        date: remDate,
+        time: remTime || undefined,
+        recurrence: remRecurrence,
+        category: remCategory,
+      },
+    });
+    setRemTitle("");
+    setRemDescription("");
+    setRemDate("");
+    setRemTime("");
+    setRemRecurrence("none");
+    setRemCategory("other");
+    setReminderDialogOpen(false);
+  }
+
   return (
     <div className="p-4 lg:p-8 max-w-4xl">
       {/* Greeting */}
@@ -789,6 +1046,31 @@ export default function DailyPlannerPage() {
             year: "numeric",
           })}
         </p>
+        <div className="flex items-center gap-2 mt-3">
+          <Button
+            onClick={() => setReminderDialogOpen(true)}
+            variant="outline"
+            size="sm"
+            className="gap-1.5 border-warm-amber/30 text-warm-amber hover:bg-warm-amber-light"
+          >
+            <Bell className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Reminder</span>
+            <span className="text-[10px] text-muted-foreground hidden sm:inline keyboard-hint">
+              (R)
+            </span>
+          </Button>
+          <Button
+            onClick={() => setTaskDialogOpen(true)}
+            size="sm"
+            className="bg-warm-sage hover:bg-warm-sage/90 text-white gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Add Task</span>
+            <span className="text-[10px] text-white/70 hidden sm:inline keyboard-hint">
+              (N)
+            </span>
+          </Button>
+        </div>
       </motion.div>
 
       {/* Motivational Quote */}
@@ -855,6 +1137,26 @@ export default function DailyPlannerPage() {
             <p className="text-[10px] text-muted-foreground">{card.label}</p>
           </motion.div>
         ))}
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          ref={searchInputRef}
+          placeholder="Search today's tasks..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="pl-10 bg-card border-border"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* My Today — Pinned Tasks */}
@@ -1228,6 +1530,337 @@ export default function DailyPlannerPage() {
           </AnimatePresence>
         </div>
       )}
+
+      {/* New Task Dialog */}
+      <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+        <DialogContent className="bg-card max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl">New Task</DialogTitle>
+            <DialogDescription className="sr-only">
+              Create a new task pinned to Today
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-5 mt-2">
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                Title
+              </label>
+              <Input
+                placeholder="e.g., Finish the report..."
+                value={newTitle}
+                onChange={e => setNewTitle(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleAddTask()}
+                className="bg-background"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                Description (optional)
+              </label>
+              <Textarea
+                placeholder="Add more details..."
+                value={newDesc}
+                onChange={e => setNewDesc(e.target.value)}
+                className="bg-background resize-none"
+                rows={2}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                Priority
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {(["low", "medium", "high", "urgent"] as Priority[]).map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setNewPriority(p)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200
+                    ${newPriority === p ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
+                  >
+                    {PRIORITY_LABELS[p]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                Category
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.keys(CATEGORY_CONFIG) as Category[]).map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setNewCategory(newCategory === c ? "" : c)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
+                    ${newCategory === c ? "bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
+                  >
+                    <span>{CATEGORY_CONFIG[c].emoji}</span>
+                    <span>{CATEGORY_CONFIG[c].label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                Energy Level
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.keys(ENERGY_CONFIG) as EnergyLevel[]).map(e => (
+                  <button
+                    key={e}
+                    type="button"
+                    onClick={() => setNewEnergy(newEnergy === e ? "" : e)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
+                    ${newEnergy === e ? "bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
+                  >
+                    <span>{ENERGY_CONFIG[e].emoji}</span>
+                    <span>{ENERGY_CONFIG[e].label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                Repeat
+              </label>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {(Object.keys(RECURRENCE_CONFIG) as RecurrenceFrequency[]).map(
+                  r => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setNewRecurrence(r)}
+                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
+                    ${newRecurrence === r ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
+                    >
+                      {RECURRENCE_CONFIG[r].label}
+                    </button>
+                  )
+                )}
+              </div>
+              {newRecurrence === "quarterly" && (
+                <div className="mt-3 p-3 bg-warm-blue-light/30 rounded-lg border border-warm-blue/20 space-y-2">
+                  <p className="text-xs text-warm-blue font-medium">
+                    Quarterly schedule: repeats every 3 months
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <label className="text-[10px] text-muted-foreground mb-0.5 block">
+                        Day of month
+                      </label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={28}
+                        value={newQuarterlyDay}
+                        onChange={e => {
+                          const n = parseInt(e.target.value, 10);
+                          setNewQuarterlyDay(isNaN(n) ? 16 : n);
+                        }}
+                        className="bg-background h-8 text-xs"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[10px] text-muted-foreground mb-0.5 block">
+                        Starting month
+                      </label>
+                      <select
+                        value={newQuarterlyStartMonth}
+                        onChange={e =>
+                          setNewQuarterlyStartMonth(parseInt(e.target.value))
+                        }
+                        className="w-full h-8 rounded-md border border-border bg-background text-xs px-2"
+                      >
+                        {[
+                          "Jan",
+                          "Feb",
+                          "Mar",
+                          "Apr",
+                          "May",
+                          "Jun",
+                          "Jul",
+                          "Aug",
+                          "Sep",
+                          "Oct",
+                          "Nov",
+                          "Dec",
+                        ].map((m, i) => (
+                          <option key={i} value={i + 1}>
+                            {m}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                Due Date (optional)
+              </label>
+              <Input
+                type="date"
+                value={newDueDate}
+                onChange={e => setNewDueDate(e.target.value)}
+                className="bg-background"
+              />
+            </div>
+            {/* Subtasks section */}
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                Subtasks (optional)
+              </label>
+              {newSubtasks.map((s, i) => (
+                <div key={i} className="flex items-center gap-2 mb-1.5">
+                  <div className="w-4 h-4 rounded border-2 border-border shrink-0" />
+                  <span className="text-sm flex-1">{s}</span>
+                  <button
+                    onClick={() =>
+                      setNewSubtasks(newSubtasks.filter((_, j) => j !== i))
+                    }
+                    className="p-0.5 text-muted-foreground hover:text-warm-terracotta"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-1.5">
+                <Input
+                  value={newSubtaskInput}
+                  onChange={e => setNewSubtaskInput(e.target.value)}
+                  onKeyDown={e =>
+                    e.key === "Enter" && (e.preventDefault(), addNewSubtask())
+                  }
+                  placeholder="Add a subtask..."
+                  className="bg-background text-sm"
+                />
+                <Button
+                  onClick={addNewSubtask}
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <Button
+              onClick={handleAddTask}
+              className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white font-medium py-2.5"
+            >
+              Create Task
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Reminder Dialog */}
+      <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
+        <DialogContent className="bg-card max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl">
+              New Reminder
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Add a birthday, appointment, or event to remember
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <Input
+              placeholder="Reminder title..."
+              value={remTitle}
+              onChange={e => setRemTitle(e.target.value)}
+              className="bg-background"
+              autoFocus
+            />
+            <Input
+              placeholder="Description (optional)"
+              value={remDescription}
+              onChange={e => setRemDescription(e.target.value)}
+              className="bg-background"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                  Date
+                </label>
+                <Input
+                  type="date"
+                  value={remDate}
+                  onChange={e => setRemDate(e.target.value)}
+                  className="bg-background"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                  Time{" "}
+                  <span className="text-muted-foreground/60 normal-case font-normal">
+                    (optional)
+                  </span>
+                </label>
+                <Input
+                  type="time"
+                  value={remTime}
+                  onChange={e => setRemTime(e.target.value)}
+                  className="bg-background"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                Category
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {(
+                  Object.keys(REMINDER_CATEGORIES) as Reminder["category"][]
+                ).map(c => {
+                  const cfg = REMINDER_CATEGORIES[c];
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setRemCategory(c)}
+                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 flex flex-col items-center gap-1
+                        ${remCategory === c ? `${cfg.bg} ${cfg.color} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
+                    >
+                      <cfg.icon className="w-4 h-4" />
+                      {cfg.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                Repeats
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {REMINDER_RECURRENCE.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setRemRecurrence(opt.value)}
+                    className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
+                      ${remRecurrence === opt.value ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Button
+              onClick={handleAddReminder}
+              disabled={!remTitle.trim() || !remDate}
+              className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white"
+            >
+              Add Reminder
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

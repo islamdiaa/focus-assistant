@@ -57,6 +57,21 @@ type Action =
         subtasks?: Array<{ title: string }>;
       };
     }
+  | {
+      type: "ADD_TASK_AND_PIN_TODAY";
+      payload: {
+        title: string;
+        description?: string;
+        priority: Priority;
+        dueDate?: string;
+        category?: Category;
+        energy?: EnergyLevel;
+        recurrence?: RecurrenceFrequency;
+        recurrenceDayOfMonth?: number;
+        recurrenceStartMonth?: number;
+        subtasks?: Array<{ title: string }>;
+      };
+    }
   | { type: "UPDATE_TASK"; payload: Partial<Task> & { id: string } }
   | { type: "DELETE_TASK"; payload: string }
   | { type: "TOGGLE_TASK"; payload: string }
@@ -283,6 +298,40 @@ function appReducer(state: AppState, action: Action): AppState {
         energy: action.payload.energy,
         quadrant: "unassigned",
         createdAt: new Date().toISOString(),
+        recurrence: action.payload.recurrence,
+        recurrenceDayOfMonth: action.payload.recurrenceDayOfMonth,
+        recurrenceStartMonth: action.payload.recurrenceStartMonth,
+        recurrenceNextDate:
+          action.payload.recurrence && action.payload.recurrence !== "none"
+            ? computeNextDate(action.payload.recurrence, new Date(), {
+                recurrenceDayOfMonth: action.payload.recurrenceDayOfMonth,
+                recurrenceStartMonth: action.payload.recurrenceStartMonth,
+              })
+            : undefined,
+        subtasks: subtasks.length > 0 ? subtasks : undefined,
+      };
+      return { ...state, tasks: [task, ...state.tasks] };
+    }
+
+    case "ADD_TASK_AND_PIN_TODAY": {
+      const subtasks: Subtask[] = (action.payload.subtasks || []).map(s => ({
+        id: nanoid(),
+        title: s.title,
+        done: false,
+      }));
+      const todayDate = new Date().toISOString().split("T")[0];
+      const task: Task = {
+        id: nanoid(),
+        title: action.payload.title,
+        description: action.payload.description,
+        priority: action.payload.priority,
+        status: "active",
+        dueDate: action.payload.dueDate,
+        category: action.payload.category,
+        energy: action.payload.energy,
+        quadrant: "unassigned",
+        createdAt: new Date().toISOString(),
+        pinnedToday: todayDate,
         recurrence: action.payload.recurrence,
         recurrenceDayOfMonth: action.payload.recurrenceDayOfMonth,
         recurrenceStartMonth: action.payload.recurrenceStartMonth,
