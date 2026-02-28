@@ -319,8 +319,10 @@ export function markdownToState(md: string): AppState {
           ) as any;
         if (key === "auto complete parent")
           state.preferences!.autoCompleteParent = val === "true";
-        if (key === "available hours per day")
-          state.preferences!.availableHoursPerDay = val ? parseFloat(val) : 8;
+        if (key === "available hours per day") {
+          const parsed = parseFloat(val);
+          state.preferences!.availableHoursPerDay = isNaN(parsed) ? 8 : parsed;
+        }
       }
     }
 
@@ -357,12 +359,18 @@ export function markdownToState(md: string): AppState {
           recurrenceParentId: col(12) || undefined,
           recurrenceNextDate: col(13) || undefined,
           subtasks,
-          recurrenceDayOfMonth: col(15) ? parseInt(col(15)) : undefined,
-          recurrenceStartMonth: col(16) ? parseInt(col(16)) : undefined,
+          recurrenceDayOfMonth: col(15)
+            ? safeParseInt(col(15), 0) || undefined
+            : undefined,
+          recurrenceStartMonth: col(16)
+            ? safeParseInt(col(16), 0) || undefined
+            : undefined,
           pinnedToday: col(17) || undefined,
           statusChangedAt: col(18) || undefined,
           isFocusGoal: col(19) === "true" ? true : undefined,
-          estimatedMinutes: col(20) ? parseInt(col(20)) : undefined,
+          estimatedMinutes: col(20)
+            ? safeParseInt(col(20), 0) || undefined
+            : undefined,
         });
       }
     }

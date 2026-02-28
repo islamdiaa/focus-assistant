@@ -163,9 +163,6 @@ export default function CommandPalette({
     [results.length, selectedIndex, selectResult]
   );
 
-  // Track the flat index as we render sections
-  let flatIndex = 0;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -215,9 +212,9 @@ export default function CommandPalette({
               <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                 Pages
               </p>
-              {filteredPages.map(page => {
+              {filteredPages.map((page, i) => {
                 const Icon = page.icon;
-                const idx = flatIndex++;
+                const idx = i;
                 return (
                   <button
                     key={page.id}
@@ -245,8 +242,8 @@ export default function CommandPalette({
               <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mt-1">
                 Tasks
               </p>
-              {filteredTasks.map(task => {
-                const idx = flatIndex++;
+              {filteredTasks.map((task, i) => {
+                const idx = filteredPages.length + i;
                 return (
                   <button
                     key={task.id}

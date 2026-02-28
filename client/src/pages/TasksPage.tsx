@@ -1654,7 +1654,15 @@ export default function TasksPage({
               size="sm"
               variant="ghost"
               className="gap-1.5 text-warm-terracotta hover:bg-warm-terracotta-light"
-              onClick={() => handleBulkAction("BULK_DELETE_TASKS")}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `Delete ${selectedIds.size} task${selectedIds.size === 1 ? "" : "s"}? You can undo with Ctrl+Z.`
+                  )
+                ) {
+                  handleBulkAction("BULK_DELETE_TASKS");
+                }
+              }}
               title="Delete selected"
             >
               <Trash2 className="w-4 h-4" />

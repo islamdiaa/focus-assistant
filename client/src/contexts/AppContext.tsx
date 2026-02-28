@@ -389,6 +389,7 @@ function appReducer(state: AppState, action: Action): AppState {
                 newStatus === "done" ? new Date().toISOString() : undefined,
               statusChangedAt: new Date().toISOString(),
               pinnedToday: newStatus === "done" ? null : t.pinnedToday, // Clear pin on completion
+              isFocusGoal: newStatus === "done" ? undefined : t.isFocusGoal, // Clear focus goal on completion
               subtasks:
                 newStatus === "done" && t.subtasks
                   ? t.subtasks.map(s => ({ ...s, done: true }))
@@ -927,7 +928,7 @@ function appReducer(state: AppState, action: Action): AppState {
         return {
           ...state,
           tasks: state.tasks.map(t =>
-            t.id === action.payload ? { ...t, isFocusGoal: null } : t
+            t.id === action.payload ? { ...t, isFocusGoal: undefined } : t
           ),
         };
       }
@@ -948,7 +949,7 @@ function appReducer(state: AppState, action: Action): AppState {
       const ids = new Set(action.payload);
       const todayStats = getTodayStats(state.dailyStats);
       let completedCount = 0;
-      const tasks = state.tasks.map(t => {
+      let tasks = state.tasks.map(t => {
         if (!ids.has(t.id) || t.status === "done") return t;
         completedCount++;
         return {
@@ -957,9 +958,54 @@ function appReducer(state: AppState, action: Action): AppState {
           completedAt: new Date().toISOString(),
           statusChangedAt: new Date().toISOString(),
           pinnedToday: null,
+          isFocusGoal: undefined,
           subtasks: t.subtasks?.map(s => ({ ...s, done: true })),
         };
       });
+      // Spawn recurrence children for completed recurring tasks
+      const newRecurrenceTasks: Task[] = [];
+      for (const id of Array.from(ids)) {
+        const task = state.tasks.find(t => t.id === id);
+        if (
+          task &&
+          task.status === "active" &&
+          task.recurrence &&
+          task.recurrence !== "none" &&
+          !tasks.some(
+            t => t.recurrenceParentId === task.id && t.status === "active"
+          )
+        ) {
+          const nextDate = computeNextDate(task.recurrence, new Date(), {
+            recurrenceDayOfMonth: task.recurrenceDayOfMonth,
+            recurrenceStartMonth: task.recurrenceStartMonth,
+          });
+          newRecurrenceTasks.push({
+            id: nanoid(),
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            status: "active",
+            dueDate: nextDate?.split("T")[0],
+            category: task.category,
+            energy: task.energy,
+            quadrant: task.quadrant,
+            createdAt: new Date().toISOString(),
+            recurrence: task.recurrence,
+            recurrenceDayOfMonth: task.recurrenceDayOfMonth,
+            recurrenceStartMonth: task.recurrenceStartMonth,
+            recurrenceParentId: task.id,
+            recurrenceNextDate: nextDate,
+            subtasks: task.subtasks?.map(s => ({
+              id: nanoid(),
+              title: s.title,
+              done: false,
+            })),
+          });
+        }
+      }
+      if (newRecurrenceTasks.length > 0) {
+        tasks = [...newRecurrenceTasks, ...tasks];
+      }
       return {
         ...state,
         tasks,
@@ -974,6 +1020,14 @@ function appReducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         tasks: state.tasks.filter(t => !ids.has(t.id)),
+        pomodoros: state.pomodoros.map(p => ({
+          ...p,
+          linkedTaskId:
+            p.linkedTaskId && ids.has(p.linkedTaskId)
+              ? undefined
+              : p.linkedTaskId,
+          linkedTasks: p.linkedTasks?.filter(lt => !ids.has(lt.taskId)),
+        })),
       };
     }
 
