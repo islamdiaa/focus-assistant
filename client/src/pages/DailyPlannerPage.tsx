@@ -912,6 +912,9 @@ export default function DailyPlannerPage({
   const [newCategory, setNewCategory] = useState<Category | "">(
     defaultCategory
   );
+  useEffect(() => {
+    setNewCategory(defaultCategory);
+  }, [defaultCategory]);
   const [newEnergy, setNewEnergy] = useState<EnergyLevel | "">("");
   const [newDueDate, setNewDueDate] = useState("");
   const [newRecurrence, setNewRecurrence] =
