@@ -32,8 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
-const EMPTY_TIMER_IMG =
-  "https://private-us-east-1.manuscdn.com/sessionFile/PlXiEUsi6v4VD1JuecPpX3/sandbox/k4s8ZO93y8NMD02oOYn6TD-img-2_1771447500000_na1fn_ZW1wdHktdGltZXI.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvUGxYaUVVc2k2djRWRDFKdWVjUHBYMy9zYW5kYm94L2s0czhaTzkzeThOTUQwMm9PWW42VEQtaW1nLTJfMTc3MTQ0NzUwMDAwMF9uYTFmbl9aVzF3ZEhrdGRHbHRaWEkucG5nP3gtb3NzLXByb2Nlc3M9aW1hZ2UvcmVzaXplLHdfMTkyMCxoXzE5MjAvZm9ybWF0LHdlYnAvcXVhbGl0eSxxXzgwIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=RInlaK~ffLRpeH0v-NOAy3TMtbQeDKkq2BENNQlE9mmClHhYlWOQYyUzWJEyJTKeTL3eDIznVJ4wHd8LtO3yr5fXZwH~ivqzbEu9LMZRmR~rg5EL8rCYI~LYNiJuNb7X2BMtM5CX5LF-wT7ePyELY8KtBirEI7POK6iqpOMvfuasH8vSxUM0OrdlvbcwaoP5C4fO4CZGKlGDtUF3lZ1yI0garPhxHz39K9Xo~OB9~wdBXUIu~nIrC5XG5kE1v2j2N6kWsZzQGjJonL80GmRbydGc2r088HdfTBJya6OeYMC6xzslIdyIqIgLT-1WbuYohOi5evnYV-TxO958smCvKw__";
+const EMPTY_TIMER_IMG = "/images/empty-timer.webp";
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);

@@ -118,8 +118,7 @@ const PRIORITY_ORDER: Record<Priority, number> = {
   low: 3,
 };
 
-const EMPTY_TASKS_IMG =
-  "https://private-us-east-1.manuscdn.com/sessionFile/PlXiEUsi6v4VD1JuecPpX3/sandbox/k4s8ZO93y8NMD02oOYn6TD-img-1_1771447504000_na1fn_ZW1wdHktdGFza3M.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvUGxYaUVVc2k2djRWRDFKdWVjUHBYMy9zYW5kYm94L2s0czhaTzkzeThOTUQwMm9PWW42VEQtaW1nLTFfMTc3MTQ0NzUwNDAwMF9uYTFmbl9aVzF3ZEhrdGRHRnphM00ucG5nP3gtb3NzLXByb2Nlc3M9aW1hZ2UvcmVzaXplLHdfMTkyMCxoXzE5MjAvZm9ybWF0LHdlYnAvcXVhbGl0eSxxXzgwIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=amTtVIynHBRmIEVQIldvf4-bXMes21S3AX6LLFog5bRL60efcFgUSN3AJ2WmE-HkJPU90jm95LEtxx6105fZKASdQIJuW-o~kYZ43Cueotk~TRv77zsOIaMJg5D3EScTFkU8g1xCMfqaXF1sAzyiP2qRlcRH0HnCtWgS3HcJ1qap46LqW8k2FMkYkC0oTFTQ5FU1NzfHgFl185ayg5i1Xdo0veHJKTyXMGu-S~-w3s423z~GlaEiQ6t1CQyGASCVhshStkv6gNCDwT83Gq604ZbHt8kjenbxl0U327xOWsQvm~9m4J6gX64kQjnHplxs31yis8U4zWkJOKk4oeY6uQ__";
+const EMPTY_TASKS_IMG = "/images/empty-tasks.webp";
 
 // ---- Subtask Progress Bar ----
 function SubtaskProgress({ subtasks }: { subtasks: Subtask[] }) {

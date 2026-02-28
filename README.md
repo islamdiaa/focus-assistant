@@ -8,9 +8,9 @@ A warm, ADHD-friendly productivity app with task management, Pomodoro timers, Ei
 
 ## Screenshots
 
-|                                                   Today View                                                    |                                                      Tasks                                                      |
-| :-------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------: |
-| ![Today](https://files.manuscdn.com/user_upload_by_module/session_file/310519663318830806/rCJUBSCRCTAumHhN.png) | ![Tasks](https://files.manuscdn.com/user_upload_by_module/session_file/310519663318830806/tFSWUijcDpdIaafI.png) |
+|                     Today View                      |                        Tasks                        |
+| :-------------------------------------------------: | :-------------------------------------------------: |
+| ![Today](client/public/images/screenshot-today.png) | ![Tasks](client/public/images/screenshot-tasks.png) |
 
 ## Features
 
