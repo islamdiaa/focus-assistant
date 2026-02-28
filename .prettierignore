@@ -34,6 +34,10 @@ data/
 .vscode/
 .idea/
 
+# Plugin state
+.omc/
+.playwright-mcp/
+
 # OS files
 .DS_Store
 Thumbs.db
