@@ -371,6 +371,14 @@ function appReducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         tasks: state.tasks.filter(t => t.id !== action.payload),
+        pomodoros: state.pomodoros.map(p => ({
+          ...p,
+          linkedTaskId:
+            p.linkedTaskId === action.payload ? undefined : p.linkedTaskId,
+          linkedTasks: p.linkedTasks?.filter(
+            lt => lt.taskId !== action.payload
+          ),
+        })),
       };
 
     case "TOGGLE_TASK": {
@@ -514,22 +522,65 @@ function appReducer(state: AppState, action: Action): AppState {
         ? getTodayStats(state.dailyStats)
         : null;
 
+      let tasks = state.tasks.map(t => {
+        if (t.id !== action.payload.taskId) return t;
+        if (shouldAutoComplete) {
+          return {
+            ...t,
+            subtasks: updatedSubtasks,
+            status: "done" as const,
+            completedAt: new Date().toISOString(),
+            statusChangedAt: new Date().toISOString(),
+            pinnedToday: null,
+            isFocusGoal: undefined,
+          };
+        }
+        return { ...t, subtasks: updatedSubtasks };
+      });
+
+      // Spawn recurrence child if auto-completed a recurring task
+      if (
+        shouldAutoComplete &&
+        parentTask.recurrence &&
+        parentTask.recurrence !== "none" &&
+        !tasks.some(
+          t => t.recurrenceParentId === parentTask.id && t.status === "active"
+        )
+      ) {
+        const nextDate = computeNextDate(parentTask.recurrence, new Date(), {
+          recurrenceDayOfMonth: parentTask.recurrenceDayOfMonth,
+          recurrenceStartMonth: parentTask.recurrenceStartMonth,
+        });
+        tasks = [
+          {
+            id: nanoid(),
+            title: parentTask.title,
+            description: parentTask.description,
+            priority: parentTask.priority,
+            status: "active",
+            dueDate: nextDate?.split("T")[0],
+            category: parentTask.category,
+            energy: parentTask.energy,
+            quadrant: parentTask.quadrant,
+            createdAt: new Date().toISOString(),
+            recurrence: parentTask.recurrence,
+            recurrenceDayOfMonth: parentTask.recurrenceDayOfMonth,
+            recurrenceStartMonth: parentTask.recurrenceStartMonth,
+            recurrenceParentId: parentTask.id,
+            recurrenceNextDate: nextDate,
+            subtasks: parentTask.subtasks?.map(s => ({
+              id: nanoid(),
+              title: s.title,
+              done: false,
+            })),
+          },
+          ...tasks,
+        ];
+      }
+
       return {
         ...state,
-        tasks: state.tasks.map(t => {
-          if (t.id !== action.payload.taskId) return t;
-          if (shouldAutoComplete) {
-            return {
-              ...t,
-              subtasks: updatedSubtasks,
-              status: "done" as const,
-              completedAt: new Date().toISOString(),
-              statusChangedAt: new Date().toISOString(),
-              pinnedToday: null,
-            };
-          }
-          return { ...t, subtasks: updatedSubtasks };
-        }),
+        tasks,
         ...(shouldAutoComplete && todayStats
           ? {
               dailyStats: updateTodayStats(state.dailyStats, {
