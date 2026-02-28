@@ -5,6 +5,7 @@
  * V1.2: Added Daily Planner, Templates, Weekly Review, Focus Mode
  *
  * Keyboard shortcuts:
+ * - Ctrl/Cmd+K: Open command palette
  * - Ctrl/Cmd+Z: Undo
  * - Ctrl/Cmd+Shift+Z: Redo
  * - 1-8: Switch pages (when no input focused)
@@ -37,6 +38,7 @@ const WeeklyReviewPage = lazy(() => import("./WeeklyReviewPage"));
 const ReadLaterPage = lazy(() => import("./ReadLaterPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
 import { useApp } from "@/contexts/AppContext";
+import CommandPalette from "@/components/CommandPalette";
 import ScratchPadDrawer from "@/components/ScratchPadDrawer";
 import {
   Dialog,
@@ -87,6 +89,7 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [scratchPadOpen, setScratchPadOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [thoughtReminderOpen, setThoughtReminderOpen] = useState(false);
   const [thoughtReminderText, setThoughtReminderText] = useState("");
   const [thoughtReminderDate, setThoughtReminderDate] = useState("");
@@ -152,6 +155,13 @@ export default function Home() {
         return;
       }
 
+      // Ctrl/Cmd+K: Open command palette (works even in inputs)
+      if (isMod && e.key === "k") {
+        e.preventDefault();
+        setCommandPaletteOpen(true);
+        return;
+      }
+
       // Skip remaining shortcuts if typing in an input
       if (isInput) return;
 
@@ -209,7 +219,7 @@ export default function Home() {
         return;
       }
     },
-    [activePage, undo, redo, focusMode, setReminderTrigger]
+    [activePage, undo, redo, focusMode, commandPaletteOpen, setReminderTrigger]
   );
 
   useEffect(() => {
@@ -442,6 +452,16 @@ export default function Home() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Command Palette (Ctrl+K / Cmd+K) */}
+      <CommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        onNavigate={page => {
+          setActivePage(page as Page);
+          setCommandPaletteOpen(false);
+        }}
+      />
     </>
   );
 }

@@ -30,6 +30,8 @@ import {
   Star,
   Eye,
   EyeOff,
+  Clock,
+  Pin,
 } from "lucide-react";
 import type { Reminder } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import type {
   Task,
   Priority,
@@ -51,6 +54,7 @@ import type {
   RecurrenceFrequency,
   Subtask,
 } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { filterTasksByContext } from "@/lib/contextFilter";
 import { DragDropProvider } from "@dnd-kit/react";
 import { useSortable } from "@dnd-kit/react/sortable";
@@ -433,6 +437,14 @@ function InlineEditForm({
   );
 }
 
+// ---- Format estimated minutes helper ----
+function formatEstimatedTime(mins: number): string {
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
 // ---- Sortable Task Card ----
 function SortableTaskCard({
   task,
@@ -442,6 +454,9 @@ function SortableTaskCard({
   dispatch,
   handleInlineSave,
   isDragDisabled,
+  selectionMode,
+  selected,
+  onToggleSelect,
 }: {
   task: Task;
   index: number;
@@ -450,6 +465,9 @@ function SortableTaskCard({
   dispatch: (action: any) => void;
   handleInlineSave: (taskId: string, updates: Partial<Task>) => void;
   isDragDisabled: boolean;
+  selectionMode: boolean;
+  selected: boolean;
+  onToggleSelect: (id: string) => void;
 }) {
   const { ref, isDragSource } = useSortable({
     id: task.id,
@@ -475,8 +493,19 @@ function SortableTaskCard({
         ${isDragSource ? "shadow-xl ring-2 ring-warm-sage/40 opacity-50" : ""}`}
     >
       <div className="flex items-start gap-3">
+        {/* Selection checkbox */}
+        {selectionMode && (
+          <div className="mt-0.5 shrink-0">
+            <Checkbox
+              checked={selected}
+              onCheckedChange={() => onToggleSelect(task.id)}
+              className="size-5"
+            />
+          </div>
+        )}
+
         {/* Drag handle */}
-        {!isDragDisabled && (
+        {!isDragDisabled && !selectionMode && (
           <div
             className="mt-0.5 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
             title="Drag to reorder"
@@ -550,6 +579,12 @@ function SortableTaskCard({
                   month: "short",
                   day: "numeric",
                 })}
+              </span>
+            )}
+            {task.estimatedMinutes && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {formatEstimatedTime(task.estimatedMinutes)}
               </span>
             )}
           </div>
@@ -664,6 +699,10 @@ export default function TasksPage({
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Bulk selection state
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   // New task form state
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -686,6 +725,9 @@ export default function TasksPage({
   const [newQuarterlyStartMonth, setNewQuarterlyStartMonth] = useState(2); // Feb
   const [newSubtasks, setNewSubtasks] = useState<string[]>([]);
   const [newSubtaskInput, setNewSubtaskInput] = useState("");
+  const [newEstimatedMinutes, setNewEstimatedMinutes] = useState<number | "">(
+    ""
+  );
 
   // Keyboard shortcut triggers — skip initial mount to prevent auto-open on navigate
   const prevNewTaskTrigger = useRef(newTaskTrigger);
@@ -771,6 +813,37 @@ export default function TasksPage({
       }
     }
   }, [reminderTrigger]);
+
+  // Escape key exits selection mode
+  useEffect(() => {
+    if (!selectionMode) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setSelectionMode(false);
+        setSelectedIds(new Set());
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [selectionMode]);
+
+  function handleToggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function handleBulkAction(
+    type: "BULK_COMPLETE_TASKS" | "BULK_DELETE_TASKS" | "BULK_PIN_TODAY",
+    payload?: any
+  ) {
+    dispatch({ type, payload: payload ?? Array.from(selectedIds) });
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+  }
 
   function handleAddReminder() {
     if (!remTitle.trim() || !remDate) return;
@@ -874,6 +947,7 @@ export default function TasksPage({
           newSubtasks.length > 0
             ? newSubtasks.map(s => ({ title: s }))
             : undefined,
+        estimatedMinutes: newEstimatedMinutes || undefined,
       },
     });
     setNewTitle("");
@@ -887,6 +961,7 @@ export default function TasksPage({
     setNewQuarterlyStartMonth(2);
     setNewSubtasks([]);
     setNewSubtaskInput("");
+    setNewEstimatedMinutes("");
     setDialogOpen(false);
   }
 
@@ -928,6 +1003,28 @@ export default function TasksPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            onClick={() => {
+              if (selectionMode) {
+                setSelectionMode(false);
+                setSelectedIds(new Set());
+              } else {
+                setSelectionMode(true);
+              }
+            }}
+            variant="outline"
+            className={cn(
+              "gap-2",
+              selectionMode
+                ? "border-warm-blue text-warm-blue bg-warm-blue-light"
+                : "border-border text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Check className="w-4 h-4" />
+            <span className="hidden sm:inline">
+              {selectionMode ? "Cancel" : "Select"}
+            </span>
+          </Button>
           <Button
             onClick={() => setReminderDialogOpen(true)}
             variant="outline"
@@ -1185,6 +1282,32 @@ export default function TasksPage({
                       </p>
                     </div>
                   )}
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                    Estimated Time
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {[15, 30, 60, 120, 240].map(mins => (
+                      <button
+                        key={mins}
+                        type="button"
+                        onClick={() =>
+                          setNewEstimatedMinutes(
+                            newEstimatedMinutes === mins ? "" : mins
+                          )
+                        }
+                        className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200
+                          ${
+                            newEstimatedMinutes === mins
+                              ? "bg-warm-blue-light border-warm-blue text-warm-blue shadow-sm scale-[1.02]"
+                              : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"
+                          }`}
+                      >
+                        {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
@@ -1467,13 +1590,79 @@ export default function TasksPage({
                   setEditingId={setEditingId}
                   dispatch={dispatch}
                   handleInlineSave={handleInlineSave}
-                  isDragDisabled={isDragDisabled}
+                  isDragDisabled={isDragDisabled || selectionMode}
+                  selectionMode={selectionMode}
+                  selected={selectedIds.has(task.id)}
+                  onToggleSelect={handleToggleSelect}
                 />
               ))}
             </AnimatePresence>
           </div>
         </DragDropProvider>
       )}
+
+      {/* Bulk action floating bar */}
+      <AnimatePresence>
+        {selectionMode && selectedIds.size > 0 && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-card border rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 z-50"
+          >
+            <span className="text-sm font-medium text-foreground whitespace-nowrap">
+              {selectedIds.size} selected
+            </span>
+            <div className="h-5 w-px bg-border" />
+            <button
+              onClick={() =>
+                setSelectedIds(new Set(filteredTasks.map(t => t.id)))
+              }
+              className="text-xs text-warm-blue hover:underline whitespace-nowrap"
+            >
+              Select All
+            </button>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-muted-foreground hover:underline whitespace-nowrap"
+            >
+              Deselect All
+            </button>
+            <div className="h-5 w-px bg-border" />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1.5 text-warm-sage hover:bg-warm-sage-light"
+              onClick={() => handleBulkAction("BULK_COMPLETE_TASKS")}
+              title="Complete selected"
+            >
+              <Check className="w-4 h-4" />
+              <span className="hidden sm:inline">Complete</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1.5 text-warm-blue hover:bg-warm-blue-light"
+              onClick={() => handleBulkAction("BULK_PIN_TODAY")}
+              title="Pin to Today"
+            >
+              <Pin className="w-4 h-4" />
+              <span className="hidden sm:inline">Pin Today</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1.5 text-warm-terracotta hover:bg-warm-terracotta-light"
+              onClick={() => handleBulkAction("BULK_DELETE_TASKS")}
+              title="Delete selected"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Delete</span>
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Keyboard shortcuts hint */}
       <div className="mt-8 text-center keyboard-hint">

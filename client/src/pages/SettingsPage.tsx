@@ -30,6 +30,8 @@ import {
   FolderSync,
   ShieldCheck,
   Loader2,
+  Zap,
+  Clock,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -606,6 +608,76 @@ export default function SettingsPage() {
           <Switch
             checked={theme === "dark"}
             onCheckedChange={() => toggleTheme?.()}
+          />
+        </div>
+      </div>
+
+      {/* ========== AUTOMATION ========== */}
+      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Zap className="w-4 h-4 text-warm-amber" />
+          <h3 className="font-semibold text-sm text-foreground">Automation</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Automate repetitive task management actions.
+        </p>
+        <div className="flex items-center justify-between bg-background rounded-xl border border-border p-4">
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              Auto-complete parent task
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Automatically mark a task as done when all its subtasks are
+              completed
+            </p>
+          </div>
+          <Switch
+            checked={state.preferences?.autoCompleteParent ?? false}
+            onCheckedChange={checked =>
+              dispatch({
+                type: "UPDATE_PREFERENCES",
+                payload: { autoCompleteParent: checked },
+              })
+            }
+          />
+        </div>
+      </div>
+
+      {/* ========== PLANNING ========== */}
+      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Clock className="w-4 h-4 text-warm-blue" />
+          <h3 className="font-semibold text-sm text-foreground">Planning</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Configure your daily planning preferences.
+        </p>
+        <div className="bg-background rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                Available hours per day
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Set your daily time budget for the Today view progress bar
+              </p>
+            </div>
+            <span className="text-sm font-semibold text-foreground tabular-nums">
+              {state.preferences?.availableHoursPerDay ?? 8}h
+            </span>
+          </div>
+          <Slider
+            value={[state.preferences?.availableHoursPerDay ?? 8]}
+            onValueChange={([v]) =>
+              dispatch({
+                type: "UPDATE_PREFERENCES",
+                payload: { availableHoursPerDay: v },
+              })
+            }
+            min={1}
+            max={16}
+            step={0.5}
+            className="w-full"
           />
         </div>
       </div>

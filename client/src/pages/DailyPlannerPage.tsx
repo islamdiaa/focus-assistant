@@ -26,6 +26,7 @@ import {
   Bell,
   Cake,
   Star,
+  Sparkles,
   AlertCircle,
   Plus,
   Pin,
@@ -39,6 +40,7 @@ import {
   Undo2,
   ChevronDown,
   Activity,
+  GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +65,10 @@ import {
   filterRemindersByContext,
 } from "@/lib/contextFilter";
 import { motion, AnimatePresence } from "framer-motion";
+import { DragDropProvider } from "@dnd-kit/react";
+import { useSortable } from "@dnd-kit/react/sortable";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 const ENERGY_EMOJI: Record<EnergyLevel, string> = {
   low: "🔋",
@@ -340,6 +346,13 @@ function getTimeOfDay(): "morning" | "afternoon" | "evening" {
   return "evening";
 }
 
+function formatEstimatedTime(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
 const TIME_GREETING: Record<string, { icon: typeof Sun; text: string }> = {
   morning: { icon: Sun, text: "Good morning" },
   afternoon: { icon: Sunset, text: "Good afternoon" },
@@ -351,9 +364,20 @@ interface TodayTaskCardProps {
   task: Task;
   dispatch: ReturnType<typeof useApp>["dispatch"];
   showUnpin?: boolean;
+  index?: number;
 }
 
-function TodayTaskCard({ task, dispatch, showUnpin }: TodayTaskCardProps) {
+function TodayTaskCard({
+  task,
+  dispatch,
+  showUnpin,
+  index,
+}: TodayTaskCardProps) {
+  const { ref } = useSortable({
+    id: task.id,
+    index: index ?? 0,
+    disabled: index === undefined,
+  });
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDueDate, setEditDueDate] = useState(task.dueDate || "");
@@ -377,6 +401,7 @@ function TodayTaskCard({ task, dispatch, showUnpin }: TodayTaskCardProps) {
 
   return (
     <motion.div
+      ref={ref}
       layout
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
@@ -385,6 +410,16 @@ function TodayTaskCard({ task, dispatch, showUnpin }: TodayTaskCardProps) {
       }`}
     >
       <div className="flex items-start gap-3 p-3">
+        {/* Drag handle — visible on hover for pinned tasks */}
+        {index !== undefined && (
+          <div
+            className="mt-0.5 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Drag to reorder"
+          >
+            <GripVertical className="w-4 h-4" />
+          </div>
+        )}
+
         {/* Status checkbox */}
         <button
           onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
@@ -396,11 +431,19 @@ function TodayTaskCard({ task, dispatch, showUnpin }: TodayTaskCardProps) {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p
-            className={`text-sm font-medium ${task.status === "done" ? "line-through text-muted-foreground" : "text-foreground"}`}
-          >
-            {task.title}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p
+              className={`text-sm font-medium ${task.status === "done" ? "line-through text-muted-foreground" : "text-foreground"}`}
+            >
+              {task.title}
+            </p>
+            {task.estimatedMinutes && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-full shrink-0">
+                <Clock className="w-2.5 h-2.5" />
+                {formatEstimatedTime(task.estimatedMinutes)}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             {task.energy && (
               <span className="text-[10px] text-muted-foreground">
@@ -432,6 +475,32 @@ function TodayTaskCard({ task, dispatch, showUnpin }: TodayTaskCardProps) {
 
         {/* Action buttons — visible on hover */}
         <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 hover-action transition-opacity">
+          {/* Focus Goal star (only for active pinned-today tasks) */}
+          {task.status === "active" && showUnpin && (
+            <button
+              onClick={() =>
+                dispatch({ type: "TOGGLE_FOCUS_GOAL", payload: task.id })
+              }
+              className={cn(
+                "p-1.5 rounded-md transition-colors",
+                task.isFocusGoal
+                  ? "text-amber-500"
+                  : "text-muted-foreground hover:text-amber-500 hover:bg-amber-50"
+              )}
+              title={
+                task.isFocusGoal
+                  ? "Remove from focus goals"
+                  : "Set as focus goal (max 3)"
+              }
+            >
+              <Star
+                className={cn(
+                  "w-3.5 h-3.5",
+                  task.isFocusGoal && "fill-current text-amber-500"
+                )}
+              />
+            </button>
+          )}
           {/* Monitor toggle (only for active tasks) */}
           {task.status === "active" && (
             <button
@@ -876,6 +945,37 @@ export default function DailyPlannerPage({
 
   const [actionedExpanded, setActionedExpanded] = useState(false);
 
+  // Focus goals: pinned today + isFocusGoal
+  const focusGoals = useMemo(() => {
+    return contextTasks.filter(t => t.isFocusGoal && t.pinnedToday === today);
+  }, [contextTasks, today]);
+
+  const focusGoalsActive = useMemo(
+    () => focusGoals.filter(t => t.status === "active"),
+    [focusGoals]
+  );
+
+  const focusGoalsCompleted = useMemo(
+    () => focusGoals.filter(t => t.status === "done"),
+    [focusGoals]
+  );
+
+  const allFocusGoalsDone =
+    focusGoals.length > 0 && focusGoalsActive.length === 0;
+
+  // Time budget: total estimated minutes from pinned-today active tasks
+  const totalEstimatedMinutes = useMemo(() => {
+    return pinnedTasks.reduce((sum, t) => sum + (t.estimatedMinutes || 0), 0);
+  }, [pinnedTasks]);
+
+  const availableHours = state.preferences?.availableHoursPerDay ?? 8;
+  const availableMinutes = availableHours * 60;
+  const timeBudgetPercent =
+    availableMinutes > 0
+      ? Math.round((totalEstimatedMinutes / availableMinutes) * 100)
+      : 0;
+  const hasAnyEstimate = pinnedTasks.some(t => !!t.estimatedMinutes);
+
   // Reminders: overdue, today, upcoming (5 days)
   const reminders = useMemo(
     () => filterRemindersByContext(state.reminders || [], activeContext),
@@ -968,6 +1068,26 @@ export default function DailyPlannerPage({
     }
   }, [reminderTrigger]);
 
+  // --- New task estimated time state ---
+  const [newEstimatedMinutes, setNewEstimatedMinutes] = useState<number | "">(
+    ""
+  );
+
+  // --- Drag-and-drop handler ---
+  function handleDragEnd(event: any) {
+    const { source, target } = event.operation;
+    if (!source || !target || source.id === target.id) return;
+
+    const oldIndex = pinnedTasks.findIndex(t => t.id === source.id);
+    const newIndex = pinnedTasks.findIndex(t => t.id === target.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = [...pinnedTasks];
+    const [moved] = reordered.splice(oldIndex, 1);
+    reordered.splice(newIndex, 0, moved);
+    dispatch({ type: "REORDER_TASKS", payload: reordered.map(t => t.id) });
+  }
+
   // --- Handlers ---
   function handleAddTask() {
     if (!newTitle.trim()) return;
@@ -989,6 +1109,7 @@ export default function DailyPlannerPage({
           newSubtasks.length > 0
             ? newSubtasks.map(s => ({ title: s }))
             : undefined,
+        estimatedMinutes: newEstimatedMinutes || undefined,
       },
     });
     setNewTitle("");
@@ -1002,6 +1123,7 @@ export default function DailyPlannerPage({
     setNewQuarterlyStartMonth(2);
     setNewSubtasks([]);
     setNewSubtaskInput("");
+    setNewEstimatedMinutes("");
     setTaskDialogOpen(false);
   }
 
@@ -1110,7 +1232,7 @@ export default function DailyPlannerPage({
       </motion.div>
 
       {/* Today's Progress */}
-      <div className="grid grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-4 gap-3 mb-8">
         {[
           {
             icon: CheckCircle2,
@@ -1133,6 +1255,13 @@ export default function DailyPlannerPage({
             color: "text-warm-amber",
             bg: "bg-warm-amber-light",
           },
+          {
+            icon: Star,
+            label: "Focus Goals",
+            value: `${focusGoalsCompleted.length}/${focusGoals.length}`,
+            color: "text-amber-500",
+            bg: "bg-amber-50",
+          },
         ].map((card, i) => (
           <motion.div
             key={card.label}
@@ -1147,6 +1276,43 @@ export default function DailyPlannerPage({
           </motion.div>
         ))}
       </div>
+
+      {/* Time Budget Bar */}
+      {hasAnyEstimate && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-8 bg-card rounded-xl border border-border p-4"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Time Budget
+            </span>
+            <span className="text-sm font-medium text-foreground">
+              {formatEstimatedTime(totalEstimatedMinutes)} planned /{" "}
+              {availableHours}h available
+            </span>
+          </div>
+          <Progress
+            value={Math.min(timeBudgetPercent, 100)}
+            className={cn(
+              "h-2.5",
+              timeBudgetPercent > 100
+                ? "[&>[data-slot=progress-indicator]]:bg-red-500"
+                : timeBudgetPercent >= 75
+                  ? "[&>[data-slot=progress-indicator]]:bg-amber-500"
+                  : "[&>[data-slot=progress-indicator]]:bg-warm-sage"
+            )}
+          />
+          {timeBudgetPercent > 100 && (
+            <p className="text-[10px] text-red-500 mt-1">
+              Over budget by{" "}
+              {formatEstimatedTime(totalEstimatedMinutes - availableMinutes)}
+            </p>
+          )}
+        </motion.div>
+      )}
 
       {/* Search Bar */}
       <div className="relative mb-6">
@@ -1167,6 +1333,85 @@ export default function DailyPlannerPage({
           </button>
         )}
       </div>
+
+      {/* Today's Focus — Top 3 Goals */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="bg-gradient-to-br from-amber-50/50 via-card to-amber-50/30 rounded-xl border border-amber-200/30 p-5 mb-4"
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <Star className="w-5 h-5 text-amber-500 fill-current" />
+          <h3 className="font-serif text-lg text-foreground">Today's Focus</h3>
+          <span className="text-xs text-muted-foreground">
+            ({focusGoalsCompleted.length + focusGoalsActive.length}/3)
+          </span>
+        </div>
+        {focusGoals.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Star up to 3 tasks to set your focus
+          </p>
+        ) : allFocusGoalsDone ? (
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="flex items-center gap-2 p-3 rounded-lg bg-warm-sage-light/50 border border-warm-sage/20"
+          >
+            <Sparkles className="w-5 h-5 text-warm-sage animate-pulse" />
+            <p className="text-sm font-medium text-warm-sage">
+              All focus goals completed! Great work today!
+            </p>
+          </motion.div>
+        ) : (
+          <div className="space-y-2">
+            {focusGoals.map(t => (
+              <div
+                key={t.id}
+                className={cn(
+                  "flex items-center gap-3 p-2.5 rounded-lg border transition-colors",
+                  t.status === "done"
+                    ? "border-warm-sage/20 bg-warm-sage-light/30 opacity-70"
+                    : "border-amber-200/30 bg-white/50"
+                )}
+              >
+                <Star className="w-4 h-4 text-amber-500 fill-current shrink-0" />
+                <button
+                  onClick={() =>
+                    dispatch({ type: "TOGGLE_TASK", payload: t.id })
+                  }
+                  className={cn(
+                    "w-4 h-4 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
+                    t.status === "done"
+                      ? "bg-warm-sage border-warm-sage"
+                      : "border-border hover:border-warm-sage"
+                  )}
+                >
+                  {t.status === "done" && (
+                    <Check className="w-2.5 h-2.5 text-white" />
+                  )}
+                </button>
+                <span
+                  className={cn(
+                    "text-sm font-medium flex-1",
+                    t.status === "done"
+                      ? "line-through text-muted-foreground"
+                      : "text-foreground"
+                  )}
+                >
+                  {t.title}
+                </span>
+                {t.estimatedMinutes && (
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                    <Clock className="w-2.5 h-2.5" />
+                    {formatEstimatedTime(t.estimatedMinutes)}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </motion.div>
 
       {/* My Today — Pinned Tasks */}
       <div className="bg-card rounded-xl border border-border p-5 mb-4">
@@ -1193,16 +1438,19 @@ export default function DailyPlannerPage({
             focus on.
           </p>
         ) : (
-          <div className="space-y-2">
-            {pinnedTasks.map(t => (
-              <TodayTaskCard
-                key={t.id}
-                task={t}
-                dispatch={dispatch}
-                showUnpin
-              />
-            ))}
-          </div>
+          <DragDropProvider onDragEnd={handleDragEnd}>
+            <div className="space-y-2">
+              {pinnedTasks.map((t, idx) => (
+                <TodayTaskCard
+                  key={t.id}
+                  task={t}
+                  dispatch={dispatch}
+                  showUnpin
+                  index={idx}
+                />
+              ))}
+            </div>
+          </DragDropProvider>
         )}
       </div>
 
@@ -1705,6 +1953,54 @@ export default function DailyPlannerPage({
                   </div>
                 </div>
               )}
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                Estimated Time
+              </label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {[
+                  { label: "15m", value: 15 },
+                  { label: "30m", value: 30 },
+                  { label: "1h", value: 60 },
+                  { label: "2h", value: 120 },
+                  { label: "4h", value: 240 },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() =>
+                      setNewEstimatedMinutes(
+                        newEstimatedMinutes === opt.value ? "" : opt.value
+                      )
+                    }
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-all duration-200",
+                      newEstimatedMinutes === opt.value
+                        ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]"
+                        : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  placeholder="Custom minutes..."
+                  value={newEstimatedMinutes}
+                  onChange={e => {
+                    const v = e.target.value;
+                    setNewEstimatedMinutes(
+                      v === "" ? "" : parseInt(v, 10) || ""
+                    );
+                  }}
+                  className="bg-background h-8 text-sm w-32"
+                />
+                <span className="text-xs text-muted-foreground">minutes</span>
+              </div>
             </div>
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
