@@ -30,10 +30,10 @@ Client (React SPA)  ──tRPC──►  Server (Express)  ──►  Storage (M
                                                   ──►  Obsidian Vault Sync (optional)
 ```
 
-- **No database for app data.** MySQL/Drizzle is only for the Manus OAuth user table.
+- **No database for app data.** MySQL/Drizzle is only for the OAuth user table.
 - **All app data** (tasks, pomodoros, settings, stats, reminders, reading list, templates) flows through `server/dataRouter.ts`.
 - **Storage backends** are swappable via `data/config.json` (`mode: "file"` or `mode: "sheets"`).
-- **Self-hosted mode:** `SKIP_AUTH=true` bypasses Manus OAuth and injects a local admin user.
+- **Self-hosted mode:** `SKIP_AUTH=true` bypasses OAuth and injects a local admin user.
 
 ## Key Files to Know
 
@@ -41,7 +41,7 @@ Client (React SPA)  ──tRPC──►  Server (Express)  ──►  Storage (M
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `shared/appTypes.ts`                    | **SINGLE SOURCE OF TRUTH** — Zod schemas → inferred TS types. All types defined here. Includes `taskStatusSchema` (`active`/`done`/`monitored`), `contextFilterSchema` (`all`/`work`/`personal`), and category constants (`WORK_CATEGORIES`, `PERSONAL_CATEGORIES`). |
 | `server/dataRouter.ts`                  | tRPC router with `load`, `save`, `getConfig`, `setConfig` procedures. Imports schemas from shared.                                                                                                                                                                   |
-| `server/mdStorage.ts`                   | Serializes/deserializes `AppState` ↔ Markdown tables. Uses `col()` safe accessor for backward compat.                                                                                                                                                                |
+| `server/mdStorage.ts`                   | Serializes/deserializes `AppState` ↔ Markdown tables. Uses `col()` safe accessor for backward compat.                                                                                                                                                               |
 | `server/obsidianSync.ts`                | Writes Obsidian-compatible markdown to configured vault path                                                                                                                                                                                                         |
 | `server/sheetsStorage.ts`               | Google Sheets API v4 read/write                                                                                                                                                                                                                                      |
 | `server/storageConfig.ts`               | Reads/writes `data/config.json` for storage mode                                                                                                                                                                                                                     |
@@ -313,7 +313,7 @@ The app runs without any required env vars for basic functionality. For self-hos
 PORT=1992
 DATA_DIR=/app/data
 NODE_ENV=production
-SKIP_AUTH=true          # Bypass Manus OAuth for self-hosted
+SKIP_AUTH=true          # Bypass OAuth for self-hosted
 JWT_SECRET=any-string   # Required but value doesn't matter with SKIP_AUTH
 ```
 

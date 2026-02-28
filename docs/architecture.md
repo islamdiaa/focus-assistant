@@ -61,7 +61,7 @@ FocusAssist is a full-stack productivity web application designed for ADHD-frien
 | Testing          | Vitest (172+ tests)                  | Unit tests, schema integrity, persistence round-trips                                    |
 | Container        | Docker (Alpine-based)                | Single container deployment                                                              |
 | CI/CD            | GitHub Actions                       | Test → Docker build → push to Docker Hub + GHCR                                          |
-| Auth             | Manus OAuth (optional)               | Session-based authentication                                                             |
+| Auth             | OAuth (optional)                     | Session-based authentication                                                             |
 | Database         | MySQL/TiDB via Drizzle ORM           | User table for auth (not used for app data)                                              |
 
 ## Directory Structure
@@ -101,7 +101,7 @@ focus-assist/
 │   │   ├── trpc.ts            # tRPC initialization
 │   │   ├── context.ts         # Request context builder
 │   │   ├── env.ts             # Environment variable access
-│   │   └── oauth.ts           # Manus OAuth handler
+│   │   └── oauth.ts           # OAuth handler
 │   ├── dataRouter.ts          # tRPC router: load, save, getConfig, setConfig (uses shared Zod schemas)
 │   ├── mdStorage.ts           # Markdown file serializer/deserializer
 │   ├── obsidianSync.ts        # Obsidian vault markdown export
@@ -278,7 +278,7 @@ Watchtower on Unraid polls Docker Hub hourly and auto-pulls new images.
 
 ## Key Design Decisions
 
-**Single container, no database for app data.** App data lives in a Markdown file, not MySQL. The database (Drizzle/MySQL) is only used for the Manus OAuth user table. This keeps the Docker deployment dead simple — one volume mount and you're done.
+**Single container, no database for app data.** App data lives in a Markdown file, not MySQL. The database (Drizzle/MySQL) is only used for the OAuth user table. This keeps the Docker deployment dead simple — one volume mount and you're done.
 
 **Zod-first type system.** All data types are defined as Zod schemas in `shared/appTypes.ts`. TypeScript types are inferred via `z.infer<>`. The save endpoint uses `.strict()` to reject unknown fields. This eliminates the class of bugs where types and validation schemas drift apart.
 

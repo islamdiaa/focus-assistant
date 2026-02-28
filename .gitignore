@@ -43,10 +43,10 @@ test-results/
 *.sqlite
 *.sqlite3
 
-# Tooling state (Claude Code plugins, Playwright MCP, Manus)
+# Tooling state (Claude Code plugins, Playwright MCP)
 .omc/
 .playwright-mcp/
-.manus-logs/
+.dev-logs/
 
 # UX walkthrough screenshots (generated during review)
 walkthrough-*.png

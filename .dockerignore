@@ -1,7 +1,7 @@
 node_modules
 dist
 client/dist
-.manus-logs
+.dev-logs
 .git
 *.md
 !README.md

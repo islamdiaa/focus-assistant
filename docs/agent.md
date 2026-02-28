@@ -33,7 +33,7 @@ FocusAssist is a personal productivity web app with these features:
 
 ## Critical Constraints
 
-1. **App data does NOT use the database.** The MySQL database (via Drizzle ORM) is only for the Manus OAuth `users` table. All app data is stored in `data/focus-assist-data.md` or Google Sheets.
+1. **App data does NOT use the database.** The MySQL database (via Drizzle ORM) is only for the OAuth `users` table. All app data is stored in `data/focus-assist-data.md` or Google Sheets.
 
 2. **Zod-first type system.** ALL data types are defined as Zod schemas in `shared/appTypes.ts`. TypeScript types are auto-inferred via `z.infer<>`. **NEVER define types manually.** The save endpoint uses `.strict()` to reject unknown fields — this prevents silent data loss.
 
@@ -239,7 +239,7 @@ The UI follows a "Warm Scandinavian" design language:
 
 ## Self-Hosted Mode
 
-When `SKIP_AUTH=true` (default in Dockerfile), the app bypasses Manus OAuth and injects a local admin user. This is for running on personal homeservers (e.g., Unraid) without Manus infrastructure.
+When `SKIP_AUTH=true` (default in Dockerfile), the app bypasses OAuth and injects a local admin user. This is for running on personal homeservers (e.g., Unraid) without external OAuth infrastructure.
 
 Key env vars for self-hosted:
 

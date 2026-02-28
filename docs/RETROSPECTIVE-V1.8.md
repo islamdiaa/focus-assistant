@@ -28,7 +28,7 @@ This session covered V1.8.1 through V1.8.4 — a mix of feature additions, a ful
 
 ### 1. No Self-Hosted Testing Path
 
-The app was developed and tested exclusively on the Manus platform. When deployed to a Docker container on Unraid, three issues surfaced immediately (analytics URIError, OAuth errors, save failures). **We had no way to simulate the self-hosted environment during development.**
+The app was developed and tested exclusively on the original hosting platform. When deployed to a Docker container on Unraid, three issues surfaced immediately (analytics URIError, OAuth errors, save failures). **We had no way to simulate the self-hosted environment during development.**
 
 **Lesson:** Self-hosted is a first-class deployment target. It needs its own test path.
 

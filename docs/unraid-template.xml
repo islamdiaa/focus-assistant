@@ -52,7 +52,7 @@
     Target="SKIP_AUTH"
     Default="true"
     Mode=""
-    Description="Set to true to bypass Manus OAuth (required for self-hosted). Set to false only if you have Manus OAuth configured."
+    Description="Set to true to bypass OAuth (required for self-hosted). Set to false only if you have external OAuth configured."
     Type="Variable"
     Display="always"
     Required="false"

@@ -28,7 +28,7 @@ export const getLoginUrl = (returnPath?: string): string => {
   return url.toString();
 };
 
-// Check if OAuth is configured (Manus-hosted mode)
+// Check if OAuth is configured (platform-hosted mode)
 export const isOAuthConfigured = (): boolean => {
   return Boolean(
     import.meta.env.VITE_OAUTH_PORTAL_URL && import.meta.env.VITE_APP_ID

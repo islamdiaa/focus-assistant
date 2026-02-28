@@ -141,7 +141,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Reminder creation from Tasks page** — new Reminder button in Tasks page header + **R** keyboard shortcut opens a full reminder creation dialog without leaving the Tasks view
 - **Edit Reminder** — click the pencil icon on any reminder to edit its title, description, date, time, category, and recurrence in a pre-filled dialog; uses existing `UPDATE_REMINDER` reducer action
 - **Inline Matrix Task Editing** — click the pencil icon on any task in the Eisenhower Matrix to edit title, priority, and due date inline without leaving the view; priority badges now shown on task cards
-- **SKIP_AUTH env var** — new environment variable (default `true` in Dockerfile) bypasses Manus OAuth for self-hosted deployments; injects a local admin user automatically
+- **SKIP_AUTH env var** — new environment variable (default `true` in Dockerfile) bypasses OAuth for self-hosted deployments; injects a local admin user automatically
 - **Unraid template** — `unraid-template.xml` for Community Apps submission with all env vars pre-configured
 - **v182-audit.test.ts** — 4 tests covering pomodoro serialization with null/undefined `startedAt`, linked tasks round-trip, and reminders round-trip
 - **v182-features.test.ts** — 8 tests covering edit reminder round-trip (title, recurrence, optional fields) and inline matrix task editing round-trip (title, priority, dueDate, quadrant preservation)
