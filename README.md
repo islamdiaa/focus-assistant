@@ -27,6 +27,12 @@ A warm, ADHD-friendly productivity app with task management, Pomodoro timers, Ei
 | **Stats**             | Daily streak, completed tasks, focus minutes, weekly charts, all-time statistics.                                                                                                                                                                 |
 | **Settings**          | Timer presets (Classic/Short/Deep/Gentle), custom sliders, focus mode, keyboard shortcuts.                                                                                                                                                        |
 | **Context Filtering** | Global Work/Personal toggle in sidebar. Filters tasks, reminders, and stats by context. Persisted across sessions.                                                                                                                                |
+| **Focus Goals**       | Mark up to 3 priority tasks as daily focus goals with star toggle and progress tracking (0/3 → 3/3).                                                                                                                                              |
+| **Command Palette**   | Ctrl+K / Cmd+K to quickly search tasks and navigate between pages.                                                                                                                                                                                |
+| **Bulk Actions**      | Multi-select mode on Tasks page for batch complete, delete, or pin-to-today.                                                                                                                                                                      |
+| **Time Estimates**    | Optional duration estimates on tasks with time budget progress bar on Today view.                                                                                                                                                                 |
+| **Auto-Complete**     | Automatically complete parent tasks when all subtasks are done (toggle in Settings).                                                                                                                                                              |
+| **Drag & Drop Today** | Reorder pinned tasks in Today view via drag-and-drop.                                                                                                                                                                                             |
 
 ## Quick Start
 
@@ -95,7 +101,7 @@ The project uses GitHub Actions for continuous integration and deployment:
 Code push → CI tests → Docker build → Docker Hub → Watchtower → Auto-update
 ```
 
-- **Test job:** TypeScript type-checking + Vitest (172+ tests)
+- **Test job:** TypeScript type-checking + Vitest (307+ tests)
 - **Docker job:** Multi-arch build (amd64/arm64), pushes to Docker Hub + GHCR
 - **Versioning:** Semver tags on GitHub releases (e.g., `v1.8.1` → Docker tag `1.8.1`)
 
@@ -144,7 +150,7 @@ For detailed architecture documentation, see [architecture.md](./architecture.md
 - **Storage:** Local Markdown file or Google Sheets
 - **Validation:** Zod (single source of truth for types + runtime validation)
 - **Build:** Vite 7 (client), esbuild (server)
-- **Tests:** Vitest (172+ tests including schema integrity + persistence round-trips)
+- **Tests:** Vitest (307+ tests including schema integrity + persistence round-trips)
 - **CI/CD:** GitHub Actions → Docker Hub + GHCR
 - **Container:** Docker (Node 22 Alpine, multi-arch amd64/arm64)
 
@@ -172,13 +178,15 @@ The UI follows a "Warm Scandinavian" design language with DM Serif Display + DM 
 
 ## Keyboard Shortcuts
 
-| Key            | Action            |
-| -------------- | ----------------- |
-| `N`            | New task          |
-| `R`            | New reminder      |
-| `F`            | Toggle focus mode |
-| `Ctrl+Z`       | Undo              |
-| `Ctrl+Shift+Z` | Redo              |
+| Key              | Action            |
+| ---------------- | ----------------- |
+| `Ctrl+K`/`Cmd+K` | Command palette   |
+| `/`              | Focus search      |
+| `N`              | New task          |
+| `R`              | New reminder      |
+| `F`              | Toggle focus mode |
+| `Ctrl+Z`         | Undo              |
+| `Ctrl+Shift+Z`   | Redo              |
 
 ## Author
 
