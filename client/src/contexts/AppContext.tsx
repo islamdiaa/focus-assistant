@@ -469,8 +469,10 @@ function appReducer(state: AppState, action: Action): AppState {
                 ...t,
                 status: newStatus as Task["status"],
                 statusChangedAt: new Date().toISOString(),
-                // Clear pin when moving to monitored (not actionable)
+                // Clear pin and focus goal when moving to monitored (not actionable)
                 pinnedToday: newStatus === "monitored" ? null : t.pinnedToday,
+                isFocusGoal:
+                  newStatus === "monitored" ? undefined : t.isFocusGoal,
               }
             : t
         ),
@@ -922,7 +924,9 @@ function appReducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         tasks: state.tasks.map(t =>
-          t.id === action.payload ? { ...t, pinnedToday: null } : t
+          t.id === action.payload
+            ? { ...t, pinnedToday: null, isFocusGoal: undefined }
+            : t
         ),
       };
     }
