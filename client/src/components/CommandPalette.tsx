@@ -8,7 +8,12 @@
  * Keyboard: Arrow keys navigate, Enter selects, Escape closes
  */
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useApp } from "@/contexts/AppContext";
 import { cn } from "@/lib/utils";
 import type { Page } from "@/components/Sidebar";
@@ -169,6 +174,9 @@ export default function CommandPalette({
         onOpenAutoFocus={e => e.preventDefault()}
       >
         <DialogTitle className="sr-only">Command Palette</DialogTitle>
+        <DialogDescription className="sr-only">
+          Search for pages or tasks
+        </DialogDescription>
 
         {/* Search input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
