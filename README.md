@@ -107,7 +107,7 @@ Code push → CI tests → Docker build → Docker Hub → Watchtower → Auto-u
 
 ## Unraid Deployment
 
-See [DOCKER-GUIDE.md](./DOCKER-GUIDE.md) for detailed Unraid deployment instructions, including:
+See [Docker Guide](./docs/docker-guide.md) for detailed Unraid deployment instructions, including:
 
 - Docker Compose Manager plugin setup
 - Manual Docker template configuration
@@ -141,7 +141,7 @@ data/                 # Persistent data (Docker volume mount point)
 drizzle/              # Database schema (auth only)
 ```
 
-For detailed architecture documentation, see [architecture.md](./architecture.md).
+For detailed architecture documentation, see [architecture.md](./docs/architecture.md).
 
 ## Tech Stack
 
@@ -170,7 +170,7 @@ pnpm db:push      # Database migrations
 This repo includes guidance files for AI coding assistants:
 
 - [claude.md](./claude.md) — Guide for Claude (Anthropic)
-- [agent.md](./agent.md) — General guide for any AI agent (Cursor, Copilot, etc.)
+- [agent.md](./docs/agent.md) — General guide for any AI agent (Cursor, Copilot, etc.)
 
 ## Design
 

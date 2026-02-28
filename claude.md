@@ -91,7 +91,7 @@ These rules exist because we hit real bugs in V1.8.x. **Do not skip them.**
 - `package.json` (version field)
 - `client/src/pages/SettingsPage.tsx` (display version)
 - `Dockerfile` (image version label)
-- `CHANGELOG.md` (new version section)
+- `docs/CHANGELOG.md` (new version section)
 - `pnpm preflight` verifies consistency
 
 ### 4. Keyboard Shortcuts Must Check Modifier Keys
