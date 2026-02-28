@@ -93,6 +93,8 @@ export const taskSchema = z.object({
   subtasks: z.array(subtaskSchema).nullable().optional(),
   pinnedToday: z.string().nullable().optional(), // YYYY-MM-DD — when set to today's date, task shows in Today view
   statusChangedAt: z.string().nullable().optional(), // ISO timestamp — set when status transitions (active↔monitored↔done)
+  isFocusGoal: z.boolean().nullable().optional(), // true = one of up to 3 "focus goals" for today
+  estimatedMinutes: z.number().nullable().optional(), // optional time estimate in minutes
 });
 
 export const pomodoroLinkSchema = z.object({
@@ -180,6 +182,8 @@ export const appPreferencesSchema = z.object({
   obsidianVaultPath: z.string().nullable().optional(),
   obsidianAutoSync: z.boolean().nullable().optional(),
   activeContext: contextFilterSchema.nullable().optional(), // 'all' | 'work' | 'personal' — global filter
+  autoCompleteParent: z.boolean().nullable().optional(), // auto-complete task when all subtasks done
+  availableHoursPerDay: z.number().nullable().optional(), // daily time budget in hours (default 8)
 });
 
 export const scratchNoteSchema = z.object({
@@ -256,6 +260,8 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   obsidianVaultPath: "",
   obsidianAutoSync: false,
   activeContext: "all",
+  autoCompleteParent: false,
+  availableHoursPerDay: 8,
 };
 
 /**

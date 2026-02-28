@@ -55,6 +55,7 @@ type Action =
         recurrenceDayOfMonth?: number;
         recurrenceStartMonth?: number;
         subtasks?: Array<{ title: string }>;
+        estimatedMinutes?: number;
       };
     }
   | {
@@ -70,6 +71,7 @@ type Action =
         recurrenceDayOfMonth?: number;
         recurrenceStartMonth?: number;
         subtasks?: Array<{ title: string }>;
+        estimatedMinutes?: number;
       };
     }
   | { type: "UPDATE_TASK"; payload: Partial<Task> & { id: string } }
@@ -147,6 +149,14 @@ type Action =
   | { type: "ADD_SCRATCH_NOTE"; payload: { text: string } }
   | { type: "DELETE_SCRATCH_NOTE"; payload: string }
   | { type: "CONVERT_SCRATCH_TO_TASK"; payload: string }
+  | { type: "TOGGLE_FOCUS_GOAL"; payload: string }
+  | { type: "BULK_COMPLETE_TASKS"; payload: string[] }
+  | { type: "BULK_DELETE_TASKS"; payload: string[] }
+  | { type: "BULK_PIN_TODAY"; payload: string[] }
+  | {
+      type: "BULK_SET_QUADRANT";
+      payload: { taskIds: string[]; quadrant: QuadrantType };
+    }
   | { type: "UNDO" }
   | { type: "REDO" };
 
@@ -309,6 +319,7 @@ function appReducer(state: AppState, action: Action): AppState {
               })
             : undefined,
         subtasks: subtasks.length > 0 ? subtasks : undefined,
+        estimatedMinutes: action.payload.estimatedMinutes,
       };
       return { ...state, tasks: [task, ...state.tasks] };
     }
@@ -343,6 +354,7 @@ function appReducer(state: AppState, action: Action): AppState {
               })
             : undefined,
         subtasks: subtasks.length > 0 ? subtasks : undefined,
+        estimatedMinutes: action.payload.estimatedMinutes,
       };
       return { ...state, tasks: [task, ...state.tasks] };
     }
@@ -482,17 +494,48 @@ function appReducer(state: AppState, action: Action): AppState {
     }
 
     case "TOGGLE_SUBTASK": {
+      const parentTask = state.tasks.find(t => t.id === action.payload.taskId);
+      if (!parentTask) return state;
+
+      const updatedSubtasks = (parentTask.subtasks || []).map(s =>
+        s.id === action.payload.subtaskId ? { ...s, done: !s.done } : s
+      );
+
+      // Auto-complete parent if preference enabled and all subtasks now done
+      const allDone =
+        updatedSubtasks.length > 0 && updatedSubtasks.every(s => s.done);
+      const shouldAutoComplete =
+        allDone &&
+        parentTask.status === "active" &&
+        state.preferences?.autoCompleteParent;
+
+      const todayStats = shouldAutoComplete
+        ? getTodayStats(state.dailyStats)
+        : null;
+
       return {
         ...state,
         tasks: state.tasks.map(t => {
           if (t.id !== action.payload.taskId) return t;
-          return {
-            ...t,
-            subtasks: (t.subtasks || []).map(s =>
-              s.id === action.payload.subtaskId ? { ...s, done: !s.done } : s
-            ),
-          };
+          if (shouldAutoComplete) {
+            return {
+              ...t,
+              subtasks: updatedSubtasks,
+              status: "done" as const,
+              completedAt: new Date().toISOString(),
+              statusChangedAt: new Date().toISOString(),
+              pinnedToday: null,
+            };
+          }
+          return { ...t, subtasks: updatedSubtasks };
         }),
+        ...(shouldAutoComplete && todayStats
+          ? {
+              dailyStats: updateTodayStats(state.dailyStats, {
+                tasksCompleted: todayStats.tasksCompleted + 1,
+              }),
+            }
+          : {}),
       };
     }
 
@@ -869,6 +912,88 @@ function appReducer(state: AppState, action: Action): AppState {
         tasks: [task, ...state.tasks],
         scratchPad: (state.scratchPad || []).filter(
           n => n.id !== action.payload
+        ),
+      };
+    }
+
+    case "TOGGLE_FOCUS_GOAL": {
+      const task = state.tasks.find(t => t.id === action.payload);
+      if (!task) return state;
+      const today = getToday();
+      // Only allow on pinned-today active tasks
+      if (task.pinnedToday !== today || task.status !== "active") return state;
+      if (task.isFocusGoal) {
+        // Unset
+        return {
+          ...state,
+          tasks: state.tasks.map(t =>
+            t.id === action.payload ? { ...t, isFocusGoal: null } : t
+          ),
+        };
+      }
+      // Check max 3
+      const currentGoals = state.tasks.filter(
+        t => t.isFocusGoal && t.pinnedToday === today && t.status === "active"
+      );
+      if (currentGoals.length >= 3) return state;
+      return {
+        ...state,
+        tasks: state.tasks.map(t =>
+          t.id === action.payload ? { ...t, isFocusGoal: true } : t
+        ),
+      };
+    }
+
+    case "BULK_COMPLETE_TASKS": {
+      const ids = new Set(action.payload);
+      const todayStats = getTodayStats(state.dailyStats);
+      let completedCount = 0;
+      const tasks = state.tasks.map(t => {
+        if (!ids.has(t.id) || t.status === "done") return t;
+        completedCount++;
+        return {
+          ...t,
+          status: "done" as const,
+          completedAt: new Date().toISOString(),
+          statusChangedAt: new Date().toISOString(),
+          pinnedToday: null,
+          subtasks: t.subtasks?.map(s => ({ ...s, done: true })),
+        };
+      });
+      return {
+        ...state,
+        tasks,
+        dailyStats: updateTodayStats(state.dailyStats, {
+          tasksCompleted: todayStats.tasksCompleted + completedCount,
+        }),
+      };
+    }
+
+    case "BULK_DELETE_TASKS": {
+      const ids = new Set(action.payload);
+      return {
+        ...state,
+        tasks: state.tasks.filter(t => !ids.has(t.id)),
+      };
+    }
+
+    case "BULK_PIN_TODAY": {
+      const ids = new Set(action.payload);
+      const today = getToday();
+      return {
+        ...state,
+        tasks: state.tasks.map(t =>
+          ids.has(t.id) ? { ...t, pinnedToday: today } : t
+        ),
+      };
+    }
+
+    case "BULK_SET_QUADRANT": {
+      const ids = new Set(action.payload.taskIds);
+      return {
+        ...state,
+        tasks: state.tasks.map(t =>
+          ids.has(t.id) ? { ...t, quadrant: action.payload.quadrant } : t
         ),
       };
     }

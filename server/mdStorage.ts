@@ -80,6 +80,12 @@ export function stateToMarkdown(state: AppState): string {
     lines.push(
       `- **Active Context:** ${state.preferences.activeContext || "all"}`
     );
+    lines.push(
+      `- **Auto Complete Parent:** ${state.preferences.autoCompleteParent ? "true" : "false"}`
+    );
+    lines.push(
+      `- **Available Hours Per Day:** ${state.preferences.availableHoursPerDay ?? 8}`
+    );
     lines.push("");
   }
 
@@ -90,10 +96,10 @@ export function stateToMarkdown(state: AppState): string {
     lines.push("_No tasks yet._");
   } else {
     lines.push(
-      "| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate | Subtasks | RecurrenceDayOfMonth | RecurrenceStartMonth | PinnedToday | StatusChangedAt |"
+      "| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate | Subtasks | RecurrenceDayOfMonth | RecurrenceStartMonth | PinnedToday | StatusChangedAt | IsFocusGoal | EstimatedMinutes |"
     );
     lines.push(
-      "|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|----------|---------------------|----------------------|-------------|-----------------|"
+      "|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|----------|---------------------|----------------------|-------------|-----------------|-------------|------------------|"
     );
     for (const t of state.tasks) {
       const subtasksJson =
@@ -101,7 +107,7 @@ export function stateToMarkdown(state: AppState): string {
           ? escapeField(JSON.stringify(t.subtasks))
           : "";
       lines.push(
-        `| ${t.id} | ${escapeField(t.title)} | ${escapeField(t.description || "")} | ${t.priority} | ${t.status} | ${t.dueDate || ""} | ${t.category || ""} | ${t.energy || ""} | ${t.quadrant} | ${t.createdAt} | ${t.completedAt || ""} | ${t.recurrence || ""} | ${t.recurrenceParentId || ""} | ${t.recurrenceNextDate || ""} | ${subtasksJson} | ${t.recurrenceDayOfMonth ?? ""} | ${t.recurrenceStartMonth ?? ""} | ${t.pinnedToday || ""} | ${t.statusChangedAt || ""} |`
+        `| ${t.id} | ${escapeField(t.title)} | ${escapeField(t.description || "")} | ${t.priority} | ${t.status} | ${t.dueDate || ""} | ${t.category || ""} | ${t.energy || ""} | ${t.quadrant} | ${t.createdAt} | ${t.completedAt || ""} | ${t.recurrence || ""} | ${t.recurrenceParentId || ""} | ${t.recurrenceNextDate || ""} | ${subtasksJson} | ${t.recurrenceDayOfMonth ?? ""} | ${t.recurrenceStartMonth ?? ""} | ${t.pinnedToday || ""} | ${t.statusChangedAt || ""} | ${t.isFocusGoal ? "true" : ""} | ${t.estimatedMinutes ?? ""} |`
       );
     }
   }
@@ -311,6 +317,10 @@ export function markdownToState(md: string): AppState {
           state.preferences!.activeContext = (
             ["all", "work", "personal"].includes(val) ? val : "all"
           ) as any;
+        if (key === "auto complete parent")
+          state.preferences!.autoCompleteParent = val === "true";
+        if (key === "available hours per day")
+          state.preferences!.availableHoursPerDay = val ? parseFloat(val) : 8;
       }
     }
 
@@ -351,6 +361,8 @@ export function markdownToState(md: string): AppState {
           recurrenceStartMonth: col(16) ? parseInt(col(16)) : undefined,
           pinnedToday: col(17) || undefined,
           statusChangedAt: col(18) || undefined,
+          isFocusGoal: col(19) === "true" ? true : undefined,
+          estimatedMinutes: col(20) ? parseInt(col(20)) : undefined,
         });
       }
     }
