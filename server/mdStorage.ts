@@ -17,6 +17,7 @@ import type {
   AppPreferences,
   ReadingItem,
   Reminder,
+  CanvasEntry,
 } from "../shared/appTypes";
 import { syncToObsidian } from "./obsidianSync";
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from "../shared/appTypes";
@@ -205,6 +206,20 @@ export function stateToMarkdown(state: AppState): string {
     lines.push("");
   }
 
+  // Canvas
+  if (state.canvas && state.canvas.length > 0) {
+    lines.push("## Canvas");
+    lines.push("");
+    lines.push("| ID | Date | Content | WordCount | UpdatedAt | CreatedAt |");
+    lines.push("|----|------|---------|-----------|-----------|-----------|");
+    for (const c of state.canvas) {
+      lines.push(
+        `| ${c.id} | ${c.date} | ${escapeField(c.content)} | ${c.wordCount ?? ""} | ${c.updatedAt} | ${c.createdAt} |`
+      );
+    }
+    lines.push("");
+  }
+
   // Templates
   if (state.templates && state.templates.length > 0) {
     lines.push("## Templates");
@@ -262,6 +277,7 @@ export function markdownToState(md: string): AppState {
     readingList: [],
     reminders: [],
     scratchPad: [],
+    canvas: [],
   };
 
   const sections = md.split(/^## /m);
@@ -477,6 +493,24 @@ export function markdownToState(md: string): AppState {
           id: r[0],
           text: r[1] || "",
           createdAt: r[2] || new Date().toISOString(),
+        });
+      }
+    }
+
+    if (title === "canvas") {
+      state.canvas = [];
+      const rows = parseMarkdownTable(sectionLines);
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r[0]) continue;
+        const col = (idx: number) => (idx < r.length ? r[idx] : "") || "";
+        state.canvas.push({
+          id: r[0],
+          date: r[1] || "",
+          content: col(2),
+          wordCount: col(3) ? safeParseInt(col(3), 0) : null,
+          updatedAt: col(4) || new Date().toISOString(),
+          createdAt: col(5) || new Date().toISOString(),
         });
       }
     }

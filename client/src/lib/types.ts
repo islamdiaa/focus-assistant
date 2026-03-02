@@ -27,6 +27,7 @@ export {
   type ReadingItem,
   type AppPreferences,
   type ScratchNote,
+  type CanvasEntry,
   type ContextFilter,
   type AppState,
   type StorageMode,

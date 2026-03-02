@@ -23,6 +23,7 @@ import {
   Briefcase,
   User,
   Globe,
+  PenLine,
 } from "lucide-react";
 import { DAILY_TIPS } from "@/lib/types";
 import type { ContextFilter } from "@/lib/types";
@@ -31,6 +32,7 @@ import { useMemo } from "react";
 export type Page =
   | "planner"
   | "tasks"
+  | "canvas"
   | "timer"
   | "matrix"
   | "stats"
@@ -62,6 +64,7 @@ const NAV_ITEMS: {
   { id: "timer", label: "Focus Timer", icon: Timer },
   { id: "matrix", label: "Matrix", icon: LayoutGrid },
   { id: "stats", label: "Stats", icon: BarChart3 },
+  { id: "canvas", label: "Canvas", icon: PenLine, section: "Knowledge" },
   { id: "reading", label: "Read Later", icon: BookOpen, section: "Knowledge" },
   { id: "reminders", label: "Reminders", icon: Bell },
   { id: "templates", label: "Templates", icon: FileText, section: "Tools" },

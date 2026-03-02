@@ -36,6 +36,7 @@ const SettingsPage = lazy(() => import("./SettingsPage"));
 const TemplatesPage = lazy(() => import("./TemplatesPage"));
 const WeeklyReviewPage = lazy(() => import("./WeeklyReviewPage"));
 const ReadLaterPage = lazy(() => import("./ReadLaterPage"));
+const CanvasPage = lazy(() => import("./CanvasPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
 import { useApp } from "@/contexts/AppContext";
 import CommandPalette from "@/components/CommandPalette";
@@ -171,6 +172,13 @@ export default function Home() {
           e.preventDefault();
           setFocusMode(true);
         }
+        return;
+      }
+
+      // C: Open Canvas — skip if Cmd/Ctrl held
+      if ((e.key === "c" || e.key === "C") && !isMod) {
+        e.preventDefault();
+        setActivePage("canvas");
         return;
       }
 
@@ -358,6 +366,7 @@ export default function Home() {
                   reminderTrigger={reminderTrigger}
                 />
               )}
+              {activePage === "canvas" && <CanvasPage />}
               {activePage === "timer" && <TimerPage />}
               {activePage === "matrix" && <MatrixPage />}
               {activePage === "stats" && <StatsPage />}
