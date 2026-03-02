@@ -37,6 +37,7 @@ data/
 # Plugin state
 .omc/
 .playwright-mcp/
+.claude/skills/
 
 # OS files
 .DS_Store

@@ -261,7 +261,7 @@ export default function Home() {
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top bar */}
-          <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10">
+          <header className="h-11 border-b border-white/15 bg-white/40 dark:bg-white/5 backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10">
             <div className="flex items-center gap-3">
               {/* Hamburger - mobile only */}
               <button
@@ -270,13 +270,13 @@ export default function Home() {
               >
                 <Menu className="w-5 h-5" />
               </button>
-              <div>
-                <h1 className="font-serif text-base lg:text-lg text-foreground leading-tight">
-                  Your Focus Assistant
+              <div className="flex items-center gap-2">
+                <h1 className="font-serif text-sm lg:text-base text-foreground leading-tight">
+                  Focus Assistant
                 </h1>
-                <p className="text-xs text-muted-foreground -mt-0.5 hidden sm:block">
+                <span className="hidden sm:inline text-xs text-muted-foreground/70 italic truncate max-w-48">
                   {subtitle}
-                </p>
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-2 lg:gap-3">
@@ -286,7 +286,7 @@ export default function Home() {
                   onClick={undo}
                   disabled={!canUndo}
                   title="Undo (Ctrl+Z)"
-                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <Undo2 className="w-4 h-4" />
                 </button>
@@ -294,18 +294,18 @@ export default function Home() {
                   onClick={redo}
                   disabled={!canRedo}
                   title="Redo (Ctrl+Shift+Z)"
-                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <Redo2 className="w-4 h-4" />
                 </button>
               </div>
-              <div className="flex items-center gap-1.5 bg-warm-sage-light px-2.5 lg:px-3 py-1.5 rounded-full border border-warm-sage/20">
+              <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-sage/15 shadow-sm px-2 lg:px-2.5 py-1 rounded-full border border-warm-sage/20">
                 <Smile className="w-3.5 h-3.5 text-warm-sage" />
                 <span className="text-xs font-medium text-warm-charcoal">
                   {completedToday}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 bg-warm-blue-light px-2.5 lg:px-3 py-1.5 rounded-full border border-warm-blue/20">
+              <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-blue/15 shadow-sm px-2 lg:px-2.5 py-1 rounded-full border border-warm-blue/20">
                 <Clock className="w-3.5 h-3.5 text-warm-blue" />
                 <span className="text-xs font-medium text-warm-charcoal">
                   {focusToday}m

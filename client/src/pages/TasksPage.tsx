@@ -167,7 +167,7 @@ function SubtaskList({
   }
 
   return (
-    <div className="mt-3 pt-3 border-t border-border/50 space-y-1.5">
+    <div className="mt-3 pt-3 border-t border-white/15 dark:border-white/10 space-y-1.5">
       <div className="flex items-center gap-1.5 mb-2">
         <ListChecks className="w-3.5 h-3.5 text-warm-sage" />
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -313,7 +313,7 @@ function InlineEditForm({
   }
 
   return (
-    <div className="mt-3 pt-3 border-t border-border space-y-4 animate-in slide-in-from-top-2 duration-200">
+    <div className="mt-3 pt-3 border-t border-white/15 dark:border-white/10 space-y-4 animate-in slide-in-from-top-2 duration-200">
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
           Title
@@ -484,12 +484,12 @@ function SortableTaskCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.2 }}
-      className={`group bg-card rounded-xl border p-4 transition-all duration-200 hover:shadow-md
-        ${task.status === "done" ? "opacity-60 border-border" : ""}
-        ${task.status === "monitored" ? "opacity-75 border-dashed border-warm-amber/40 bg-warm-amber-light/20" : "border-border"}
-        ${task.status === "active" ? "border-border" : ""}
-        ${editingId === task.id ? "ring-2 ring-warm-sage/30 shadow-md" : ""}
-        ${isDragSource ? "shadow-xl ring-2 ring-warm-sage/40 opacity-50" : ""}`}
+      className={`group backdrop-blur-xl bg-white/60 dark:bg-white/5 rounded-2xl border p-4 transition-all duration-300 shadow-card hover:shadow-card-hover hover:bg-white/70 dark:hover:bg-white/8
+        ${task.status === "done" ? "opacity-60 border-white/15 dark:border-white/10" : ""}
+        ${task.status === "monitored" ? "opacity-75 border-dashed border-warm-amber/40 bg-warm-amber-light/20" : "border-white/30 dark:border-white/10"}
+        ${task.status === "active" ? "border-white/30 dark:border-white/10" : ""}
+        ${editingId === task.id ? "ring-2 ring-warm-sage/30 shadow-card-hover" : ""}
+        ${isDragSource ? "shadow-card-active ring-2 ring-warm-sage/40 opacity-50" : ""}`}
     >
       <div className="flex items-start gap-3">
         {/* Selection checkbox */}
@@ -592,46 +592,11 @@ function SortableTaskCard({
         </div>
 
         {/* Action Icons */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover-action transition-opacity">
-          {/* Subtask toggle */}
-          <button
-            onClick={() => setSubtasksOpen(!subtasksOpen)}
-            className={`p-1.5 rounded-md transition-colors ${
-              subtasksOpen
-                ? "text-warm-sage bg-warm-sage-light"
-                : "text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light"
-            }`}
-            title="Subtasks"
-          >
-            <ListChecks className="w-4 h-4" />
-          </button>
-          {/* Monitor toggle */}
-          {task.status !== "done" && (
-            <button
-              onClick={() =>
-                dispatch({ type: "TOGGLE_MONITOR", payload: task.id })
-              }
-              className={`p-1.5 rounded-md transition-colors ${
-                task.status === "monitored"
-                  ? "text-warm-amber bg-warm-amber-light"
-                  : "text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light"
-              }`}
-              title={
-                task.status === "monitored"
-                  ? "Reactivate task"
-                  : "Monitor task (waiting)"
-              }
-            >
-              {task.status === "monitored" ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-            </button>
-          )}
+        <div className="flex items-center gap-1">
+          {/* Always-visible primary actions */}
           <button
             onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
+            className="p-1.5 rounded-md text-muted-foreground/50 hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
             title={task.status === "done" ? "Reopen task" : "Mark as done"}
           >
             <Check className="w-4 h-4" />
@@ -641,19 +606,58 @@ function SortableTaskCard({
             className={`p-1.5 rounded-md transition-colors ${
               editingId === task.id
                 ? "text-warm-sage bg-warm-sage-light"
-                : "text-muted-foreground hover:text-warm-blue hover:bg-warm-blue-light"
+                : "text-muted-foreground/50 hover:text-warm-blue hover:bg-warm-blue-light"
             }`}
             title="Edit task"
           >
             <Pencil className="w-4 h-4" />
           </button>
-          <button
-            onClick={() => dispatch({ type: "DELETE_TASK", payload: task.id })}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
-            title="Delete task"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {/* Hover-revealed secondary actions */}
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover-action transition-opacity">
+            <button
+              onClick={() => setSubtasksOpen(!subtasksOpen)}
+              className={`p-1.5 rounded-md transition-colors ${
+                subtasksOpen
+                  ? "text-warm-sage bg-warm-sage-light"
+                  : "text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light"
+              }`}
+              title="Subtasks"
+            >
+              <ListChecks className="w-4 h-4" />
+            </button>
+            {task.status !== "done" && (
+              <button
+                onClick={() =>
+                  dispatch({ type: "TOGGLE_MONITOR", payload: task.id })
+                }
+                className={`p-1.5 rounded-md transition-colors ${
+                  task.status === "monitored"
+                    ? "text-warm-amber bg-warm-amber-light"
+                    : "text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light"
+                }`}
+                title={
+                  task.status === "monitored"
+                    ? "Reactivate task"
+                    : "Monitor task (waiting)"
+                }
+              >
+                {task.status === "monitored" ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            )}
+            <button
+              onClick={() =>
+                dispatch({ type: "DELETE_TASK", payload: task.id })
+              }
+              className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
+              title="Delete task"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1498,7 +1502,7 @@ export default function TasksPage({
 
       {/* Filters & Sort */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
-        <div className="flex bg-warm-sand/50 rounded-lg p-1 gap-1">
+        <div className="flex gap-1.5">
           {(["all", "active", "monitored", "done"] as Filter[]).map(f => {
             const labels: Record<Filter, string> = {
               all: "All",
@@ -1510,21 +1514,21 @@ export default function TasksPage({
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200
-                  ${filter === f ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border
+                  ${filter === f ? "bg-warm-sage/15 text-warm-charcoal border-warm-sage/30 backdrop-blur-md shadow-md" : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/15 dark:hover:border-white/10 hover:bg-warm-sand/30"}`}
               >
                 {labels[f]} ({counts[f]})
               </button>
             );
           })}
         </div>
-        <div className="flex bg-warm-sand/50 rounded-lg p-1 gap-1 sm:ml-auto flex-wrap">
+        <div className="flex gap-1.5 sm:ml-auto flex-wrap">
           {(["manual", "newest", "priority", "dueDate"] as Sort[]).map(s => (
             <button
               key={s}
               onClick={() => setSort(s)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-1.5
-                ${sort === s ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 border
+                ${sort === s ? "bg-warm-blue/10 text-warm-charcoal border-warm-blue/25 shadow-sm" : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/15 dark:hover:border-white/10 hover:bg-warm-sand/30"}`}
             >
               {s === "manual" && <GripVertical className="w-3.5 h-3.5" />}
               {s === "newest" && <ArrowUpDown className="w-3.5 h-3.5" />}
@@ -1544,14 +1548,14 @@ export default function TasksPage({
 
       {/* Task List */}
       {filteredTasks.length === 0 ? (
-        <div className="bg-card rounded-2xl border border-border p-12 text-center">
+        <div className="glass rounded-2xl p-12 lg:p-16 text-center">
           {searchQuery ? (
             <>
-              <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
+              <Search className="w-16 h-16 mx-auto mb-6 text-muted-foreground/30" />
               <h3 className="font-serif text-xl text-foreground mb-2">
                 No matches
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                 No tasks match "{searchQuery}". Try a different search.
               </p>
             </>
@@ -1560,12 +1564,12 @@ export default function TasksPage({
               <img
                 src={EMPTY_TASKS_IMG}
                 alt="All clear"
-                className="w-40 h-40 mx-auto mb-4 rounded-2xl object-cover opacity-90"
+                className="w-48 h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80"
               />
               <h3 className="font-serif text-xl text-foreground mb-2">
                 All clear!
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                 Add a task to get started. You got this!
               </p>
             </>

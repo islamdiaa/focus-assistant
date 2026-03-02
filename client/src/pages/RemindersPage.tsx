@@ -424,7 +424,7 @@ export default function RemindersPage({
 
       {/* Reminder list */}
       {filteredReminders.length === 0 ? (
-        <div className="bg-card rounded-2xl border border-border p-12 text-center">
+        <div className="glass rounded-2xl p-12 text-center">
           <Bell className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
           <h3 className="font-serif text-xl text-foreground mb-2">
             {reminders.length === 0
@@ -463,8 +463,8 @@ export default function RemindersPage({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className={`bg-card rounded-xl border p-4 transition-all
-                    ${isOverdue ? "border-red-200 bg-red-50/30" : isToday ? "border-warm-amber/30 bg-warm-amber-light/20" : "border-border"}
+                  className={`glass rounded-xl p-4 transition-all
+                    ${isOverdue ? "border-red-200 bg-red-50/30" : isToday ? "border-warm-amber/30 bg-warm-amber-light/20" : "border-white/15 dark:border-white/10"}
                     ${reminder.acknowledged ? "opacity-50" : ""}`}
                 >
                   <div className="flex items-start gap-3">

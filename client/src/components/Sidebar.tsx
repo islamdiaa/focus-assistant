@@ -115,16 +115,16 @@ export default function Sidebar({
       {/* Sidebar */}
       <aside
         className={`
-        fixed top-0 left-0 h-screen z-50 w-64 bg-card border-r border-border flex flex-col
+        fixed top-0 left-0 h-screen z-50 w-64 glass-heavy border-r border-white/20 flex flex-col
         transition-transform duration-300 ease-in-out
         lg:sticky lg:translate-x-0 lg:w-56 lg:z-auto
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}
       >
         {/* Logo + close button */}
-        <div className="px-5 py-5 border-b border-border flex items-center justify-between">
+        <div className="px-6 py-6 border-b border-white/15 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-warm-sage/20 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl backdrop-blur-md bg-warm-sage/25 shadow-md shadow-warm-sage/20 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-warm-sage" />
             </div>
             <div>
@@ -138,7 +138,7 @@ export default function Sidebar({
           </div>
           <button
             onClick={onClose}
-            className="lg:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
+            className="lg:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -146,7 +146,7 @@ export default function Sidebar({
 
         {/* Context Switcher */}
         <div className="px-3 pt-3 pb-1">
-          <div className="flex bg-warm-sand/40 rounded-lg p-0.5 gap-0.5">
+          <div className="flex backdrop-blur-md bg-white/30 dark:bg-white/10 rounded-xl p-0.5 gap-0.5">
             {CONTEXT_OPTIONS.map(opt => {
               const Icon = opt.icon;
               const isActive = activeContext === opt.id;
@@ -157,7 +157,7 @@ export default function Sidebar({
                   className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200
                     ${
                       isActive
-                        ? "bg-white text-warm-charcoal shadow-sm"
+                        ? "bg-white/70 dark:bg-white/15 text-warm-charcoal shadow-md backdrop-blur-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                 >
@@ -186,13 +186,16 @@ export default function Sidebar({
                 )}
                 <button
                   onClick={() => handleNav(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                     ${
                       isActive
-                        ? "bg-warm-sage/15 text-warm-charcoal"
-                        : "text-muted-foreground hover:bg-warm-sand/50 hover:text-foreground"
+                        ? "bg-warm-sage/15 text-warm-charcoal backdrop-blur-md shadow-sm ring-1 ring-warm-sage/10"
+                        : "text-muted-foreground hover:bg-white/40 dark:hover:bg-white/10 hover:text-foreground"
                     }`}
                 >
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full bg-warm-sage" />
+                  )}
                   <Icon
                     className={`w-[18px] h-[18px] ${isActive ? "text-warm-sage" : ""}`}
                   />
@@ -236,7 +239,7 @@ export default function Sidebar({
 
         {/* Daily Tip */}
         <div className="px-3 pb-4">
-          <div className="bg-warm-amber-light rounded-xl p-4 border border-warm-amber/20">
+          <div className="backdrop-blur-md bg-warm-amber/10 shadow-md shadow-warm-amber/5 rounded-xl p-4 border border-warm-amber/20">
             <div className="flex items-center gap-1.5 mb-2">
               <Sparkles className="w-3.5 h-3.5 text-warm-amber" />
               <span className="text-xs font-semibold text-warm-charcoal uppercase tracking-wide">

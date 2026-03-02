@@ -310,7 +310,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== NOTIFICATION SOUNDS ========== */}
-      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Bell className="w-4 h-4 text-warm-amber" />
           <h3 className="font-semibold text-sm text-foreground">
@@ -351,7 +351,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== DATA STORAGE ========== */}
-      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-2">
           <HardDrive className="w-4 h-4 text-warm-sage" />
           <h3 className="font-semibold text-sm text-foreground">
@@ -513,7 +513,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== OBSIDIAN VAULT SYNC ========== */}
-      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-2">
           <FolderSync className="w-4 h-4 text-warm-lavender" />
           <h3 className="font-semibold text-sm text-foreground">
@@ -555,7 +555,7 @@ export default function SettingsPage() {
               </p>
             )}
           </div>
-          <div className="flex items-center justify-between bg-background rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between bg-background rounded-xl border border-white/15 dark:border-white/10 p-4">
             <div>
               <p className="text-sm font-medium text-foreground">Auto-Sync</p>
               <p className="text-xs text-muted-foreground">
@@ -571,7 +571,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== APPEARANCE ========== */}
-      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-2">
           {theme === "dark" ? (
             <Moon className="w-4 h-4 text-warm-lavender" />
@@ -583,7 +583,7 @@ export default function SettingsPage() {
         <p className="text-xs text-muted-foreground mb-4">
           Switch between light and dark themes.
         </p>
-        <div className="flex items-center justify-between bg-background rounded-xl border border-border p-4">
+        <div className="flex items-center justify-between bg-background rounded-xl border border-white/15 dark:border-white/10 p-4">
           <div className="flex items-center gap-3">
             <div
               className={`p-2 rounded-lg ${theme === "dark" ? "bg-warm-lavender/10" : "bg-warm-amber-light"}`}
@@ -613,7 +613,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== AUTOMATION ========== */}
-      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Zap className="w-4 h-4 text-warm-amber" />
           <h3 className="font-semibold text-sm text-foreground">Automation</h3>
@@ -621,7 +621,7 @@ export default function SettingsPage() {
         <p className="text-xs text-muted-foreground mb-4">
           Automate repetitive task management actions.
         </p>
-        <div className="flex items-center justify-between bg-background rounded-xl border border-border p-4">
+        <div className="flex items-center justify-between bg-background rounded-xl border border-white/15 dark:border-white/10 p-4">
           <div>
             <p className="text-sm font-medium text-foreground">
               Auto-complete parent task
@@ -644,7 +644,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== PLANNING ========== */}
-      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Clock className="w-4 h-4 text-warm-blue" />
           <h3 className="font-semibold text-sm text-foreground">Planning</h3>
@@ -652,7 +652,7 @@ export default function SettingsPage() {
         <p className="text-xs text-muted-foreground mb-4">
           Configure your daily planning preferences.
         </p>
-        <div className="bg-background rounded-xl border border-border p-4">
+        <div className="bg-background rounded-xl border border-white/15 dark:border-white/10 p-4">
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm font-medium text-foreground">
@@ -683,7 +683,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== QUICK PRESETS ========== */}
-      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Timer className="w-4 h-4 text-warm-sage" />
           <h3 className="font-semibold text-sm text-foreground">
@@ -695,7 +695,7 @@ export default function SettingsPage() {
             <button
               key={preset.name}
               onClick={() => applyPreset(preset)}
-              className="text-left bg-background rounded-xl border border-border p-4 hover:border-warm-sage/40 hover:bg-warm-sage-light/30 transition-all duration-200"
+              className="text-left bg-background rounded-xl border border-white/15 dark:border-white/10 p-4 hover:border-warm-sage/40 hover:bg-warm-sage-light/30 transition-all duration-200"
             >
               <p className="text-sm font-medium text-foreground">
                 {preset.name}
@@ -709,7 +709,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== CUSTOM TIMER SETTINGS ========== */}
-      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-6">
           <Timer className="w-4 h-4 text-warm-sage" />
           <h3 className="font-semibold text-sm text-foreground">
@@ -826,7 +826,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== EXPORT / IMPORT ========== */}
-      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Download className="w-4 h-4 text-warm-sage" />
           <h3 className="font-semibold text-sm text-foreground">
@@ -863,7 +863,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== DATA INTEGRITY CHECK ========== */}
-      <div className="bg-card rounded-2xl border border-border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-2">
           <ShieldCheck className="w-4 h-4 text-warm-blue" />
           <h3 className="font-semibold text-sm text-foreground">
@@ -930,7 +930,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== ABOUT ========== */}
-      <div className="bg-warm-sand/50 rounded-2xl border border-border p-6">
+      <div className="bg-warm-sand/50 rounded-2xl border border-white/15 dark:border-white/10 p-6">
         <h3 className="font-serif text-lg text-foreground mb-2">
           About Your Focus Assistant
         </h3>
@@ -940,16 +940,16 @@ export default function SettingsPage() {
           help you stay focused and motivated.
         </p>
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">
+          <span className="text-xs px-3 py-1 rounded-full bg-card border border-white/15 dark:border-white/10 text-muted-foreground font-medium">
             v{pkgJson.version}
           </span>
-          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">
+          <span className="text-xs px-3 py-1 rounded-full bg-card border border-white/15 dark:border-white/10 text-muted-foreground font-medium">
             ADHD-Friendly
           </span>
-          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">
+          <span className="text-xs px-3 py-1 rounded-full bg-card border border-white/15 dark:border-white/10 text-muted-foreground font-medium">
             Subtasks
           </span>
-          <span className="text-xs px-3 py-1 rounded-full bg-card border border-border text-muted-foreground font-medium">
+          <span className="text-xs px-3 py-1 rounded-full bg-card border border-white/15 dark:border-white/10 text-muted-foreground font-medium">
             Focus Mode
           </span>
           <span className="text-xs px-3 py-1 rounded-full bg-warm-sage-light border border-warm-sage/20 text-warm-sage font-medium">

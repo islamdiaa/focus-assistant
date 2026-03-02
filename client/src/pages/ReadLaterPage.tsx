@@ -214,7 +214,7 @@ export default function ReadLaterPage() {
           onClick={() =>
             setFilterStatus(filterStatus === "unread" ? "all" : "unread")
           }
-          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "unread" ? "border-warm-terracotta/40 bg-warm-terracotta/10" : "border-border bg-card hover:bg-warm-terracotta/5"}`}
+          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "unread" ? "border-warm-terracotta/40 bg-warm-terracotta/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-terracotta/5"}`}
         >
           <Clock className="w-4 h-4 mx-auto mb-1 text-warm-terracotta" />
           <div className="text-xl font-bold text-foreground">{unreadCount}</div>
@@ -224,7 +224,7 @@ export default function ReadLaterPage() {
           onClick={() =>
             setFilterStatus(filterStatus === "reading" ? "all" : "reading")
           }
-          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "reading" ? "border-warm-blue/40 bg-warm-blue/10" : "border-border bg-card hover:bg-warm-blue/5"}`}
+          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "reading" ? "border-warm-blue/40 bg-warm-blue/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-blue/5"}`}
         >
           <BookOpen className="w-4 h-4 mx-auto mb-1 text-warm-blue" />
           <div className="text-xl font-bold text-foreground">
@@ -236,7 +236,7 @@ export default function ReadLaterPage() {
           onClick={() =>
             setFilterStatus(filterStatus === "read" ? "all" : "read")
           }
-          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "read" ? "border-warm-sage/40 bg-warm-sage/10" : "border-border bg-card hover:bg-warm-sage/5"}`}
+          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "read" ? "border-warm-sage/40 bg-warm-sage/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-sage/5"}`}
         >
           <CheckCircle2 className="w-4 h-4 mx-auto mb-1 text-warm-sage" />
           <div className="text-xl font-bold text-foreground">{readCount}</div>
@@ -265,7 +265,7 @@ export default function ReadLaterPage() {
                 className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
                   filterTag === tag
                     ? "bg-warm-lavender text-white border-warm-lavender"
-                    : "bg-card text-muted-foreground border-border hover:border-warm-lavender/40"
+                    : "bg-card text-muted-foreground border-white/15 dark:border-white/10 hover:border-warm-lavender/40"
                 }`}
               >
                 {tag}
@@ -313,7 +313,7 @@ export default function ReadLaterPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-card rounded-xl border border-border overflow-hidden"
+                  className="glass rounded-xl overflow-hidden"
                 >
                   <div className="p-4">
                     <div className="flex items-start gap-3">
@@ -413,7 +413,7 @@ export default function ReadLaterPage() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <div className="mt-4 pt-4 border-t border-border space-y-3">
+                          <div className="mt-4 pt-4 border-t border-white/15 dark:border-white/10 space-y-3">
                             {/* Notes */}
                             {item.notes && (
                               <div className="bg-warm-sand/30 rounded-lg p-3">
