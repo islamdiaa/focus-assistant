@@ -517,16 +517,16 @@ export default function TimerPage() {
 
       {/* Pomodoro list */}
       {state.pomodoros.length === 0 ? (
-        <div className="bg-card rounded-2xl border border-border p-12 text-center">
+        <div className="glass rounded-2xl p-12 lg:p-16 text-center">
           <img
             src={EMPTY_TIMER_IMG}
             alt="No pomodoros"
-            className="w-40 h-40 mx-auto mb-4 rounded-2xl object-cover opacity-90"
+            className="w-48 h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80"
           />
           <h3 className="font-serif text-xl text-foreground mb-2">
             No Pomodoros yet
           </h3>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-4">
             Create your first Pomodoro and link it to your tasks.
           </p>
           <Button
@@ -558,7 +558,7 @@ export default function TimerPage() {
             return (
               <div
                 key={pom.id}
-                className={`bg-card rounded-2xl border border-border p-6 transition-all duration-200 hover:shadow-md
+                className={`glass rounded-2xl p-6 transition-all duration-200 hover:shadow-md
                   ${isCompleted ? "opacity-60" : ""} ${isRunning ? "ring-2 ring-warm-sage/30" : ""}`}
               >
                 <div className="flex items-start justify-between mb-4">

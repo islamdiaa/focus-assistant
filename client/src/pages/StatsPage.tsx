@@ -109,16 +109,16 @@ export default function StatsPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         {/* Streak */}
-        <div className="bg-warm-peach rounded-2xl p-5 border border-warm-peach/50">
+        <div className="backdrop-blur-xl bg-warm-peach/30 border border-white/30 shadow-lg shadow-warm-peach/10 ring-1 ring-warm-peach/20 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Flame className="w-4 h-4 text-warm-terracotta" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">
               Current Streak
             </span>
           </div>
-          <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">
+          <p className="font-serif text-3xl lg:text-4xl text-warm-charcoal">
             {state.currentStreak} days
           </p>
           <p className="text-xs text-warm-charcoal/60 mt-1">
@@ -127,42 +127,42 @@ export default function StatsPage() {
         </div>
 
         {/* Today's Tasks */}
-        <div className="bg-warm-sage-light rounded-2xl p-5 border border-warm-sage/20">
+        <div className="backdrop-blur-xl bg-warm-sage-light/30 border border-white/30 shadow-lg shadow-warm-sage/10 ring-1 ring-warm-sage/20 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="w-4 h-4 text-warm-sage" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">
               Today's Tasks
             </span>
           </div>
-          <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">
+          <p className="font-serif text-3xl lg:text-4xl text-warm-charcoal">
             {todayStats?.tasksCompleted || 0}
           </p>
           <p className="text-xs text-warm-charcoal/60 mt-1">completed today</p>
         </div>
 
         {/* Focus Today */}
-        <div className="bg-warm-blue-light rounded-2xl p-5 border border-warm-blue/20">
+        <div className="backdrop-blur-xl bg-warm-blue-light/30 border border-white/30 shadow-lg shadow-warm-blue/10 ring-1 ring-warm-blue/20 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-4 h-4 text-warm-blue" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">
               Focus Today
             </span>
           </div>
-          <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">
+          <p className="font-serif text-3xl lg:text-4xl text-warm-charcoal">
             {todayStats?.focusMinutes || 0}m
           </p>
           <p className="text-xs text-warm-charcoal/60 mt-1">minutes focused</p>
         </div>
 
         {/* Total Sessions */}
-        <div className="bg-warm-amber-light rounded-2xl p-5 border border-warm-amber/20">
+        <div className="backdrop-blur-xl bg-warm-amber-light/30 border border-white/30 shadow-lg shadow-warm-amber/10 ring-1 ring-warm-amber/20 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-4 h-4 text-warm-amber" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">
               Total Sessions
             </span>
           </div>
-          <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">
+          <p className="font-serif text-3xl lg:text-4xl text-warm-charcoal">
             {totalSessions}
           </p>
           <p className="text-xs text-warm-charcoal/60 mt-1">focus sessions</p>
@@ -170,7 +170,7 @@ export default function StatsPage() {
       </div>
 
       {/* Weekly Charts */}
-      <div className="bg-card rounded-2xl border border-border p-4 lg:p-6 mb-6">
+      <div className="glass rounded-2xl p-4 lg:p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-4 h-4 text-warm-sage" />
           <h3 className="font-semibold text-sm text-foreground">This Week</h3>
@@ -230,7 +230,7 @@ export default function StatsPage() {
       </div>
 
       {/* Task Status Summary */}
-      <div className="bg-card rounded-2xl border border-border p-4 lg:p-6 mb-6">
+      <div className="glass rounded-2xl p-4 lg:p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Target className="w-4 h-4 text-warm-sage" />
           <h3 className="font-semibold text-sm text-foreground">
@@ -269,7 +269,7 @@ export default function StatsPage() {
       </div>
 
       {/* All-Time Stats */}
-      <div className="bg-warm-lavender-light rounded-2xl border border-warm-lavender/20 p-4 lg:p-6">
+      <div className="backdrop-blur-xl bg-warm-lavender/15 border border-white/30 shadow-lg shadow-warm-lavender/10 rounded-2xl p-4 lg:p-6">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-4 h-4 text-warm-lavender" />
           <h3 className="font-semibold text-sm text-foreground">

@@ -405,7 +405,7 @@ function TodayTaskCard({
       layout
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`rounded-lg border border-border/50 bg-background/50 hover:bg-background transition-colors group ${
+      className={`rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-background transition-colors group ${
         task.status === "done" ? "opacity-50" : ""
       }`}
     >
@@ -571,7 +571,7 @@ function TodayTaskCard({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-3 pb-3 pt-2 border-t border-border/50 space-y-2">
+            <div className="px-3 pb-3 pt-2 border-t border-white/15 dark:border-white/10 space-y-2">
               <Input
                 value={editTitle}
                 onChange={e => setEditTitle(e.target.value)}
@@ -1209,7 +1209,7 @@ export default function DailyPlannerPage({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="mb-8 relative overflow-hidden rounded-2xl border border-warm-lavender/20 bg-gradient-to-br from-warm-lavender/5 via-card to-warm-blue-light/30 p-5 lg:p-6"
+        className="mb-8 relative overflow-hidden rounded-2xl glass ring-1 ring-warm-lavender/10 p-6"
       >
         <Quote className="absolute top-3 right-3 w-10 h-10 text-warm-lavender/10 rotate-180" />
         <div className="relative">
@@ -1232,7 +1232,7 @@ export default function DailyPlannerPage({
       </motion.div>
 
       {/* Today's Progress */}
-      <div className="grid grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-4 gap-4 mb-8">
         {[
           {
             icon: CheckCircle2,
@@ -1268,7 +1268,7 @@ export default function DailyPlannerPage({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 + i * 0.05 }}
-            className={`${card.bg} rounded-xl p-3 border border-border/30 text-center`}
+            className={`${card.bg} backdrop-blur-xl rounded-xl p-3 border border-white/30 dark:border-white/10 text-center shadow-md`}
           >
             <card.icon className={`w-4 h-4 ${card.color} mx-auto mb-1`} />
             <p className="text-xl font-bold text-foreground">{card.value}</p>
@@ -1283,7 +1283,7 @@ export default function DailyPlannerPage({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mb-8 bg-card rounded-xl border border-border p-4"
+          className="mb-8 glass rounded-xl p-4"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1322,7 +1322,7 @@ export default function DailyPlannerPage({
           placeholder="Search today's tasks..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className="pl-10 bg-card border-border"
+          className="pl-10 bg-card border-white/15 dark:border-white/10"
         />
         {searchQuery && (
           <button
@@ -1414,7 +1414,7 @@ export default function DailyPlannerPage({
       </motion.div>
 
       {/* My Today — Pinned Tasks */}
-      <div className="bg-card rounded-xl border border-border p-5 mb-4">
+      <div className="glass rounded-xl p-5 mb-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
             <Pin className="w-5 h-5 text-warm-sage" />
@@ -1504,7 +1504,7 @@ export default function DailyPlannerPage({
                     onClick={() => {
                       dispatch({ type: "PIN_TO_TODAY", payload: t.id });
                     }}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-background/50 hover:bg-warm-sage-light/30 hover:border-warm-sage/30 transition-colors text-left group"
+                    className="w-full flex items-center gap-3 p-3 rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-warm-sage-light/30 hover:border-warm-sage/30 transition-colors text-left group"
                   >
                     <Plus className="w-4 h-4 text-muted-foreground group-hover:text-warm-sage transition-colors shrink-0" />
                     <div className="flex-1 min-w-0">
@@ -1563,7 +1563,7 @@ export default function DailyPlannerPage({
 
       {/* Today's Reminders */}
       {todayReminders.length > 0 && (
-        <div className="bg-warm-amber-light/30 rounded-xl border border-warm-amber/20 p-5 mb-4">
+        <div className="backdrop-blur-xl bg-warm-amber/10 rounded-xl border border-warm-amber/20 p-6 shadow-md mb-4">
           <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
             <Bell className="w-5 h-5 text-warm-amber" />
             Today's Reminders ({todayReminders.length})
@@ -1583,7 +1583,7 @@ export default function DailyPlannerPage({
 
       {/* Upcoming Reminders (5 days) */}
       {upcomingReminders.length > 0 && (
-        <div className="bg-warm-blue-light/20 rounded-xl border border-warm-blue/10 p-5 mb-4">
+        <div className="bg-warm-blue-light/20 rounded-xl border border-warm-blue/10 p-6 mb-4">
           <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-warm-blue" />
             Upcoming Reminders ({upcomingReminders.length})
@@ -1602,7 +1602,7 @@ export default function DailyPlannerPage({
       )}
 
       {/* Due Today / Overdue */}
-      <div className="bg-card rounded-xl border border-border p-5 mb-4">
+      <div className="glass rounded-xl p-5 mb-4">
         <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
           <Calendar className="w-5 h-5 text-warm-terracotta" />
           Due Today ({dueTasks.length})
@@ -1622,7 +1622,7 @@ export default function DailyPlannerPage({
 
       {/* High Priority */}
       {highPriorityTasks.length > 0 && (
-        <div className="bg-card rounded-xl border border-border p-5 mb-4">
+        <div className="glass rounded-xl p-5 mb-4">
           <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
             <Zap className="w-5 h-5 text-warm-amber" />
             High Priority ({highPriorityTasks.length})
@@ -1642,7 +1642,7 @@ export default function DailyPlannerPage({
 
       {/* Energy-Matched Suggestions */}
       {energySuggestions.length > 0 && (
-        <div className="bg-card rounded-xl border border-border p-5 mb-4">
+        <div className="glass rounded-xl p-5 mb-4">
           <h3 className="font-serif text-lg text-foreground mb-1 flex items-center gap-2">
             <GreetingIcon className="w-5 h-5 text-warm-blue" />
             Suggested for {timeOfDay}
@@ -1662,7 +1662,7 @@ export default function DailyPlannerPage({
       {(state.readingList || []).filter(
         r => r.status === "unread" || r.status === "reading"
       ).length > 0 && (
-        <div className="bg-card rounded-xl border border-border p-5 mb-4">
+        <div className="glass rounded-xl p-5 mb-4">
           <h3 className="font-serif text-lg text-foreground mb-1 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-warm-lavender" />
             Reading Queue
@@ -1686,7 +1686,7 @@ export default function DailyPlannerPage({
                   rel="noopener noreferrer"
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-background/50 hover:bg-background hover:border-warm-lavender/30 transition-colors group"
+                  className="flex items-start gap-3 p-3 rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-background hover:border-warm-lavender/30 transition-colors group"
                 >
                   <div
                     className={`shrink-0 mt-0.5 w-7 h-7 rounded-md flex items-center justify-center ${
@@ -1736,7 +1736,7 @@ export default function DailyPlannerPage({
 
       {/* Actioned Today — tasks completed or sent to monitoring today */}
       {actionedToday.length > 0 && (
-        <div className="bg-card rounded-xl border border-border p-5">
+        <div className="glass rounded-xl p-5">
           <button
             onClick={() => setActionedExpanded(!actionedExpanded)}
             className="w-full flex items-center justify-between"

@@ -70,7 +70,7 @@ const QUADRANTS: QuadrantConfig[] = [
     subtitle: "Not Urgent, Not Important",
     description: "Time-wasters, distractions",
     bgClass: "bg-warm-sand",
-    borderClass: "border-border",
+    borderClass: "border-white/15 dark:border-white/10",
     iconBg: "bg-warm-charcoal/10",
   },
 ];
@@ -399,7 +399,7 @@ export default function MatrixPage() {
         <span className="text-xs px-3 py-1 rounded-full bg-warm-sage-light text-warm-sage border border-warm-sage/20 font-medium">
           {assigned.length} assigned
         </span>
-        <span className="text-xs px-3 py-1 rounded-full bg-warm-sand text-muted-foreground border border-border font-medium">
+        <span className="text-xs px-3 py-1 rounded-full bg-warm-sand text-muted-foreground border border-white/15 dark:border-white/10 font-medium">
           {unassigned.length} unassigned
         </span>
       </div>
@@ -483,7 +483,7 @@ export default function MatrixPage() {
             onDragOver={e => e.preventDefault()}
             onDrop={handleDropUnassigned}
           >
-            <div className="bg-card rounded-xl border border-border p-4 lg:sticky lg:top-8">
+            <div className="glass rounded-xl p-4 lg:sticky lg:top-8">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   Unassigned
@@ -527,7 +527,7 @@ export default function MatrixPage() {
         {!showPanel && (
           <button
             onClick={() => setShowPanel(true)}
-            className="shrink-0 bg-card border border-border rounded-xl px-2 py-4 lg:flex items-center text-muted-foreground hover:text-foreground transition-colors hidden"
+            className="shrink-0 glass rounded-xl px-2 py-4 lg:flex items-center text-muted-foreground hover:text-foreground transition-colors hidden"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -538,7 +538,7 @@ export default function MatrixPage() {
       {!showPanel && (
         <button
           onClick={() => setShowPanel(true)}
-          className="mt-4 w-full bg-card border border-border rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+          className="mt-4 w-full glass rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
         >
           <ChevronDown className="w-4 h-4" />
           Show Unassigned ({unassigned.length})
@@ -547,16 +547,16 @@ export default function MatrixPage() {
 
       {/* Empty state when no tasks at all */}
       {activeTasks.length === 0 && (
-        <div className="mt-8 bg-card rounded-2xl border border-border p-8 lg:p-12 text-center">
+        <div className="mt-8 glass rounded-2xl p-8 lg:p-16 text-center">
           <img
             src={EMPTY_MATRIX_IMG}
             alt="No tasks"
-            className="w-32 lg:w-40 h-32 lg:h-40 mx-auto mb-4 rounded-2xl object-cover opacity-90"
+            className="w-40 lg:w-48 h-40 lg:h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80"
           />
           <h3 className="font-serif text-lg lg:text-xl text-foreground mb-2">
             No tasks to prioritize
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             Add some tasks in the Tasks tab first, then come back here to
             organize them by urgency and importance!
           </p>
