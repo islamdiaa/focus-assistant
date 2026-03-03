@@ -68,6 +68,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DragDropProvider } from "@dnd-kit/react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const ENERGY_EMOJI: Record<EnergyLevel, string> = {
@@ -426,7 +427,10 @@ function TodayTaskCard({
 
         {/* Status checkbox */}
         <button
-          onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
+          onClick={() => {
+            dispatch({ type: "TOGGLE_TASK", payload: task.id });
+            if (task.status !== "done") toast.success("Task completed");
+          }}
           className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all motion-safe:active:scale-[0.97]
             ${task.status === "done" ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
         >
@@ -519,7 +523,10 @@ function TodayTaskCard({
           )}
           {/* Complete/reopen */}
           <button
-            onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
+            onClick={() => {
+              dispatch({ type: "TOGGLE_TASK", payload: task.id });
+              if (task.status !== "done") toast.success("Task completed");
+            }}
             className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors motion-safe:active:scale-[0.97]"
             title={task.status === "done" ? "Reopen task" : "Mark as done"}
           >
@@ -556,7 +563,15 @@ function TodayTaskCard({
           )}
           {/* Delete */}
           <button
-            onClick={() => dispatch({ type: "DELETE_TASK", payload: task.id })}
+            onClick={() => {
+              dispatch({ type: "DELETE_TASK", payload: task.id });
+              toast("Task deleted", {
+                action: {
+                  label: "Undo",
+                  onClick: () => dispatch({ type: "UNDO" }),
+                },
+              });
+            }}
             className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors motion-safe:active:scale-[0.97]"
             title="Delete task"
           >
@@ -949,6 +964,10 @@ export default function DailyPlannerPage({
 
   const [actionedExpanded, setActionedExpanded] = useState(false);
 
+  // H12: Progressive disclosure — secondary sections collapsed by default
+  const [showReminders, setShowReminders] = useState(false);
+  const [showReadingQueue, setShowReadingQueue] = useState(false);
+
   // Focus goals: pinned today + isFocusGoal
   const focusGoals = useMemo(() => {
     return contextTasks.filter(t => t.isFocusGoal && t.pinnedToday === today);
@@ -1116,6 +1135,7 @@ export default function DailyPlannerPage({
         estimatedMinutes: newEstimatedMinutes || undefined,
       },
     });
+    toast.success("Task added");
     setNewTitle("");
     setNewDesc("");
     setNewPriority("medium");
@@ -1391,7 +1411,7 @@ export default function DailyPlannerPage({
       </motion.div>
 
       {/* My Today — Pinned Tasks */}
-      <div className="glass rounded-xl p-5 mb-4">
+      <div className="glass-subtle rounded-xl p-5 mb-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
             <Pin className="w-5 h-5 text-warm-sage" />
@@ -1484,6 +1504,7 @@ export default function DailyPlannerPage({
                     key={t.id}
                     onClick={() => {
                       dispatch({ type: "PIN_TO_TODAY", payload: t.id });
+                      toast.success("Pinned to today");
                     }}
                     className="w-full flex items-center gap-3 p-3 rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-warm-sage-light/30 hover:border-warm-sage/30 transition-colors text-left group motion-safe:active:scale-[0.97]"
                   >
@@ -1522,68 +1543,8 @@ export default function DailyPlannerPage({
         </DialogContent>
       </Dialog>
 
-      {/* Overdue Reminders */}
-      {overdueReminders.length > 0 && (
-        <div className="bg-red-50/50 rounded-xl border border-red-200/50 p-5 mb-4">
-          <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-red-500" />
-            Overdue Reminders ({overdueReminders.length})
-          </h3>
-          <div className="space-y-2">
-            {overdueReminders.map(r => (
-              <TodayReminderCard
-                key={r.id}
-                reminder={r}
-                dispatch={dispatch}
-                variant="overdue"
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Today's Reminders */}
-      {todayReminders.length > 0 && (
-        <div className="backdrop-blur-xl bg-warm-amber/10 rounded-xl border border-warm-amber/20 p-6 shadow-md mb-4">
-          <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
-            <Bell className="w-5 h-5 text-warm-amber" />
-            Today's Reminders ({todayReminders.length})
-          </h3>
-          <div className="space-y-2">
-            {todayReminders.map(r => (
-              <TodayReminderCard
-                key={r.id}
-                reminder={r}
-                dispatch={dispatch}
-                variant="today"
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Upcoming Reminders (5 days) */}
-      {upcomingReminders.length > 0 && (
-        <div className="bg-warm-blue-light/20 rounded-xl border border-warm-blue/10 p-6 mb-4">
-          <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-warm-blue" />
-            Upcoming Reminders ({upcomingReminders.length})
-          </h3>
-          <div className="space-y-2">
-            {upcomingReminders.map(r => (
-              <TodayReminderCard
-                key={r.id}
-                reminder={r}
-                dispatch={dispatch}
-                variant="upcoming"
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Due Today / Overdue */}
-      <div className="glass rounded-xl p-5 mb-4">
+      <div className="glass-subtle rounded-xl p-5 mb-4">
         <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
           <Calendar className="w-5 h-5 text-warm-terracotta" />
           Due Today ({dueTasks.length})
@@ -1603,7 +1564,7 @@ export default function DailyPlannerPage({
 
       {/* High Priority */}
       {highPriorityTasks.length > 0 && (
-        <div className="glass rounded-xl p-5 mb-4">
+        <div className="glass-subtle rounded-xl p-5 mb-4">
           <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
             <Zap className="w-5 h-5 text-warm-amber" />
             High Priority ({highPriorityTasks.length})
@@ -1623,7 +1584,7 @@ export default function DailyPlannerPage({
 
       {/* Energy-Matched Suggestions */}
       {energySuggestions.length > 0 && (
-        <div className="glass rounded-xl p-5 mb-4">
+        <div className="glass-subtle rounded-xl p-5 mb-4">
           <h3 className="font-serif text-lg text-foreground mb-1 flex items-center gap-2">
             <GreetingIcon className="w-5 h-5 text-warm-blue" />
             Suggested for {timeOfDay}
@@ -1639,85 +1600,215 @@ export default function DailyPlannerPage({
         </div>
       )}
 
-      {/* Reading Queue — Daily Digest */}
+      {/* Reminders — collapsible, collapsed by default (H12: progressive disclosure) */}
+      {(overdueReminders.length > 0 ||
+        todayReminders.length > 0 ||
+        upcomingReminders.length > 0) && (
+        <div className="glass rounded-xl p-5 mb-4">
+          <button
+            onClick={() => setShowReminders(v => !v)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors motion-safe:active:scale-[0.97]"
+          >
+            {showReminders ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+            <Bell className="w-4 h-4 text-warm-amber" />
+            Reminders
+            <span className="text-xs text-muted-foreground/70 ml-auto">
+              {overdueReminders.length +
+                todayReminders.length +
+                upcomingReminders.length}
+            </span>
+          </button>
+          <AnimatePresence>
+            {showReminders && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 space-y-4">
+                  {/* Overdue Reminders */}
+                  {overdueReminders.length > 0 && (
+                    <div className="bg-red-50/50 rounded-xl border border-red-200/50 p-5">
+                      <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5 text-red-500" />
+                        Overdue Reminders ({overdueReminders.length})
+                      </h3>
+                      <div className="space-y-2">
+                        {overdueReminders.map(r => (
+                          <TodayReminderCard
+                            key={r.id}
+                            reminder={r}
+                            dispatch={dispatch}
+                            variant="overdue"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Today's Reminders */}
+                  {todayReminders.length > 0 && (
+                    <div className="backdrop-blur-xl bg-warm-amber/10 rounded-xl border border-warm-amber/20 p-6 shadow-md">
+                      <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-warm-amber" />
+                        Today's Reminders ({todayReminders.length})
+                      </h3>
+                      <div className="space-y-2">
+                        {todayReminders.map(r => (
+                          <TodayReminderCard
+                            key={r.id}
+                            reminder={r}
+                            dispatch={dispatch}
+                            variant="today"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Upcoming Reminders (5 days) */}
+                  {upcomingReminders.length > 0 && (
+                    <div className="bg-warm-blue-light/20 rounded-xl border border-warm-blue/10 p-6">
+                      <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-warm-blue" />
+                        Upcoming Reminders ({upcomingReminders.length})
+                      </h3>
+                      <div className="space-y-2">
+                        {upcomingReminders.map(r => (
+                          <TodayReminderCard
+                            key={r.id}
+                            reminder={r}
+                            dispatch={dispatch}
+                            variant="upcoming"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Reading Queue — collapsible, collapsed by default (H12: progressive disclosure) */}
       {(state.readingList || []).filter(
         r => r.status === "unread" || r.status === "reading"
       ).length > 0 && (
-        <div className="glass rounded-xl p-5 mb-4">
-          <h3 className="font-serif text-lg text-foreground mb-1 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-warm-lavender" />
+        <div className="glass-subtle rounded-xl p-5 mb-4">
+          <button
+            onClick={() => setShowReadingQueue(v => !v)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors motion-safe:active:scale-[0.97]"
+          >
+            {showReadingQueue ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+            <BookOpen className="w-4 h-4 text-warm-lavender" />
             Reading Queue
-          </h3>
-          <p className="text-xs text-muted-foreground mb-3">
-            {
-              (state.readingList || []).filter(r => r.status === "unread")
-                .length
-            }{" "}
-            unread links waiting for you
-          </p>
-          <div className="space-y-2">
-            {(state.readingList || [])
-              .filter(r => r.status === "unread" || r.status === "reading")
-              .slice(0, 5)
-              .map(item => (
-                <motion.a
-                  key={item.id}
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-start gap-3 p-3 rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-background hover:border-warm-lavender/30 transition-colors group"
-                >
-                  <div
-                    className={`shrink-0 mt-0.5 w-7 h-7 rounded-md flex items-center justify-center ${
-                      item.status === "reading"
-                        ? "bg-warm-blue/10"
-                        : "bg-warm-lavender/10"
-                    }`}
-                  >
-                    {item.status === "reading" ? (
-                      <BookOpen className="w-3.5 h-3.5 text-warm-blue" />
-                    ) : (
-                      <Globe className="w-3.5 h-3.5 text-warm-lavender" />
+            <span className="text-xs text-muted-foreground/70 ml-auto">
+              {
+                (state.readingList || []).filter(
+                  r => r.status === "unread" || r.status === "reading"
+                ).length
+              }
+            </span>
+          </button>
+          <AnimatePresence>
+            {showReadingQueue && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {
+                      (state.readingList || []).filter(
+                        r => r.status === "unread"
+                      ).length
+                    }{" "}
+                    unread links waiting for you
+                  </p>
+                  <div className="space-y-2">
+                    {(state.readingList || [])
+                      .filter(
+                        r => r.status === "unread" || r.status === "reading"
+                      )
+                      .slice(0, 5)
+                      .map(item => (
+                        <motion.a
+                          key={item.id}
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="flex items-start gap-3 p-3 rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-background hover:border-warm-lavender/30 transition-colors group"
+                        >
+                          <div
+                            className={`shrink-0 mt-0.5 w-7 h-7 rounded-md flex items-center justify-center ${
+                              item.status === "reading"
+                                ? "bg-warm-blue/10"
+                                : "bg-warm-lavender/10"
+                            }`}
+                          >
+                            {item.status === "reading" ? (
+                              <BookOpen className="w-3.5 h-3.5 text-warm-blue" />
+                            ) : (
+                              <Globe className="w-3.5 h-3.5 text-warm-lavender" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground group-hover:text-warm-lavender transition-colors line-clamp-1 flex items-center gap-1.5">
+                              {item.title}
+                              <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover-action transition-opacity" />
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] text-muted-foreground">
+                                {item.domain || "link"}
+                              </span>
+                              {item.tags.length > 0 && (
+                                <span className="text-[10px] text-warm-lavender/70">
+                                  {item.tags.slice(0, 2).join(", ")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </motion.a>
+                      ))}
+                    {(state.readingList || []).filter(
+                      r => r.status === "unread" || r.status === "reading"
+                    ).length > 5 && (
+                      <p className="text-xs text-muted-foreground text-center mt-2">
+                        +{" "}
+                        {(state.readingList || []).filter(
+                          r => r.status === "unread" || r.status === "reading"
+                        ).length - 5}{" "}
+                        more in Read Later
+                      </p>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground group-hover:text-warm-lavender transition-colors line-clamp-1 flex items-center gap-1.5">
-                      {item.title}
-                      <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover-action transition-opacity" />
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] text-muted-foreground">
-                        {item.domain || "link"}
-                      </span>
-                      {item.tags.length > 0 && (
-                        <span className="text-[10px] text-warm-lavender/70">
-                          {item.tags.slice(0, 2).join(", ")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </motion.a>
-              ))}
-            {(state.readingList || []).filter(
-              r => r.status === "unread" || r.status === "reading"
-            ).length > 5 && (
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                +{" "}
-                {(state.readingList || []).filter(
-                  r => r.status === "unread" || r.status === "reading"
-                ).length - 5}{" "}
-                more in Read Later
-              </p>
+                </div>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       )}
 
       {/* Actioned Today — tasks completed or sent to monitoring today */}
       {actionedToday.length > 0 && (
-        <div className="glass rounded-xl p-5">
+        <div className="glass-subtle rounded-xl p-5">
           <button
             onClick={() => setActionedExpanded(!actionedExpanded)}
             className="w-full flex items-center justify-between motion-safe:active:scale-[0.97]"

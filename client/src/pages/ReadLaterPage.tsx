@@ -34,6 +34,7 @@ import {
   Plus,
 } from "lucide-react";
 import type { ReadingItem, ReadingStatus } from "@/lib/types";
+import { toast } from "sonner";
 
 type FilterStatus = "all" | ReadingStatus;
 
@@ -139,6 +140,7 @@ export default function ReadLaterPage() {
         tags,
       },
     });
+    toast.success("Saved to read later");
     setAddUrl("");
     setAddTitle("");
     setAddDescription("");
@@ -157,6 +159,7 @@ export default function ReadLaterPage() {
       type: "MARK_READING_STATUS",
       payload: { id: item.id, status: next },
     });
+    if (next === "read") toast.success("Marked as read");
   }
 
   function handleSaveNotes() {
@@ -170,6 +173,9 @@ export default function ReadLaterPage() {
 
   function handleDelete(id: string) {
     dispatch({ type: "DELETE_READING_ITEM", payload: id });
+    toast("Article removed", {
+      action: { label: "Undo", onClick: () => dispatch({ type: "UNDO" }) },
+    });
   }
 
   function handleRemoveTag(itemId: string, tag: string) {

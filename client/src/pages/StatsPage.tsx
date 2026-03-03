@@ -170,7 +170,7 @@ export default function StatsPage() {
       </div>
 
       {/* Weekly Charts */}
-      <div className="glass rounded-2xl p-4 lg:p-6 mb-6">
+      <div className="glass-subtle rounded-2xl p-4 lg:p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-4 h-4 text-warm-sage" />
           <h3 className="font-semibold text-sm text-foreground">This Week</h3>
@@ -230,7 +230,7 @@ export default function StatsPage() {
       </div>
 
       {/* Task Status Summary */}
-      <div className="glass rounded-2xl p-4 lg:p-6 mb-6">
+      <div className="glass-subtle rounded-2xl p-4 lg:p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Target className="w-4 h-4 text-warm-sage" />
           <h3 className="font-semibold text-sm text-foreground">

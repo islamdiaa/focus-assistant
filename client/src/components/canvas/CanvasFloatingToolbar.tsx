@@ -55,7 +55,7 @@ export function CanvasFloatingToolbar({ editor }: CanvasFloatingToolbarProps) {
         placement: "top",
       }}
     >
-      <div className="glass-heavy rounded-xl flex items-center gap-0.5 px-1.5 py-1">
+      <div className="glass rounded-xl flex items-center gap-0.5 px-1.5 py-1">
         <ToolbarButton
           icon={Bold}
           label="Bold"
