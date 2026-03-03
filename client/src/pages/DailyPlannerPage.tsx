@@ -374,7 +374,7 @@ function TodayTaskCard({
   showUnpin,
   index,
 }: TodayTaskCardProps) {
-  const { ref } = useSortable({
+  const { ref, isDragSource } = useSortable({
     id: task.id,
     index: index ?? 0,
     disabled: index === undefined,
@@ -409,9 +409,9 @@ function TodayTaskCard({
       role="listitem"
       aria-roledescription="sortable"
       aria-label={`Task: ${task.title}`}
-      className={`rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-background transition-colors group ${
+      className={`rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-background transition-[opacity,transform,box-shadow] duration-150 group ${
         task.status === "done" ? "opacity-50" : ""
-      }`}
+      } ${isDragSource ? "opacity-60 scale-[1.02] shadow-card-active ring-2 ring-warm-sage/30 z-50" : ""}`}
     >
       <div className="flex items-start gap-3 p-3">
         {/* Drag handle — visible on hover for pinned tasks */}
@@ -426,16 +426,30 @@ function TodayTaskCard({
         )}
 
         {/* Status checkbox */}
-        <button
+        <motion.button
+          whileTap={{ scale: 0.85 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
           onClick={() => {
             dispatch({ type: "TOGGLE_TASK", payload: task.id });
             if (task.status !== "done") toast.success("Task completed");
           }}
-          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all motion-safe:active:scale-[0.97]
+          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
             ${task.status === "done" ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
         >
-          {task.status === "done" && <Check className="w-3 h-3 text-white" />}
-        </button>
+          <AnimatePresence>
+            {task.status === "done" && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                className="flex items-center justify-center"
+              >
+                <Check className="w-3 h-3 text-white" />
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -1346,7 +1360,9 @@ export default function DailyPlannerPage({
       >
         <div className="flex items-center gap-2 mb-3">
           <Star className="w-5 h-5 text-amber-500 fill-current" />
-          <h3 className="font-serif text-lg text-foreground">Today's Focus</h3>
+          <h3 className="font-semibold text-lg text-foreground">
+            Today's Focus
+          </h3>
           <span className="text-xs text-muted-foreground">
             ({focusGoalsCompleted.length + focusGoalsActive.length}/3)
           </span>
@@ -1420,7 +1436,7 @@ export default function DailyPlannerPage({
       {/* My Today — Pinned Tasks */}
       <div className="glass-subtle rounded-xl p-5 mb-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
+          <h3 className="font-semibold text-lg text-foreground flex items-center gap-2">
             <Pin className="w-5 h-5 text-warm-sage" />
             My Today ({pinnedTasks.length})
           </h3>
@@ -1466,7 +1482,7 @@ export default function DailyPlannerPage({
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
         <DialogContent className="bg-card max-w-md max-h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">
+            <DialogTitle className="font-semibold text-xl">
               Add to Today
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -1552,7 +1568,7 @@ export default function DailyPlannerPage({
 
       {/* Due Today / Overdue */}
       <div className="glass-subtle rounded-xl p-5 mb-4">
-        <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+        <h3 className="font-semibold text-lg text-foreground mb-3 flex items-center gap-2">
           <Calendar className="w-5 h-5 text-warm-terracotta" />
           Due Today ({dueTasks.length})
         </h3>
@@ -1572,7 +1588,7 @@ export default function DailyPlannerPage({
       {/* High Priority */}
       {highPriorityTasks.length > 0 && (
         <div className="glass-subtle rounded-xl p-5 mb-4">
-          <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+          <h3 className="font-semibold text-lg text-foreground mb-3 flex items-center gap-2">
             <Zap className="w-5 h-5 text-warm-amber" />
             High Priority ({highPriorityTasks.length})
           </h3>
@@ -1592,7 +1608,7 @@ export default function DailyPlannerPage({
       {/* Energy-Matched Suggestions */}
       {energySuggestions.length > 0 && (
         <div className="glass-subtle rounded-xl p-5 mb-4">
-          <h3 className="font-serif text-lg text-foreground mb-1 flex items-center gap-2">
+          <h3 className="font-semibold text-lg text-foreground mb-1 flex items-center gap-2">
             <GreetingIcon className="w-5 h-5 text-warm-blue" />
             Suggested for {timeOfDay}
           </h3>
@@ -1645,7 +1661,7 @@ export default function DailyPlannerPage({
                   {/* Overdue Reminders */}
                   {overdueReminders.length > 0 && (
                     <div className="bg-red-50/50 rounded-xl border border-red-200/50 p-5">
-                      <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+                      <h3 className="font-semibold text-lg text-foreground mb-3 flex items-center gap-2">
                         <AlertCircle className="w-5 h-5 text-red-500" />
                         Overdue Reminders ({overdueReminders.length})
                       </h3>
@@ -1665,7 +1681,7 @@ export default function DailyPlannerPage({
                   {/* Today's Reminders */}
                   {todayReminders.length > 0 && (
                     <div className="backdrop-blur-xl bg-warm-amber/10 rounded-xl border border-warm-amber/20 p-6 shadow-md">
-                      <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+                      <h3 className="font-semibold text-lg text-foreground mb-3 flex items-center gap-2">
                         <Bell className="w-5 h-5 text-warm-amber" />
                         Today's Reminders ({todayReminders.length})
                       </h3>
@@ -1685,7 +1701,7 @@ export default function DailyPlannerPage({
                   {/* Upcoming Reminders (5 days) */}
                   {upcomingReminders.length > 0 && (
                     <div className="bg-warm-blue-light/20 rounded-xl border border-warm-blue/10 p-6">
-                      <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+                      <h3 className="font-semibold text-lg text-foreground mb-3 flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-warm-blue" />
                         Upcoming Reminders ({upcomingReminders.length})
                       </h3>
@@ -1828,7 +1844,7 @@ export default function DailyPlannerPage({
             aria-controls="actioned-today-panel"
             className="w-full flex items-center justify-between motion-safe:active:scale-[0.97]"
           >
-            <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
+            <h3 className="font-semibold text-lg text-foreground flex items-center gap-2">
               <Activity className="w-5 h-5 text-warm-sage" />
               Actioned Today ({actionedToday.length})
             </h3>
@@ -1907,7 +1923,9 @@ export default function DailyPlannerPage({
       <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
         <DialogContent className="bg-card max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">New Task</DialogTitle>
+            <DialogTitle className="font-semibold text-xl">
+              New Task
+            </DialogTitle>
             <DialogDescription className="sr-only">
               Create a new task pinned to Today
             </DialogDescription>
@@ -2181,7 +2199,7 @@ export default function DailyPlannerPage({
       <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
         <DialogContent className="bg-card max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">
+            <DialogTitle className="font-semibold text-xl">
               New Reminder
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">

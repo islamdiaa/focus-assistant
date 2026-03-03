@@ -445,7 +445,7 @@ export default function TimerPage() {
           </DialogTrigger>
           <DialogContent className="bg-card max-w-md">
             <DialogHeader>
-              <DialogTitle className="font-serif text-xl">
+              <DialogTitle className="font-semibold text-xl">
                 New Pomodoro
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
@@ -523,7 +523,7 @@ export default function TimerPage() {
             alt="No pomodoros"
             className="w-48 h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80"
           />
-          <h3 className="font-serif text-xl text-foreground mb-2">
+          <h3 className="font-semibold text-xl text-foreground mb-2">
             No Pomodoros yet
           </h3>
           <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-4">

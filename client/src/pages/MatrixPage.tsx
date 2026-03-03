@@ -553,7 +553,7 @@ export default function MatrixPage() {
             alt="No tasks"
             className="w-40 lg:w-48 h-40 lg:h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80"
           />
-          <h3 className="font-serif text-lg lg:text-xl text-foreground mb-2">
+          <h3 className="font-semibold text-lg lg:text-xl text-foreground mb-2">
             No tasks to prioritize
           </h3>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">

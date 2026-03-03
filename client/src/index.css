@@ -207,11 +207,6 @@
         transparent 50%
       );
   }
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-serif);
-  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),

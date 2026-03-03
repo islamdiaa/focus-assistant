@@ -487,12 +487,12 @@ function SortableTaskCard({
       role="listitem"
       aria-roledescription="sortable"
       aria-label={`Task: ${task.title}`}
-      className={`group backdrop-blur-xl bg-white/60 dark:bg-[oklch(0.22_0.02_155)] rounded-2xl border p-4 transition-all duration-300 shadow-card hover:shadow-card-hover hover:bg-white/70 dark:hover:bg-[oklch(0.25_0.025_155)]
+      className={`group backdrop-blur-xl bg-white/60 dark:bg-[oklch(0.22_0.02_155)] rounded-2xl border p-4 transition-[opacity,transform,box-shadow] duration-150 shadow-card hover:shadow-card-hover hover:bg-white/70 dark:hover:bg-[oklch(0.25_0.025_155)]
         ${task.status === "done" ? "opacity-60 border-white/15 dark:border-white/10" : ""}
         ${task.status === "monitored" ? "opacity-75 border-dashed border-warm-amber/40 bg-warm-amber-light/20" : "border-white/30 dark:border-white/10"}
         ${task.status === "active" ? "border-white/30 dark:border-white/10" : ""}
         ${editingId === task.id ? "ring-2 ring-warm-sage/30 shadow-card-hover" : ""}
-        ${isDragSource ? "shadow-card-active ring-2 ring-warm-sage/40 opacity-50" : ""}`}
+        ${isDragSource ? "opacity-60 scale-[1.02] shadow-card-active ring-2 ring-warm-sage/30 z-50" : ""}`}
     >
       <div className="flex items-start gap-3">
         {/* Selection indicator */}
@@ -532,7 +532,9 @@ function SortableTaskCard({
         )}
 
         {/* Checkbox */}
-        <button
+        <motion.button
+          whileTap={{ scale: 0.85 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
           onClick={() => {
             dispatch({ type: "TOGGLE_TASK", payload: task.id });
             if (task.status !== "done") toast.success("Task completed");
@@ -542,11 +544,23 @@ function SortableTaskCard({
             ${task.status === "monitored" ? "bg-warm-amber/20 border-warm-amber/50" : ""}
             ${task.status === "active" ? "border-border hover:border-warm-sage" : ""}`}
         >
-          {task.status === "done" && <Check className="w-3 h-3 text-white" />}
+          <AnimatePresence>
+            {task.status === "done" && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                className="flex items-center justify-center"
+              >
+                <Check className="w-3 h-3 text-white" />
+              </motion.span>
+            )}
+          </AnimatePresence>
           {task.status === "monitored" && (
             <Eye className="w-3 h-3 text-warm-amber" />
           )}
-        </button>
+        </motion.button>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -1082,7 +1096,7 @@ export default function TasksPage({
             </DialogTrigger>
             <DialogContent className="bg-card max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="font-serif text-xl">
+                <DialogTitle className="font-semibold text-xl">
                   New Task
                 </DialogTitle>
                 <DialogDescription className="sr-only">
@@ -1415,7 +1429,7 @@ export default function TasksPage({
       <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
         <DialogContent className="bg-card max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">
+            <DialogTitle className="font-semibold text-xl">
               New Reminder
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -1588,7 +1602,7 @@ export default function TasksPage({
           {searchQuery ? (
             <>
               <Search className="w-16 h-16 mx-auto mb-6 text-muted-foreground/30" />
-              <h3 className="font-serif text-xl text-foreground mb-2">
+              <h3 className="font-semibold text-xl text-foreground mb-2">
                 No matches
               </h3>
               <p className="text-sm text-muted-foreground max-w-xs mx-auto">
@@ -1602,7 +1616,7 @@ export default function TasksPage({
                 alt="All clear"
                 className="w-48 h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80"
               />
-              <h3 className="font-serif text-xl text-foreground mb-2">
+              <h3 className="font-semibold text-xl text-foreground mb-2">
                 All clear!
               </h3>
               <p className="text-sm text-muted-foreground max-w-xs mx-auto">

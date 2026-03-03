@@ -99,7 +99,9 @@ export default function ThoughtsDrawer({
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 text-warm-amber" />
-                <h3 className="font-serif text-lg text-foreground">Thoughts</h3>
+                <h3 className="font-semibold text-lg text-foreground">
+                  Thoughts
+                </h3>
                 {notes.length > 0 && (
                   <span className="text-xs text-muted-foreground bg-warm-sand/50 px-1.5 py-0.5 rounded-full">
                     {notes.length}

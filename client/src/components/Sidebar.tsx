@@ -140,7 +140,7 @@ export default function Sidebar({
               <Sparkles className="w-5 h-5 text-warm-sage" />
             </div>
             <div>
-              <h1 className="font-serif text-lg leading-tight text-foreground">
+              <h1 className="font-semibold text-lg leading-tight text-foreground">
                 Focus
               </h1>
               <p className="text-xs text-muted-foreground leading-tight">

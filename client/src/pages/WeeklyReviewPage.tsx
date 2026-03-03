@@ -191,7 +191,7 @@ export default function WeeklyReviewPage() {
 
       {/* Daily Breakdown */}
       <div className="bg-card rounded-xl border border-border p-5 mb-6">
-        <h3 className="font-serif text-lg text-foreground mb-4">
+        <h3 className="font-semibold text-lg text-foreground mb-4">
           Daily Breakdown
         </h3>
         <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
@@ -238,7 +238,7 @@ export default function WeeklyReviewPage() {
 
       {/* Completed Tasks */}
       <div className="bg-card rounded-xl border border-border p-5 mb-6">
-        <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+        <h3 className="font-semibold text-lg text-foreground mb-3 flex items-center gap-2">
           <CheckCircle2 className="w-5 h-5 text-warm-sage" />
           Completed ({weekStats.completedTasks.length})
         </h3>
@@ -276,7 +276,7 @@ export default function WeeklyReviewPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Carry-over */}
         <div className="bg-card rounded-xl border border-border p-5">
-          <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+          <h3 className="font-semibold text-lg text-foreground mb-3 flex items-center gap-2">
             <ArrowRight className="w-5 h-5 text-warm-amber" />
             Carry Over ({weekStats.carryOverTasks.length})
           </h3>
@@ -301,7 +301,7 @@ export default function WeeklyReviewPage() {
 
         {/* Overdue */}
         <div className="bg-card rounded-xl border border-border p-5">
-          <h3 className="font-serif text-lg text-foreground mb-3 flex items-center gap-2">
+          <h3 className="font-semibold text-lg text-foreground mb-3 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-warm-terracotta" />
             Overdue ({weekStats.overdueTasks.length})
           </h3>
