@@ -36,6 +36,7 @@ const emptyState: AppState = {
   preferences: { ...DEFAULT_PREFERENCES },
   readingList: [],
   reminders: [],
+  canvas: [],
 };
 
 export const dataRouter = router({

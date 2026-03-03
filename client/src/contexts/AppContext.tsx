@@ -1230,7 +1230,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const dispatch = useCallback((action: Action) => {
     // Mark state as dirty for user-initiated actions (not loads/system actions)
-    if (!NON_UNDOABLE_ACTIONS.has(action.type)) {
+    // Canvas saves are NON_UNDOABLE but still need dirty flag to prevent poll overwrites
+    if (
+      !NON_UNDOABLE_ACTIONS.has(action.type) ||
+      action.type === "SET_CANVAS_ENTRY"
+    ) {
       dirtyRef.current = true;
     }
     rawDispatch(action);
