@@ -17,7 +17,7 @@ interface AutoSaveReturn {
 }
 
 const DEBOUNCE_MS = 1000;
-const INTERVAL_MS = 30_000;
+const INTERVAL_MS = 15_000;
 const SAVING_INDICATOR_MS = 300;
 
 export function useCanvasAutoSave({
