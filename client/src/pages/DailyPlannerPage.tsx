@@ -409,9 +409,9 @@ function TodayTaskCard({
       role="listitem"
       aria-roledescription="sortable"
       aria-label={`Task: ${task.title}`}
-      className={`rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-background transition-all duration-150 group ${
+      className={`rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-background transition-[opacity,transform,box-shadow] duration-150 group ${
         task.status === "done" ? "opacity-50" : ""
-      } ${isDragSource ? "opacity-50 scale-[1.02] shadow-lg ring-2 ring-warm-sage/30 z-50" : ""}`}
+      } ${isDragSource ? "opacity-60 scale-[1.02] shadow-card-active ring-2 ring-warm-sage/30 z-50" : ""}`}
     >
       <div className="flex items-start gap-3 p-3">
         {/* Drag handle — visible on hover for pinned tasks */}
@@ -433,7 +433,7 @@ function TodayTaskCard({
             dispatch({ type: "TOGGLE_TASK", payload: task.id });
             if (task.status !== "done") toast.success("Task completed");
           }}
-          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all motion-safe:active:scale-[0.97]
+          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
             ${task.status === "done" ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
         >
           <AnimatePresence>
@@ -1901,7 +1901,7 @@ export default function DailyPlannerPage({
       >
         <Quote className="absolute top-3 right-3 w-10 h-10 text-warm-lavender/10 rotate-180" />
         <div className="relative">
-          <p className="font-semibold text-base lg:text-lg text-foreground leading-relaxed italic">
+          <p className="font-serif text-base lg:text-lg text-foreground leading-relaxed italic">
             "{quote.text}"
           </p>
           <div className="mt-3 flex items-center gap-2">

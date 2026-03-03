@@ -512,7 +512,7 @@ export default function ReadLaterPage() {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif">Save a Link</DialogTitle>
+            <DialogTitle className="font-semibold">Save a Link</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
@@ -587,7 +587,7 @@ export default function ReadLaterPage() {
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-serif">
+            <DialogTitle className="font-semibold">
               {notesItem?.notes ? "Edit Notes" : "Add Notes"}
             </DialogTitle>
             {notesItem && (

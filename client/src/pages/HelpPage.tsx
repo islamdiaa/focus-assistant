@@ -64,7 +64,9 @@ function Section({
         >
           <Icon className="w-4 h-4" />
         </div>
-        <h3 className="font-serif text-lg text-foreground flex-1">{title}</h3>
+        <h3 className="font-semibold text-lg text-foreground flex-1">
+          {title}
+        </h3>
         {open ? (
           <ChevronDown className="w-4 h-4 text-muted-foreground" />
         ) : (
@@ -869,7 +871,7 @@ export default function HelpPage() {
       {/* ========== FOOTER ========== */}
       <div className="bg-warm-sand/50 rounded-2xl border border-white/15 dark:border-white/10 p-6 text-center">
         <Sparkles className="w-5 h-5 text-warm-sage mx-auto mb-2" />
-        <p className="text-sm text-foreground font-serif">
+        <p className="text-sm text-foreground font-semibold">
           You're doing great. One step at a time.
         </p>
         <p className="text-xs text-muted-foreground mt-1">

@@ -239,7 +239,7 @@ export default function StatsPage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="min-w-0 bg-warm-sage-light/50 rounded-xl p-3 text-center">
-            <p className="font-serif text-xl text-warm-charcoal">
+            <p className="font-semibold text-xl text-warm-charcoal">
               {taskSummary.open}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Open</p>
@@ -247,20 +247,20 @@ export default function StatsPage() {
           <div className="min-w-0 bg-warm-amber-light/50 rounded-xl p-3 text-center">
             <div className="flex items-center justify-center gap-1">
               <Eye className="w-3.5 h-3.5 text-warm-amber" />
-              <p className="font-serif text-xl text-warm-charcoal">
+              <p className="font-semibold text-xl text-warm-charcoal">
                 {taskSummary.monitored}
               </p>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">Monitored</p>
           </div>
           <div className="min-w-0 bg-warm-blue-light/50 rounded-xl p-3 text-center">
-            <p className="font-serif text-xl text-warm-charcoal">
+            <p className="font-semibold text-xl text-warm-charcoal">
               {taskSummary.done}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Done</p>
           </div>
           <div className="min-w-0 bg-warm-lavender-light/50 rounded-xl p-3 text-center">
-            <p className="font-serif text-xl text-warm-charcoal">
+            <p className="font-semibold text-xl text-warm-charcoal">
               {taskSummary.total}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Total</p>
