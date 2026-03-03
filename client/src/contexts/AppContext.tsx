@@ -29,6 +29,7 @@ import type {
   Reminder,
   ContextFilter,
   ScratchNote,
+  CanvasEntry,
 } from "@/lib/types";
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from "@/lib/types";
 import {
@@ -149,6 +150,11 @@ type Action =
   | { type: "ADD_SCRATCH_NOTE"; payload: { text: string } }
   | { type: "DELETE_SCRATCH_NOTE"; payload: string }
   | { type: "CONVERT_SCRATCH_TO_TASK"; payload: string }
+  | {
+      type: "SET_CANVAS_ENTRY";
+      payload: { date: string; content: string; wordCount?: number };
+    }
+  | { type: "DELETE_CANVAS_ENTRY"; payload: string }
   | { type: "TOGGLE_FOCUS_GOAL"; payload: string }
   | { type: "BULK_COMPLETE_TASKS"; payload: string[] }
   | { type: "BULK_DELETE_TASKS"; payload: string[] }
@@ -171,6 +177,7 @@ const initialState: AppState = {
   readingList: [],
   reminders: [],
   scratchPad: [],
+  canvas: [],
 };
 
 function getToday(): string {
@@ -277,6 +284,7 @@ const NON_UNDOABLE_ACTIONS = new Set([
   "REDO",
   "UPDATE_DAILY_STATS",
   "SET_STREAK",
+  "SET_CANVAS_ENTRY",
 ]);
 
 function appReducer(state: AppState, action: Action): AppState {
@@ -289,6 +297,7 @@ function appReducer(state: AppState, action: Action): AppState {
         readingList: action.payload.readingList || [],
         reminders: action.payload.reminders || [],
         scratchPad: action.payload.scratchPad || [],
+        canvas: action.payload.canvas || [],
       };
 
     case "ADD_TASK": {
@@ -384,7 +393,7 @@ function appReducer(state: AppState, action: Action): AppState {
     case "TOGGLE_TASK": {
       const task = state.tasks.find(t => t.id === action.payload);
       if (!task) return state;
-      const newStatus = task.status === "active" ? "done" : "active";
+      const newStatus = task.status === "done" ? "active" : "done";
       const todayStats = getTodayStats(state.dailyStats);
       const delta = newStatus === "done" ? 1 : -1;
 
@@ -969,6 +978,43 @@ function appReducer(state: AppState, action: Action): AppState {
         scratchPad: (state.scratchPad || []).filter(
           n => n.id !== action.payload
         ),
+      };
+    }
+
+    case "SET_CANVAS_ENTRY": {
+      const entries = state.canvas || [];
+      const existing = entries.find(e => e.date === action.payload.date);
+      const now = new Date().toISOString();
+      if (existing) {
+        return {
+          ...state,
+          canvas: entries.map(e =>
+            e.date === action.payload.date
+              ? {
+                  ...e,
+                  content: action.payload.content,
+                  wordCount: action.payload.wordCount ?? e.wordCount,
+                  updatedAt: now,
+                }
+              : e
+          ),
+        };
+      }
+      const newEntry: CanvasEntry = {
+        id: nanoid(),
+        date: action.payload.date,
+        content: action.payload.content,
+        wordCount: action.payload.wordCount ?? null,
+        updatedAt: now,
+        createdAt: now,
+      };
+      return { ...state, canvas: [newEntry, ...entries] };
+    }
+
+    case "DELETE_CANVAS_ENTRY": {
+      return {
+        ...state,
+        canvas: (state.canvas || []).filter(e => e.id !== action.payload),
       };
     }
 

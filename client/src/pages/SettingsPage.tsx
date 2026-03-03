@@ -32,6 +32,8 @@ import {
   Loader2,
   Zap,
   Clock,
+  HelpCircle,
+  ArrowRight,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -98,7 +100,11 @@ const PRESETS: Preset[] = [
   },
 ];
 
-export default function SettingsPage() {
+interface SettingsPageProps {
+  onNavigate?: (page: string) => void;
+}
+
+export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
   const { state, dispatch, syncToCloud, reloadState } = useApp();
   const { theme, toggleTheme } = useTheme();
   const [settings, setSettings] = useState<TimerSettings>({
@@ -930,7 +936,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ========== ABOUT ========== */}
-      <div className="bg-warm-sand/50 rounded-2xl border border-white/15 dark:border-white/10 p-6">
+      <div className="bg-warm-sand/50 rounded-2xl border border-white/15 dark:border-white/10 p-6 mb-6">
         <h3 className="font-serif text-lg text-foreground mb-2">
           About Your Focus Assistant
         </h3>
@@ -963,6 +969,30 @@ export default function SettingsPage() {
           </span>
         </div>
       </div>
+
+      {/* ========== NEED HELP? ========== */}
+      {onNavigate && (
+        <div className="glass rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-2">
+            <HelpCircle className="w-4 h-4 text-warm-sage" />
+            <h3 className="font-semibold text-sm text-foreground">
+              Need Help?
+            </h3>
+          </div>
+          <p className="text-xs text-muted-foreground mb-4">
+            View the complete guide with feature descriptions, keyboard
+            shortcuts, workflow tips, and more.
+          </p>
+          <Button
+            onClick={() => onNavigate("help")}
+            className="bg-warm-sage hover:bg-warm-sage/90 text-white gap-2 text-xs"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            Open Help & Guide
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -29,6 +29,8 @@ import {
   CalendarCheck,
   Settings,
   Search,
+  PenLine,
+  HelpCircle,
 } from "lucide-react";
 
 interface CommandPaletteProps {
@@ -43,11 +45,13 @@ const PAGES: { id: Page; label: string; icon: typeof Sun }[] = [
   { id: "timer", label: "Focus Timer", icon: Timer },
   { id: "matrix", label: "Matrix", icon: LayoutGrid },
   { id: "stats", label: "Stats", icon: BarChart3 },
+  { id: "canvas", label: "Canvas", icon: PenLine },
   { id: "reading", label: "Read Later", icon: BookOpen },
   { id: "reminders", label: "Reminders", icon: Bell },
   { id: "templates", label: "Templates", icon: FileText },
   { id: "review", label: "Weekly Review", icon: CalendarCheck },
   { id: "settings", label: "Settings", icon: Settings },
+  { id: "help", label: "Help", icon: HelpCircle },
 ];
 
 const PRIORITY_COLORS: Record<string, string> = {

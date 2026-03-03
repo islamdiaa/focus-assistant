@@ -192,6 +192,15 @@ export const scratchNoteSchema = z.object({
   createdAt: z.string(),
 });
 
+export const canvasEntrySchema = z.object({
+  id: z.string(),
+  date: z.string(), // YYYY-MM-DD — daily journal key
+  content: z.string(), // Tiptap JSON stringified
+  wordCount: z.number().nullable().optional(),
+  updatedAt: z.string(),
+  createdAt: z.string(),
+});
+
 /**
  * The main AppState schema — used for save endpoint validation.
  * .strict() ensures unknown fields cause errors instead of being silently stripped.
@@ -208,6 +217,7 @@ export const appStateSchema = z
     readingList: z.array(readingItemSchema).nullable().optional(),
     reminders: z.array(reminderSchema).nullable().optional(),
     scratchPad: z.array(scratchNoteSchema).nullable().optional(),
+    canvas: z.array(canvasEntrySchema).nullable().optional(),
   })
   .strict();
 
@@ -241,6 +251,7 @@ export type Reminder = z.infer<typeof reminderSchema>;
 export type ReadingItem = z.infer<typeof readingItemSchema>;
 export type AppPreferences = z.infer<typeof appPreferencesSchema>;
 export type ScratchNote = z.infer<typeof scratchNoteSchema>;
+export type CanvasEntry = z.infer<typeof canvasEntrySchema>;
 export type ContextFilter = z.infer<typeof contextFilterSchema>;
 export type AppState = z.infer<typeof appStateSchema>;
 export type StorageMode = z.infer<typeof storageConfigSchema>["mode"];

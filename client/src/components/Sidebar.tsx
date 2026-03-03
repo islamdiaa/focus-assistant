@@ -23,6 +23,8 @@ import {
   Briefcase,
   User,
   Globe,
+  PenLine,
+  HelpCircle,
 } from "lucide-react";
 import { DAILY_TIPS } from "@/lib/types";
 import type { ContextFilter } from "@/lib/types";
@@ -31,6 +33,7 @@ import { useMemo } from "react";
 export type Page =
   | "planner"
   | "tasks"
+  | "canvas"
   | "timer"
   | "matrix"
   | "stats"
@@ -38,7 +41,8 @@ export type Page =
   | "reminders"
   | "templates"
   | "review"
-  | "settings";
+  | "settings"
+  | "help";
 
 interface SidebarProps {
   activePage: Page;
@@ -62,11 +66,13 @@ const NAV_ITEMS: {
   { id: "timer", label: "Focus Timer", icon: Timer },
   { id: "matrix", label: "Matrix", icon: LayoutGrid },
   { id: "stats", label: "Stats", icon: BarChart3 },
+  { id: "canvas", label: "Canvas", icon: PenLine, section: "Knowledge" },
   { id: "reading", label: "Read Later", icon: BookOpen, section: "Knowledge" },
   { id: "reminders", label: "Reminders", icon: Bell },
   { id: "templates", label: "Templates", icon: FileText, section: "Tools" },
   { id: "review", label: "Weekly Review", icon: CalendarCheck },
   { id: "settings", label: "Settings", icon: Settings, section: "System" },
+  { id: "help", label: "Help", icon: HelpCircle },
 ];
 
 const CONTEXT_OPTIONS: {
