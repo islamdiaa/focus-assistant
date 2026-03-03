@@ -144,7 +144,7 @@ export default function Sidebar({
           </div>
           <button
             onClick={onClose}
-            className="lg:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-white/10 transition-colors"
+            className="lg:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-[oklch(0.20_0.015_155)] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -152,7 +152,7 @@ export default function Sidebar({
 
         {/* Context Switcher */}
         <div className="px-3 pt-3 pb-1">
-          <div className="flex backdrop-blur-md bg-white/30 dark:bg-white/10 rounded-xl p-0.5 gap-0.5">
+          <div className="flex backdrop-blur-md bg-white/30 dark:bg-[oklch(0.20_0.015_155)] rounded-xl p-0.5 gap-0.5">
             {CONTEXT_OPTIONS.map(opt => {
               const Icon = opt.icon;
               const isActive = activeContext === opt.id;
@@ -163,7 +163,7 @@ export default function Sidebar({
                   className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200
                     ${
                       isActive
-                        ? "bg-white/70 dark:bg-white/15 text-warm-charcoal shadow-md backdrop-blur-sm"
+                        ? "bg-white/70 dark:bg-[oklch(0.25_0.025_155)] text-warm-charcoal shadow-md backdrop-blur-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                 >
@@ -196,7 +196,7 @@ export default function Sidebar({
                     ${
                       isActive
                         ? "bg-warm-sage/15 text-warm-charcoal backdrop-blur-md shadow-sm ring-1 ring-warm-sage/10"
-                        : "text-muted-foreground hover:bg-white/40 dark:hover:bg-white/10 hover:text-foreground"
+                        : "text-muted-foreground hover:bg-white/40 dark:hover:bg-[oklch(0.20_0.015_155)] hover:text-foreground"
                     }`}
                 >
                   {isActive && (

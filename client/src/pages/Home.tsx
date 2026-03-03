@@ -278,7 +278,7 @@ export default function Home() {
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top bar */}
-          <header className="h-11 border-b border-white/15 bg-white/40 dark:bg-white/5 backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10">
+          <header className="h-11 border-b border-white/15 bg-white/40 dark:bg-[oklch(0.22_0.02_155)] backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10">
             <div className="flex items-center gap-3">
               {/* Hamburger - mobile only */}
               <button
