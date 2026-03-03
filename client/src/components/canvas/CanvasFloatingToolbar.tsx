@@ -35,7 +35,7 @@ function ToolbarButton({
       onClick={onClick}
       title={label}
       className={cn(
-        "flex items-center justify-center w-8 h-8 rounded-lg transition-colors",
+        "flex items-center justify-center w-8 h-8 rounded-lg transition-colors active:scale-[0.97] transform-gpu",
         "hover:bg-warm-sage/15",
         isActive
           ? "bg-warm-sage/20 text-warm-sage"

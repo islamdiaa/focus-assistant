@@ -14,8 +14,6 @@ import {
   Sparkles,
   X,
   Sun,
-  FileText,
-  CalendarCheck,
   Crosshair,
   Lightbulb,
   BookOpen,
@@ -59,20 +57,22 @@ const NAV_ITEMS: {
   id: Page;
   label: string;
   icon: typeof CheckSquare;
-  section?: string;
+  section: string;
 }[] = [
-  { id: "planner", label: "Today", icon: Sun },
-  { id: "tasks", label: "Tasks", icon: CheckSquare },
-  { id: "timer", label: "Focus Timer", icon: Timer },
-  { id: "matrix", label: "Matrix", icon: LayoutGrid },
-  { id: "stats", label: "Stats", icon: BarChart3 },
-  { id: "canvas", label: "Canvas", icon: PenLine, section: "Knowledge" },
+  // Core
+  { id: "planner", label: "Today", icon: Sun, section: "Core" },
+  { id: "tasks", label: "Tasks", icon: CheckSquare, section: "Core" },
+  { id: "matrix", label: "Matrix", icon: LayoutGrid, section: "Core" },
+  // Tools
+  { id: "timer", label: "Focus Timer", icon: Timer, section: "Tools" },
+  { id: "canvas", label: "Canvas", icon: PenLine, section: "Tools" },
+  // Knowledge
   { id: "reading", label: "Read Later", icon: BookOpen, section: "Knowledge" },
-  { id: "reminders", label: "Reminders", icon: Bell },
-  { id: "templates", label: "Templates", icon: FileText, section: "Tools" },
-  { id: "review", label: "Weekly Review", icon: CalendarCheck },
-  { id: "settings", label: "Settings", icon: Settings, section: "System" },
-  { id: "help", label: "Help", icon: HelpCircle },
+  { id: "reminders", label: "Reminders", icon: Bell, section: "Knowledge" },
+  // Meta
+  { id: "stats", label: "Stats", icon: BarChart3, section: "Meta" },
+  { id: "settings", label: "Settings", icon: Settings, section: "Meta" },
+  { id: "help", label: "Help", icon: HelpCircle, section: "Meta" },
 ];
 
 const CONTEXT_OPTIONS: {
@@ -186,7 +186,7 @@ export default function Sidebar({
             return (
               <div key={item.id}>
                 {showSection && (
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-3 pt-4 pb-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 px-3 pt-4 pb-1">
                     {item.section}
                   </p>
                 )}

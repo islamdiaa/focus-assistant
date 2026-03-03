@@ -580,7 +580,7 @@ export default function TimerPage() {
                     onClick={() =>
                       dispatch({ type: "DELETE_POMODORO", payload: pom.id })
                     }
-                    className="text-muted-foreground hover:text-warm-terracotta p-1 transition-colors"
+                    className="text-muted-foreground hover:text-warm-terracotta p-1 transition-colors active:scale-[0.97] transform-gpu"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

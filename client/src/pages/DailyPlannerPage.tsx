@@ -1208,33 +1208,6 @@ export default function DailyPlannerPage({
         </div>
       </motion.div>
 
-      {/* Motivational Quote */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="mb-8 relative overflow-hidden rounded-2xl glass ring-1 ring-warm-lavender/10 p-6"
-      >
-        <Quote className="absolute top-3 right-3 w-10 h-10 text-warm-lavender/10 rotate-180" />
-        <div className="relative">
-          <p className="font-serif text-base lg:text-lg text-foreground leading-relaxed italic">
-            "{quote.text}"
-          </p>
-          <div className="mt-3 flex items-center gap-2">
-            <div className="w-6 h-0.5 bg-warm-lavender/40 rounded-full" />
-            <p className="text-xs text-muted-foreground font-medium">
-              {quote.author}
-              {quote.source && (
-                <span className="font-normal text-muted-foreground/60">
-                  {" "}
-                  — {quote.source}
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
-      </motion.div>
-
       {/* Today's Progress */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         {[
@@ -1795,6 +1768,33 @@ export default function DailyPlannerPage({
           </AnimatePresence>
         </div>
       )}
+
+      {/* Motivational Quote */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="mb-8 relative overflow-hidden rounded-2xl glass ring-1 ring-warm-lavender/10 p-6"
+      >
+        <Quote className="absolute top-3 right-3 w-10 h-10 text-warm-lavender/10 rotate-180" />
+        <div className="relative">
+          <p className="font-serif text-base lg:text-lg text-foreground leading-relaxed italic">
+            "{quote.text}"
+          </p>
+          <div className="mt-3 flex items-center gap-2">
+            <div className="w-6 h-0.5 bg-warm-lavender/40 rounded-full" />
+            <p className="text-xs text-muted-foreground font-medium">
+              {quote.author}
+              {quote.source && (
+                <span className="font-normal text-muted-foreground/60">
+                  {" "}
+                  — {quote.source}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
       {/* New Task Dialog */}
       <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>

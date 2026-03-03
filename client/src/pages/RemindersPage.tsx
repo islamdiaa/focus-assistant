@@ -343,7 +343,7 @@ export default function RemindersPage({
                         key={c}
                         type="button"
                         onClick={() => setCategory(c)}
-                        className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 flex flex-col items-center gap-1
+                        className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 active:scale-[0.97] transform-gpu flex flex-col items-center gap-1
                         ${category === c ? `${cfg.bg} ${cfg.color} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                       >
                         <cfg.icon className="w-4 h-4" />
@@ -364,7 +364,7 @@ export default function RemindersPage({
                     key={opt.value}
                     type="button"
                     onClick={() => setRecurrence(opt.value)}
-                    className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
+                    className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 active:scale-[0.97] transform-gpu
                       ${recurrence === opt.value ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                   >
                     {opt.label}
@@ -414,7 +414,7 @@ export default function RemindersPage({
           <button
             key={tab.id}
             onClick={() => setFilter(tab.id)}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all active:scale-[0.97] transform-gpu
               ${filter === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             {tab.label}
@@ -519,7 +519,7 @@ export default function RemindersPage({
                       <button
                         onClick={() => openEditDialog(reminder)}
                         title="Edit reminder"
-                        className="p-1.5 rounded-md text-muted-foreground hover:text-warm-blue hover:bg-warm-blue-light transition-colors"
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-warm-blue hover:bg-warm-blue-light transition-colors active:scale-[0.97] transform-gpu"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
@@ -536,7 +536,7 @@ export default function RemindersPage({
                               ? "Acknowledge & advance to next"
                               : "Acknowledge"
                           }
-                          className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors active:scale-[0.97] transform-gpu"
                         >
                           <Check className="w-4 h-4" />
                         </button>
@@ -549,7 +549,7 @@ export default function RemindersPage({
                             })
                           }
                           title="Undo acknowledge"
-                          className="p-1.5 rounded-md text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light transition-colors"
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light transition-colors active:scale-[0.97] transform-gpu"
                         >
                           <Undo2 className="w-3.5 h-3.5" />
                         </button>
@@ -561,7 +561,7 @@ export default function RemindersPage({
                             payload: reminder.id,
                           })
                         }
-                        className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 transition-colors"
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 transition-colors active:scale-[0.97] transform-gpu"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
