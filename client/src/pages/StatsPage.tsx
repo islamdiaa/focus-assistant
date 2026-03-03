@@ -109,9 +109,9 @@ export default function StatsPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {/* Streak */}
-        <div className="backdrop-blur-xl bg-warm-peach/30 border border-white/30 shadow-lg shadow-warm-peach/10 ring-1 ring-warm-peach/20 rounded-2xl p-6">
+        <div className="min-w-0 backdrop-blur-xl bg-warm-peach/30 border border-white/30 shadow-card ring-1 ring-warm-peach/20 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Flame className="w-4 h-4 text-warm-terracotta" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">
@@ -127,7 +127,7 @@ export default function StatsPage() {
         </div>
 
         {/* Today's Tasks */}
-        <div className="backdrop-blur-xl bg-warm-sage-light/30 border border-white/30 shadow-lg shadow-warm-sage/10 ring-1 ring-warm-sage/20 rounded-2xl p-6">
+        <div className="min-w-0 backdrop-blur-xl bg-warm-sage-light/30 border border-white/30 shadow-card ring-1 ring-warm-sage/20 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="w-4 h-4 text-warm-sage" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">
@@ -141,7 +141,7 @@ export default function StatsPage() {
         </div>
 
         {/* Focus Today */}
-        <div className="backdrop-blur-xl bg-warm-blue-light/30 border border-white/30 shadow-lg shadow-warm-blue/10 ring-1 ring-warm-blue/20 rounded-2xl p-6">
+        <div className="min-w-0 backdrop-blur-xl bg-warm-blue-light/30 border border-white/30 shadow-card ring-1 ring-warm-blue/20 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-4 h-4 text-warm-blue" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">
@@ -155,7 +155,7 @@ export default function StatsPage() {
         </div>
 
         {/* Total Sessions */}
-        <div className="backdrop-blur-xl bg-warm-amber-light/30 border border-white/30 shadow-lg shadow-warm-amber/10 ring-1 ring-warm-amber/20 rounded-2xl p-6">
+        <div className="min-w-0 backdrop-blur-xl bg-warm-amber-light/30 border border-white/30 shadow-card ring-1 ring-warm-amber/20 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-4 h-4 text-warm-amber" />
             <span className="text-xs font-semibold uppercase tracking-wide text-warm-charcoal/70">
@@ -237,14 +237,14 @@ export default function StatsPage() {
             Task Overview{activeContext !== "all" ? ` (${activeContext})` : ""}
           </h3>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-warm-sage-light/50 rounded-xl p-3 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="min-w-0 bg-warm-sage-light/50 rounded-xl p-3 text-center">
             <p className="font-serif text-xl text-warm-charcoal">
               {taskSummary.open}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Open</p>
           </div>
-          <div className="bg-warm-amber-light/50 rounded-xl p-3 text-center">
+          <div className="min-w-0 bg-warm-amber-light/50 rounded-xl p-3 text-center">
             <div className="flex items-center justify-center gap-1">
               <Eye className="w-3.5 h-3.5 text-warm-amber" />
               <p className="font-serif text-xl text-warm-charcoal">
@@ -253,13 +253,13 @@ export default function StatsPage() {
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">Monitored</p>
           </div>
-          <div className="bg-warm-blue-light/50 rounded-xl p-3 text-center">
+          <div className="min-w-0 bg-warm-blue-light/50 rounded-xl p-3 text-center">
             <p className="font-serif text-xl text-warm-charcoal">
               {taskSummary.done}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Done</p>
           </div>
-          <div className="bg-warm-lavender-light/50 rounded-xl p-3 text-center">
+          <div className="min-w-0 bg-warm-lavender-light/50 rounded-xl p-3 text-center">
             <p className="font-serif text-xl text-warm-charcoal">
               {taskSummary.total}
             </p>
@@ -269,27 +269,27 @@ export default function StatsPage() {
       </div>
 
       {/* All-Time Stats */}
-      <div className="backdrop-blur-xl bg-warm-lavender/15 border border-white/30 shadow-lg shadow-warm-lavender/10 rounded-2xl p-4 lg:p-6">
+      <div className="backdrop-blur-xl bg-warm-lavender/15 border border-white/30 shadow-card rounded-2xl p-4 lg:p-6">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-4 h-4 text-warm-lavender" />
           <h3 className="font-semibold text-sm text-foreground">
             All-Time Stats
           </h3>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="min-w-0 overflow-hidden">
+            <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal truncate">
               {allTimeTasks}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1 truncate">
               Tasks Completed
             </p>
           </div>
-          <div>
-            <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal">
+          <div className="min-w-0 overflow-hidden">
+            <p className="font-serif text-2xl lg:text-3xl text-warm-charcoal truncate">
               {allTimeFocus}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1 truncate">
               Total Focus Time
             </p>
           </div>

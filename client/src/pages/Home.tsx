@@ -308,7 +308,7 @@ export default function Home() {
                   <Menu className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-2">
-                  <h1 className="font-serif text-sm lg:text-base text-foreground leading-tight">
+                  <h1 className="font-semibold text-sm lg:text-base text-foreground leading-tight">
                     {PAGE_TITLES[activePage] || "Focus Assistant"}
                   </h1>
                   <span className="hidden sm:inline text-xs text-muted-foreground/70 italic truncate max-w-48">
@@ -458,7 +458,7 @@ export default function Home() {
         >
           <DialogContent className="bg-card max-w-sm">
             <DialogHeader>
-              <DialogTitle className="font-serif text-lg">
+              <DialogTitle className="font-semibold text-lg">
                 Make Reminder
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">

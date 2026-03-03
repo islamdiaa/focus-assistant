@@ -937,7 +937,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
 
       {/* ========== ABOUT ========== */}
       <div className="bg-warm-sand/50 rounded-2xl border border-white/15 dark:border-white/10 p-6 mb-6">
-        <h3 className="font-serif text-lg text-foreground mb-2">
+        <h3 className="font-semibold text-lg text-foreground mb-2">
           About Your Focus Assistant
         </h3>
         <p className="text-xs text-muted-foreground leading-relaxed mb-4">

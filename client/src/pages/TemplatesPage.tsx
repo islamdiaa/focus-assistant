@@ -158,7 +158,7 @@ export default function TemplatesPage() {
             </DialogTrigger>
             <DialogContent className="bg-card max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="font-serif text-xl">
+                <DialogTitle className="font-semibold text-xl">
                   Create Template
                 </DialogTitle>
                 <DialogDescription className="sr-only">
@@ -275,7 +275,7 @@ export default function TemplatesPage() {
       {templates.length === 0 ? (
         <div className="bg-card rounded-2xl border border-border p-12 text-center">
           <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
-          <h3 className="font-serif text-xl text-foreground mb-2">
+          <h3 className="font-semibold text-xl text-foreground mb-2">
             No templates yet
           </h3>
           <p className="text-sm text-muted-foreground">

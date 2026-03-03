@@ -127,6 +127,28 @@ Pattern: `motion-safe:active:scale-[0.97]`
 - Section labels: `text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70`
 - Quick Actions section uses same label styling for consistency
 
+### Toast Notifications (Sonner)
+
+- `<Toaster />` configured in App.tsx with `closeButton` and `visibleToasts={3}`
+- Positive: `toast.success("Task completed")` — checkmarks, completions, saves
+- Destructive with undo: `toast("Deleted", { action: { label: "Undo", onClick: handler } })`
+- Never toast on every keystroke or auto-save — only discrete user actions
+- Import: `import { toast } from "sonner"`
+
+### Progressive Disclosure (Collapsible Sections)
+
+- Pattern: `useState(false)` + `AnimatePresence` + `motion.div` height animation
+- Required ARIA: `aria-expanded={isOpen}`, `aria-controls="panel-id"`, matching `id` on panel
+- Show count badge on collapsed header: `({count})` so user knows content exists
+- Use for secondary/low-priority sections (reminders, reading queue in Today view)
+
+### Bulk Actions (TasksPage)
+
+- Selection indicators: circular checkmarks with `role="checkbox"` + `aria-checked`
+- Floating action bar: `role="toolbar"` + `aria-label="Bulk actions for N tasks"`
+- Use `glass-heavy` for floating bar (it's a modal-like elevated surface)
+- Remove `animate-pulse` from count badges (accessibility concern)
+
 ### Reducer Actions
 
 - Auto-save actions go in `NON_UNDOABLE_ACTIONS` to avoid polluting undo stack
@@ -186,13 +208,15 @@ Each reviews the full PR from a different angle:
 
 ## Remaining Design Improvement Tasks
 
-### High Priority
+### High Priority (All Complete)
 
-- [ ] H11: Toast notifications for key actions
-- [ ] H12: Progressive disclosure — collapse secondary sections in Today
-- [ ] H13: Reorder DailyPlanner — action items first
-- [ ] H14: Standardize glass effects — reduce glass-heavy usage
-- [ ] H15: Bulk actions discoverability (count badge + action bar)
+- [x] H1-H5: Motion, dark mode, background hue, keyboard drag, focus-within (PR #4)
+- [x] H6-H10: Sidebar nav, quote card, page title, press feedback, page transitions (PR #5)
+- [x] H11: Toast notifications for key actions (PR #6)
+- [x] H12: Progressive disclosure — collapse secondary sections in Today (PR #6)
+- [x] H13: Reorder DailyPlanner — action items first (PR #6)
+- [x] H14: Standardize glass effects — reduce glass-heavy usage (PR #6)
+- [x] H15: Bulk actions discoverability (count badge + action bar) (PR #6)
 
 ### Medium Priority
 
