@@ -405,6 +405,7 @@ function TodayTaskCard({
       layout
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
+      role="listitem"
       aria-roledescription="sortable"
       aria-label={`Task: ${task.title}`}
       className={`rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-background transition-colors group ${
@@ -415,11 +416,8 @@ function TodayTaskCard({
         {/* Drag handle — visible on hover for pinned tasks */}
         {index !== undefined && (
           <div
-            role="button"
-            tabIndex={0}
-            aria-label={`Reorder ${task.title}. Press space to pick up, arrow keys to move, space to drop.`}
-            aria-roledescription="drag handle"
-            className="mt-0.5 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground focus:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-warm-sage/40 focus:rounded cursor-grab active:cursor-grabbing touch-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
+            aria-hidden="true"
+            className="mt-0.5 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
             title="Drag to reorder"
           >
             <GripVertical className="w-4 h-4" />

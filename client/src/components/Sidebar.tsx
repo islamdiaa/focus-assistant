@@ -163,7 +163,7 @@ export default function Sidebar({
                   className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200
                     ${
                       isActive
-                        ? "bg-white/70 dark:bg-[oklch(0.25_0.025_155)] text-warm-charcoal shadow-md backdrop-blur-sm"
+                        ? "bg-white/70 dark:bg-[oklch(0.25_0.025_155)] text-warm-charcoal dark:text-foreground shadow-md backdrop-blur-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                 >

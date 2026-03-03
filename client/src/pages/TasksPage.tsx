@@ -484,6 +484,7 @@ function SortableTaskCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.2 }}
+      role="listitem"
       aria-roledescription="sortable"
       aria-label={`Task: ${task.title}`}
       className={`group backdrop-blur-xl bg-white/60 dark:bg-[oklch(0.22_0.02_155)] rounded-2xl border p-4 transition-all duration-300 shadow-card hover:shadow-card-hover hover:bg-white/70 dark:hover:bg-[oklch(0.25_0.025_155)]
@@ -508,11 +509,8 @@ function SortableTaskCard({
         {/* Drag handle */}
         {!isDragDisabled && !selectionMode && (
           <div
-            role="button"
-            tabIndex={0}
-            aria-label={`Reorder ${task.title}. Press space to pick up, arrow keys to move, space to drop.`}
-            aria-roledescription="drag handle"
-            className="mt-0.5 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground focus:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-warm-sage/40 focus:rounded cursor-grab active:cursor-grabbing touch-none"
+            aria-hidden="true"
+            className="mt-0.5 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
             title="Drag to reorder"
           >
             <GripVertical className="w-4 h-4" />
