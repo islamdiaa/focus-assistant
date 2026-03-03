@@ -498,12 +498,14 @@ function SortableTaskCard({
         {/* Selection indicator */}
         {selectionMode && (
           <button
+            role="checkbox"
+            aria-checked={selected}
             onClick={e => {
               e.stopPropagation();
               onToggleSelect(task.id);
             }}
             className="mt-0.5 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-sage/50 rounded-full"
-            aria-label={selected ? "Deselect task" : "Select task"}
+            aria-label={`Select task: ${task.title}`}
           >
             <div
               className={cn(
@@ -879,6 +881,8 @@ export default function TasksPage({
       toast(`${count} tasks deleted`, {
         action: { label: "Undo", onClick: () => dispatch({ type: "UNDO" }) },
       });
+    } else if (type === "BULK_PIN_TODAY") {
+      toast.success(`${count} tasks pinned to today`);
     }
     setSelectedIds(new Set());
     setSelectionMode(false);
@@ -1649,9 +1653,11 @@ export default function TasksPage({
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             className="fixed bottom-4 left-1/2 -translate-x-1/2 glass-heavy border rounded-xl shadow-2xl px-5 py-3 flex items-center gap-3 z-50"
+            role="toolbar"
+            aria-label={`Bulk actions for ${selectedIds.size} selected tasks`}
           >
             <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground whitespace-nowrap">
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-warm-sage text-white text-xs font-bold animate-pulse">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-warm-sage text-white text-xs font-bold">
                 {selectedIds.size}
               </span>
               selected

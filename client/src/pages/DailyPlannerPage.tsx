@@ -552,9 +552,15 @@ function TodayTaskCard({
           {/* Unpin (only for pinned tasks) */}
           {showUnpin && (
             <button
-              onClick={() =>
-                dispatch({ type: "UNPIN_FROM_TODAY", payload: task.id })
-              }
+              onClick={() => {
+                dispatch({ type: "UNPIN_FROM_TODAY", payload: task.id });
+                toast("Removed from today", {
+                  action: {
+                    label: "Undo",
+                    onClick: () => dispatch({ type: "UNDO" }),
+                  },
+                });
+              }}
               title="Remove from Today"
               className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta/10 transition-colors motion-safe:active:scale-[0.97]"
             >
@@ -1374,9 +1380,10 @@ export default function DailyPlannerPage({
               >
                 <Star className="w-4 h-4 text-amber-500 fill-current shrink-0" />
                 <button
-                  onClick={() =>
-                    dispatch({ type: "TOGGLE_TASK", payload: t.id })
-                  }
+                  onClick={() => {
+                    dispatch({ type: "TOGGLE_TASK", payload: t.id });
+                    if (t.status !== "done") toast.success("Task completed");
+                  }}
                   className={cn(
                     "w-4 h-4 rounded-md border-2 flex items-center justify-center shrink-0 transition-all motion-safe:active:scale-[0.97]",
                     t.status === "done"
@@ -1604,9 +1611,11 @@ export default function DailyPlannerPage({
       {(overdueReminders.length > 0 ||
         todayReminders.length > 0 ||
         upcomingReminders.length > 0) && (
-        <div className="glass rounded-xl p-5 mb-4">
+        <div className="glass-subtle rounded-xl p-5 mb-4">
           <button
             onClick={() => setShowReminders(v => !v)}
+            aria-expanded={showReminders}
+            aria-controls="reminders-panel"
             className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors motion-safe:active:scale-[0.97]"
           >
             {showReminders ? (
@@ -1625,6 +1634,7 @@ export default function DailyPlannerPage({
           <AnimatePresence>
             {showReminders && (
               <motion.div
+                id="reminders-panel"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -1705,6 +1715,8 @@ export default function DailyPlannerPage({
         <div className="glass-subtle rounded-xl p-5 mb-4">
           <button
             onClick={() => setShowReadingQueue(v => !v)}
+            aria-expanded={showReadingQueue}
+            aria-controls="reading-queue-panel"
             className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors motion-safe:active:scale-[0.97]"
           >
             {showReadingQueue ? (
@@ -1725,6 +1737,7 @@ export default function DailyPlannerPage({
           <AnimatePresence>
             {showReadingQueue && (
               <motion.div
+                id="reading-queue-panel"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -1811,6 +1824,8 @@ export default function DailyPlannerPage({
         <div className="glass-subtle rounded-xl p-5">
           <button
             onClick={() => setActionedExpanded(!actionedExpanded)}
+            aria-expanded={actionedExpanded}
+            aria-controls="actioned-today-panel"
             className="w-full flex items-center justify-between motion-safe:active:scale-[0.97]"
           >
             <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
@@ -1826,6 +1841,7 @@ export default function DailyPlannerPage({
           <AnimatePresence>
             {actionedExpanded && (
               <motion.div
+                id="actioned-today-panel"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
