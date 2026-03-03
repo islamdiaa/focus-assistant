@@ -45,7 +45,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import type {
   Task,
   Priority,
@@ -59,6 +58,7 @@ import { filterTasksByContext } from "@/lib/contextFilter";
 import { DragDropProvider } from "@dnd-kit/react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 interface TasksPageProps {
   newTaskTrigger?: number;
@@ -495,15 +495,29 @@ function SortableTaskCard({
         ${isDragSource ? "shadow-card-active ring-2 ring-warm-sage/40 opacity-50" : ""}`}
     >
       <div className="flex items-start gap-3">
-        {/* Selection checkbox */}
+        {/* Selection indicator */}
         {selectionMode && (
-          <div className="mt-0.5 shrink-0">
-            <Checkbox
-              checked={selected}
-              onCheckedChange={() => onToggleSelect(task.id)}
-              className="size-5"
-            />
-          </div>
+          <button
+            role="checkbox"
+            aria-checked={selected}
+            onClick={e => {
+              e.stopPropagation();
+              onToggleSelect(task.id);
+            }}
+            className="mt-0.5 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-warm-sage/50 rounded-full"
+            aria-label={`Select task: ${task.title}`}
+          >
+            <div
+              className={cn(
+                "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                selected
+                  ? "bg-warm-sage border-warm-sage text-white"
+                  : "border-muted-foreground/30 hover:border-warm-sage/60"
+              )}
+            >
+              {selected && <Check className="w-3 h-3" />}
+            </div>
+          </button>
         )}
 
         {/* Drag handle */}
@@ -519,7 +533,10 @@ function SortableTaskCard({
 
         {/* Checkbox */}
         <button
-          onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
+          onClick={() => {
+            dispatch({ type: "TOGGLE_TASK", payload: task.id });
+            if (task.status !== "done") toast.success("Task completed");
+          }}
           className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
             ${task.status === "done" ? "bg-warm-sage border-warm-sage" : ""}
             ${task.status === "monitored" ? "bg-warm-amber/20 border-warm-amber/50" : ""}
@@ -599,7 +616,10 @@ function SortableTaskCard({
         <div className="flex items-center gap-1">
           {/* Always-visible primary actions */}
           <button
-            onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
+            onClick={() => {
+              dispatch({ type: "TOGGLE_TASK", payload: task.id });
+              if (task.status !== "done") toast.success("Task completed");
+            }}
             className="p-1.5 rounded-md text-muted-foreground/50 hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
             title={task.status === "done" ? "Reopen task" : "Mark as done"}
           >
@@ -653,9 +673,15 @@ function SortableTaskCard({
               </button>
             )}
             <button
-              onClick={() =>
-                dispatch({ type: "DELETE_TASK", payload: task.id })
-              }
+              onClick={() => {
+                dispatch({ type: "DELETE_TASK", payload: task.id });
+                toast("Task deleted", {
+                  action: {
+                    label: "Undo",
+                    onClick: () => dispatch({ type: "UNDO" }),
+                  },
+                });
+              }}
               className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
               title="Delete task"
             >
@@ -847,7 +873,17 @@ export default function TasksPage({
     type: "BULK_COMPLETE_TASKS" | "BULK_DELETE_TASKS" | "BULK_PIN_TODAY",
     payload?: any
   ) {
+    const count = selectedIds.size;
     dispatch({ type, payload: payload ?? Array.from(selectedIds) });
+    if (type === "BULK_COMPLETE_TASKS") {
+      toast.success(`${count} tasks completed`);
+    } else if (type === "BULK_DELETE_TASKS") {
+      toast(`${count} tasks deleted`, {
+        action: { label: "Undo", onClick: () => dispatch({ type: "UNDO" }) },
+      });
+    } else if (type === "BULK_PIN_TODAY") {
+      toast.success(`${count} tasks pinned to today`);
+    }
     setSelectedIds(new Set());
     setSelectionMode(false);
   }
@@ -957,6 +993,7 @@ export default function TasksPage({
         estimatedMinutes: newEstimatedMinutes || undefined,
       },
     });
+    toast.success("Task created");
     setNewTitle("");
     setNewDesc("");
     setNewPriority("medium");
@@ -1011,26 +1048,21 @@ export default function TasksPage({
         </div>
         <div className="flex items-center gap-2">
           <Button
+            size="sm"
             onClick={() => {
-              if (selectionMode) {
-                setSelectionMode(false);
-                setSelectedIds(new Set());
-              } else {
-                setSelectionMode(true);
-              }
+              setSelectionMode(m => !m);
+              if (selectionMode) setSelectedIds(new Set());
             }}
-            variant="outline"
+            variant={selectionMode ? "default" : "outline"}
             className={cn(
-              "gap-2",
+              "gap-1.5",
               selectionMode
-                ? "border-warm-blue text-warm-blue bg-warm-blue-light"
-                : "border-border text-muted-foreground hover:text-foreground"
+                ? "bg-warm-blue text-white hover:bg-warm-blue/90 border-warm-blue shadow-md"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-warm-blue/40"
             )}
           >
-            <Check className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {selectionMode ? "Cancel" : "Select"}
-            </span>
+            <ListChecks className="w-4 h-4" />
+            {selectionMode ? "Cancel" : "Select"}
           </Button>
           <Button
             onClick={() => setReminderDialogOpen(true)}
@@ -1620,10 +1652,15 @@ export default function TasksPage({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-card border rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 z-50"
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 glass-heavy border rounded-xl shadow-2xl px-5 py-3 flex items-center gap-3 z-50"
+            role="toolbar"
+            aria-label={`Bulk actions for ${selectedIds.size} selected tasks`}
           >
-            <span className="text-sm font-medium text-foreground whitespace-nowrap">
-              {selectedIds.size} selected
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground whitespace-nowrap">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-warm-sage text-white text-xs font-bold">
+                {selectedIds.size}
+              </span>
+              selected
             </span>
             <div className="h-5 w-px bg-border" />
             <button

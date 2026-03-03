@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 const CATEGORY_CONFIG: Record<
   Reminder["category"],
@@ -225,6 +226,7 @@ export default function RemindersPage({
         category,
       },
     });
+    toast.success("Reminder created");
     resetForm();
     setDialogOpen(false);
   }
@@ -525,12 +527,13 @@ export default function RemindersPage({
                       </button>
                       {!reminder.acknowledged ? (
                         <button
-                          onClick={() =>
+                          onClick={() => {
                             dispatch({
                               type: "ACK_REMINDER",
                               payload: reminder.id,
-                            })
-                          }
+                            });
+                            toast.success("Reminder acknowledged");
+                          }}
                           title={
                             reminder.recurrence !== "none"
                               ? "Acknowledge & advance to next"
@@ -555,12 +558,18 @@ export default function RemindersPage({
                         </button>
                       )}
                       <button
-                        onClick={() =>
+                        onClick={() => {
                           dispatch({
                             type: "DELETE_REMINDER",
                             payload: reminder.id,
-                          })
-                        }
+                          });
+                          toast("Reminder deleted", {
+                            action: {
+                              label: "Undo",
+                              onClick: () => dispatch({ type: "UNDO" }),
+                            },
+                          });
+                        }}
                         className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 transition-colors motion-safe:active:scale-[0.97]"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
