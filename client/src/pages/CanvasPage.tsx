@@ -84,7 +84,7 @@ export default function CanvasPage() {
       <div className="glass-subtle border-b px-4 py-3 flex items-center justify-center gap-3">
         <button
           onClick={goBack}
-          className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-[oklch(0.20_0.015_155)] transition-colors"
           aria-label="Previous day"
         >
           <ChevronLeft className="h-4 w-4 text-warm-charcoal/70 dark:text-white/70" />
@@ -104,7 +104,7 @@ export default function CanvasPage() {
             "p-1.5 rounded-lg transition-colors",
             isToday
               ? "opacity-30 cursor-not-allowed"
-              : "hover:bg-black/5 dark:hover:bg-white/5"
+              : "hover:bg-black/5 dark:hover:bg-[oklch(0.20_0.015_155)]"
           )}
           aria-label="Next day"
         >

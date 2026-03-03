@@ -237,7 +237,7 @@ function SubtaskList({
                   setEditingId(sub.id);
                   setEditTitle(sub.title);
                 }}
-                className="p-1 rounded text-muted-foreground/40 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors opacity-0 group-hover/sub:opacity-100 hover-action"
+                className="p-1 rounded text-muted-foreground/40 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors opacity-0 group-hover/sub:opacity-100 group-focus-within/sub:opacity-100 hover-action"
                 title="Edit subtask"
               >
                 <Pencil className="w-3 h-3" />
@@ -250,7 +250,7 @@ function SubtaskList({
                   payload: { taskId: task.id, subtaskId: sub.id },
                 })
               }
-              className="p-1 rounded text-muted-foreground/40 hover:text-warm-terracotta opacity-0 group-hover/sub:opacity-100 hover-action transition-opacity"
+              className="p-1 rounded text-muted-foreground/40 hover:text-warm-terracotta opacity-0 group-hover/sub:opacity-100 group-focus-within/sub:opacity-100 hover-action transition-opacity"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -484,7 +484,10 @@ function SortableTaskCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.2 }}
-      className={`group backdrop-blur-xl bg-white/60 dark:bg-white/5 rounded-2xl border p-4 transition-all duration-300 shadow-card hover:shadow-card-hover hover:bg-white/70 dark:hover:bg-white/8
+      role="listitem"
+      aria-roledescription="sortable"
+      aria-label={`Task: ${task.title}`}
+      className={`group backdrop-blur-xl bg-white/60 dark:bg-[oklch(0.22_0.02_155)] rounded-2xl border p-4 transition-all duration-300 shadow-card hover:shadow-card-hover hover:bg-white/70 dark:hover:bg-[oklch(0.25_0.025_155)]
         ${task.status === "done" ? "opacity-60 border-white/15 dark:border-white/10" : ""}
         ${task.status === "monitored" ? "opacity-75 border-dashed border-warm-amber/40 bg-warm-amber-light/20" : "border-white/30 dark:border-white/10"}
         ${task.status === "active" ? "border-white/30 dark:border-white/10" : ""}
@@ -506,6 +509,7 @@ function SortableTaskCard({
         {/* Drag handle */}
         {!isDragDisabled && !selectionMode && (
           <div
+            aria-hidden="true"
             className="mt-0.5 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
             title="Drag to reorder"
           >
@@ -613,7 +617,7 @@ function SortableTaskCard({
             <Pencil className="w-4 h-4" />
           </button>
           {/* Hover-revealed secondary actions */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover-action transition-opacity">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover-action transition-opacity">
             <button
               onClick={() => setSubtasksOpen(!subtasksOpen)}
               className={`p-1.5 rounded-md transition-colors ${
@@ -1577,7 +1581,11 @@ export default function TasksPage({
         </div>
       ) : (
         <DragDropProvider onDragEnd={handleDragEnd}>
-          <div className="space-y-2">
+          <div
+            className="space-y-2"
+            role="list"
+            aria-label="Sortable task list"
+          >
             {sort === "manual" && !searchQuery && (
               <p className="text-xs text-muted-foreground/60 mb-2 flex items-center gap-1.5">
                 <GripVertical className="w-3.5 h-3.5" /> Drag tasks to reorder

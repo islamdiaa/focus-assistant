@@ -340,7 +340,7 @@ export default function MatrixPage() {
             setEditingTaskId(task.id);
           }}
           title="Edit task"
-          className="p-2 rounded text-muted-foreground/40 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors opacity-0 group-hover:opacity-100 hover-action"
+          className="p-2 rounded text-muted-foreground/40 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover-action"
         >
           <Pencil className="w-3.5 h-3.5" />
         </button>

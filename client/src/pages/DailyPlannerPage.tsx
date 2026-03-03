@@ -405,6 +405,9 @@ function TodayTaskCard({
       layout
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
+      role="listitem"
+      aria-roledescription="sortable"
+      aria-label={`Task: ${task.title}`}
       className={`rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-background transition-colors group ${
         task.status === "done" ? "opacity-50" : ""
       }`}
@@ -413,7 +416,8 @@ function TodayTaskCard({
         {/* Drag handle — visible on hover for pinned tasks */}
         {index !== undefined && (
           <div
-            className="mt-0.5 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-hidden="true"
+            className="mt-0.5 p-0.5 rounded text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing touch-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
             title="Drag to reorder"
           >
             <GripVertical className="w-4 h-4" />
@@ -474,7 +478,7 @@ function TodayTaskCard({
         </div>
 
         {/* Action buttons — visible on hover */}
-        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 hover-action transition-opacity">
+        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover-action transition-opacity">
           {/* Focus Goal star (only for active pinned-today tasks) */}
           {task.status === "active" && showUnpin && (
             <button
@@ -734,7 +738,7 @@ function TodayReminderCard({
       </div>
 
       {/* Action buttons — visible on hover */}
-      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 hover-action transition-opacity">
+      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover-action transition-opacity">
         {!reminder.acknowledged ? (
           <button
             onClick={() =>
@@ -1439,7 +1443,11 @@ export default function DailyPlannerPage({
           </p>
         ) : (
           <DragDropProvider onDragEnd={handleDragEnd}>
-            <div className="space-y-2">
+            <div
+              className="space-y-2"
+              role="list"
+              aria-label="Sortable pinned tasks"
+            >
               {pinnedTasks.map((t, idx) => (
                 <TodayTaskCard
                   key={t.id}
@@ -1704,7 +1712,7 @@ export default function DailyPlannerPage({
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground group-hover:text-warm-lavender transition-colors line-clamp-1 flex items-center gap-1.5">
                       {item.title}
-                      <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 hover-action transition-opacity" />
+                      <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover-action transition-opacity" />
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[10px] text-muted-foreground">

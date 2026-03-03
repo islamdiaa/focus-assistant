@@ -62,7 +62,7 @@ import {
   CloudOff,
   Lightbulb,
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 
 const MOTIVATIONAL = [
   "Your brain is powerful!",
@@ -245,244 +245,249 @@ export default function Home() {
   }, [handleKeyDown]);
 
   return (
-    <>
-      {/* Focus Mode Overlay */}
-      {focusMode && (
-        <Suspense
-          fallback={
-            <div className="fixed inset-0 bg-background flex items-center justify-center z-50">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-sage" />
-            </div>
-          }
-        >
-          <FocusModePage onExit={() => setFocusMode(false)} />
-        </Suspense>
-      )}
+    <MotionConfig reducedMotion="user">
+      <>
+        {/* Focus Mode Overlay */}
+        {focusMode && (
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 bg-background flex items-center justify-center z-50">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-sage" />
+              </div>
+            }
+          >
+            <FocusModePage onExit={() => setFocusMode(false)} />
+          </Suspense>
+        )}
 
-      {/* Main Layout */}
-      <div
-        className={`flex min-h-screen bg-background ${focusMode ? "hidden" : ""}`}
-      >
-        <Sidebar
-          activePage={activePage}
-          onNavigate={setActivePage}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          onFocusMode={() => setFocusMode(true)}
-          onScratchPad={() => setScratchPadOpen(o => !o)}
-          activeContext={activeContext}
-          onContextChange={ctx =>
-            dispatch({ type: "SET_CONTEXT", payload: ctx })
-          }
+        {/* Main Layout */}
+        <div
+          className={`flex min-h-screen bg-background ${focusMode ? "hidden" : ""}`}
+        >
+          <Sidebar
+            activePage={activePage}
+            onNavigate={setActivePage}
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            onFocusMode={() => setFocusMode(true)}
+            onScratchPad={() => setScratchPadOpen(o => !o)}
+            activeContext={activeContext}
+            onContextChange={ctx =>
+              dispatch({ type: "SET_CONTEXT", payload: ctx })
+            }
+          />
+
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Top bar */}
+            <header className="h-11 border-b border-white/15 bg-white/40 dark:bg-[oklch(0.22_0.02_155)] backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10">
+              <div className="flex items-center gap-3">
+                {/* Hamburger - mobile only */}
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden p-1.5 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-serif text-sm lg:text-base text-foreground leading-tight">
+                    Focus Assistant
+                  </h1>
+                  <span className="hidden sm:inline text-xs text-muted-foreground/70 italic truncate max-w-48">
+                    {subtitle}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 lg:gap-3">
+                {/* Undo/Redo buttons */}
+                <div className="flex items-center gap-0.5">
+                  <button
+                    onClick={undo}
+                    disabled={!canUndo}
+                    title="Undo (Ctrl+Z)"
+                    className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Undo2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={redo}
+                    disabled={!canRedo}
+                    title="Redo (Ctrl+Shift+Z)"
+                    className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Redo2 className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-sage/15 shadow-sm px-2 lg:px-2.5 py-1 rounded-full border border-warm-sage/20">
+                  <Smile className="w-3.5 h-3.5 text-warm-sage" />
+                  <span className="text-xs font-medium text-warm-charcoal">
+                    {completedToday}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-blue/15 shadow-sm px-2 lg:px-2.5 py-1 rounded-full border border-warm-blue/20">
+                  <Clock className="w-3.5 h-3.5 text-warm-blue" />
+                  <span className="text-xs font-medium text-warm-charcoal">
+                    {focusToday}m
+                  </span>
+                </div>
+              </div>
+            </header>
+
+            {/* Save error banner */}
+            {saveStatus === "error" && (
+              <div className="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center gap-2 text-sm text-red-700">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span className="flex-1">
+                  {saveError ||
+                    "Changes not saved to server. Data is cached locally."}
+                </span>
+                <button
+                  onClick={() => {
+                    /* trigger manual retry */ import("@/lib/sheets").then(m =>
+                      m.saveState(state)
+                    );
+                  }}
+                  className="text-xs font-medium px-2 py-1 rounded bg-red-100 hover:bg-red-200 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Page content */}
+            <main className="flex-1 overflow-y-auto">
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center h-64">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-sage" />
+                  </div>
+                }
+              >
+                {activePage === "planner" && (
+                  <DailyPlannerPage
+                    newTaskTrigger={newTaskTrigger}
+                    searchTrigger={searchTrigger}
+                    reminderTrigger={reminderTrigger}
+                  />
+                )}
+                {activePage === "tasks" && (
+                  <TasksPage
+                    newTaskTrigger={newTaskTrigger}
+                    searchTrigger={searchTrigger}
+                    reminderTrigger={reminderTrigger}
+                  />
+                )}
+                {activePage === "canvas" && <CanvasPage />}
+                {activePage === "timer" && <TimerPage />}
+                {activePage === "matrix" && <MatrixPage />}
+                {activePage === "stats" && <StatsPage />}
+                {activePage === "reading" && <ReadLaterPage />}
+                {activePage === "reminders" && (
+                  <RemindersPage reminderTrigger={reminderTrigger} />
+                )}
+                {activePage === "templates" && <TemplatesPage />}
+                {activePage === "review" && <WeeklyReviewPage />}
+                {activePage === "settings" && (
+                  <SettingsPage onNavigate={p => setActivePage(p as Page)} />
+                )}
+                {activePage === "help" && <HelpPage />}
+              </Suspense>
+            </main>
+          </div>
+        </div>
+
+        {/* Thoughts Floating Button — hidden during focus mode */}
+        {!focusMode && (
+          <button
+            onClick={() => setScratchPadOpen(o => !o)}
+            className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full bg-warm-amber hover:bg-warm-amber/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+            title="Thoughts (I)"
+          >
+            <Lightbulb className="w-5 h-5" />
+          </button>
+        )}
+
+        {/* Thoughts Drawer */}
+        <ScratchPadDrawer
+          open={scratchPadOpen}
+          onClose={() => setScratchPadOpen(false)}
+          onMakeReminder={(text, noteId) => {
+            setThoughtReminderText(text);
+            setThoughtReminderNoteId(noteId);
+            setThoughtReminderOpen(true);
+          }}
         />
 
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Top bar */}
-          <header className="h-11 border-b border-white/15 bg-white/40 dark:bg-white/5 backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10">
-            <div className="flex items-center gap-3">
-              {/* Hamburger - mobile only */}
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-1.5 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-              <div className="flex items-center gap-2">
-                <h1 className="font-serif text-sm lg:text-base text-foreground leading-tight">
-                  Focus Assistant
-                </h1>
-                <span className="hidden sm:inline text-xs text-muted-foreground/70 italic truncate max-w-48">
-                  {subtitle}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 lg:gap-3">
-              {/* Undo/Redo buttons */}
-              <div className="flex items-center gap-0.5">
-                <button
-                  onClick={undo}
-                  disabled={!canUndo}
-                  title="Undo (Ctrl+Z)"
-                  className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Undo2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={redo}
-                  disabled={!canRedo}
-                  title="Redo (Ctrl+Shift+Z)"
-                  className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Redo2 className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-sage/15 shadow-sm px-2 lg:px-2.5 py-1 rounded-full border border-warm-sage/20">
-                <Smile className="w-3.5 h-3.5 text-warm-sage" />
-                <span className="text-xs font-medium text-warm-charcoal">
-                  {completedToday}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-blue/15 shadow-sm px-2 lg:px-2.5 py-1 rounded-full border border-warm-blue/20">
-                <Clock className="w-3.5 h-3.5 text-warm-blue" />
-                <span className="text-xs font-medium text-warm-charcoal">
-                  {focusToday}m
-                </span>
-              </div>
-            </div>
-          </header>
-
-          {/* Save error banner */}
-          {saveStatus === "error" && (
-            <div className="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center gap-2 text-sm text-red-700">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              <span className="flex-1">
-                {saveError ||
-                  "Changes not saved to server. Data is cached locally."}
-              </span>
-              <button
-                onClick={() => {
-                  /* trigger manual retry */ import("@/lib/sheets").then(m =>
-                    m.saveState(state)
-                  );
-                }}
-                className="text-xs font-medium px-2 py-1 rounded bg-red-100 hover:bg-red-200 transition-colors"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {/* Page content */}
-          <main className="flex-1 overflow-y-auto">
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center h-64">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-sage" />
-                </div>
-              }
-            >
-              {activePage === "planner" && (
-                <DailyPlannerPage
-                  newTaskTrigger={newTaskTrigger}
-                  searchTrigger={searchTrigger}
-                  reminderTrigger={reminderTrigger}
-                />
-              )}
-              {activePage === "tasks" && (
-                <TasksPage
-                  newTaskTrigger={newTaskTrigger}
-                  searchTrigger={searchTrigger}
-                  reminderTrigger={reminderTrigger}
-                />
-              )}
-              {activePage === "canvas" && <CanvasPage />}
-              {activePage === "timer" && <TimerPage />}
-              {activePage === "matrix" && <MatrixPage />}
-              {activePage === "stats" && <StatsPage />}
-              {activePage === "reading" && <ReadLaterPage />}
-              {activePage === "reminders" && (
-                <RemindersPage reminderTrigger={reminderTrigger} />
-              )}
-              {activePage === "templates" && <TemplatesPage />}
-              {activePage === "review" && <WeeklyReviewPage />}
-              {activePage === "settings" && (
-                <SettingsPage onNavigate={p => setActivePage(p as Page)} />
-              )}
-              {activePage === "help" && <HelpPage />}
-            </Suspense>
-          </main>
-        </div>
-      </div>
-
-      {/* Thoughts Floating Button — hidden during focus mode */}
-      {!focusMode && (
-        <button
-          onClick={() => setScratchPadOpen(o => !o)}
-          className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full bg-warm-amber hover:bg-warm-amber/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
-          title="Thoughts (I)"
+        {/* Thought → Reminder Dialog */}
+        <Dialog
+          open={thoughtReminderOpen}
+          onOpenChange={setThoughtReminderOpen}
         >
-          <Lightbulb className="w-5 h-5" />
-        </button>
-      )}
-
-      {/* Thoughts Drawer */}
-      <ScratchPadDrawer
-        open={scratchPadOpen}
-        onClose={() => setScratchPadOpen(false)}
-        onMakeReminder={(text, noteId) => {
-          setThoughtReminderText(text);
-          setThoughtReminderNoteId(noteId);
-          setThoughtReminderOpen(true);
-        }}
-      />
-
-      {/* Thought → Reminder Dialog */}
-      <Dialog open={thoughtReminderOpen} onOpenChange={setThoughtReminderOpen}>
-        <DialogContent className="bg-card max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-lg">
-              Make Reminder
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              Set a date for this thought
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 mt-2">
-            <p className="text-sm text-foreground bg-warm-amber-light/30 rounded-lg p-3 border border-warm-amber/20">
-              {thoughtReminderText}
-            </p>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
-                Date
-              </label>
-              <Input
-                type="date"
-                value={thoughtReminderDate}
-                onChange={e => setThoughtReminderDate(e.target.value)}
-                className="bg-background"
-              />
-            </div>
-            <Button
-              onClick={() => {
-                if (!thoughtReminderDate || !thoughtReminderText) return;
-                dispatch({
-                  type: "ADD_REMINDER",
-                  payload: {
-                    title: thoughtReminderText,
-                    date: thoughtReminderDate,
-                    recurrence: "none",
-                    category: "other",
-                  },
-                });
-                if (thoughtReminderNoteId) {
+          <DialogContent className="bg-card max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="font-serif text-lg">
+                Make Reminder
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Set a date for this thought
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 mt-2">
+              <p className="text-sm text-foreground bg-warm-amber-light/30 rounded-lg p-3 border border-warm-amber/20">
+                {thoughtReminderText}
+              </p>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                  Date
+                </label>
+                <Input
+                  type="date"
+                  value={thoughtReminderDate}
+                  onChange={e => setThoughtReminderDate(e.target.value)}
+                  className="bg-background"
+                />
+              </div>
+              <Button
+                onClick={() => {
+                  if (!thoughtReminderDate || !thoughtReminderText) return;
                   dispatch({
-                    type: "DELETE_SCRATCH_NOTE",
-                    payload: thoughtReminderNoteId,
+                    type: "ADD_REMINDER",
+                    payload: {
+                      title: thoughtReminderText,
+                      date: thoughtReminderDate,
+                      recurrence: "none",
+                      category: "other",
+                    },
                   });
-                }
-                setThoughtReminderOpen(false);
-                setThoughtReminderText("");
-                setThoughtReminderDate("");
-                setThoughtReminderNoteId(null);
-              }}
-              disabled={!thoughtReminderDate}
-              className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white"
-            >
-              Create Reminder
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+                  if (thoughtReminderNoteId) {
+                    dispatch({
+                      type: "DELETE_SCRATCH_NOTE",
+                      payload: thoughtReminderNoteId,
+                    });
+                  }
+                  setThoughtReminderOpen(false);
+                  setThoughtReminderText("");
+                  setThoughtReminderDate("");
+                  setThoughtReminderNoteId(null);
+                }}
+                disabled={!thoughtReminderDate}
+                className="w-full bg-warm-sage hover:bg-warm-sage/90 text-white"
+              >
+                Create Reminder
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-      {/* Command Palette (Ctrl+K / Cmd+K) */}
-      <CommandPalette
-        open={commandPaletteOpen}
-        onOpenChange={setCommandPaletteOpen}
-        onNavigate={page => {
-          setActivePage(page as Page);
-          setCommandPaletteOpen(false);
-        }}
-      />
-    </>
+        {/* Command Palette (Ctrl+K / Cmd+K) */}
+        <CommandPalette
+          open={commandPaletteOpen}
+          onOpenChange={setCommandPaletteOpen}
+          onNavigate={page => {
+            setActivePage(page as Page);
+            setCommandPaletteOpen(false);
+          }}
+        />
+      </>
+    </MotionConfig>
   );
 }
