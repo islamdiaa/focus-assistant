@@ -182,7 +182,7 @@ function InlineEditForm({
             key={opt.value}
             type="button"
             onClick={() => setPriority(opt.value)}
-            className={`text-[10px] px-2 py-1 rounded-md border font-medium transition-all
+            className={`text-[10px] px-2 py-1 rounded-md border font-medium transition-all motion-safe:active:scale-[0.97]
               ${priority === opt.value ? `${opt.color} scale-105 shadow-sm` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
           >
             {opt.label}
@@ -340,7 +340,7 @@ export default function MatrixPage() {
             setEditingTaskId(task.id);
           }}
           title="Edit task"
-          className="p-2 rounded text-muted-foreground/40 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover-action"
+          className="p-2 rounded text-muted-foreground/40 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors motion-safe:active:scale-[0.97] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover-action"
         >
           <Pencil className="w-3.5 h-3.5" />
         </button>
@@ -527,7 +527,7 @@ export default function MatrixPage() {
         {!showPanel && (
           <button
             onClick={() => setShowPanel(true)}
-            className="shrink-0 glass rounded-xl px-2 py-4 lg:flex items-center text-muted-foreground hover:text-foreground transition-colors hidden"
+            className="shrink-0 glass rounded-xl px-2 py-4 lg:flex items-center text-muted-foreground hover:text-foreground transition-colors motion-safe:active:scale-[0.97] hidden"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -538,7 +538,7 @@ export default function MatrixPage() {
       {!showPanel && (
         <button
           onClick={() => setShowPanel(true)}
-          className="mt-4 w-full glass rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+          className="mt-4 w-full glass rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors motion-safe:active:scale-[0.97] text-sm"
         >
           <ChevronDown className="w-4 h-4" />
           Show Unassigned ({unassigned.length})

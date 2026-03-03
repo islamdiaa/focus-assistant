@@ -351,7 +351,7 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
                             setSelectedTaskId(t.id);
                             setTaskPickerOpen(false);
                           }}
-                          className="w-full text-left px-4 py-2.5 hover:bg-warm-sand/30 transition-colors border-b border-border/30 last:border-0"
+                          className="w-full text-left px-4 py-2.5 hover:bg-warm-sand/30 transition-colors motion-safe:active:scale-[0.97] border-b border-border/30 last:border-0"
                         >
                           <p className="text-sm font-medium text-foreground truncate">
                             {t.title}

@@ -214,7 +214,7 @@ export default function ReadLaterPage() {
           onClick={() =>
             setFilterStatus(filterStatus === "unread" ? "all" : "unread")
           }
-          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "unread" ? "border-warm-terracotta/40 bg-warm-terracotta/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-terracotta/5"}`}
+          className={`rounded-xl p-3 text-center border transition-all motion-safe:active:scale-[0.97] ${filterStatus === "unread" ? "border-warm-terracotta/40 bg-warm-terracotta/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-terracotta/5"}`}
         >
           <Clock className="w-4 h-4 mx-auto mb-1 text-warm-terracotta" />
           <div className="text-xl font-bold text-foreground">{unreadCount}</div>
@@ -224,7 +224,7 @@ export default function ReadLaterPage() {
           onClick={() =>
             setFilterStatus(filterStatus === "reading" ? "all" : "reading")
           }
-          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "reading" ? "border-warm-blue/40 bg-warm-blue/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-blue/5"}`}
+          className={`rounded-xl p-3 text-center border transition-all motion-safe:active:scale-[0.97] ${filterStatus === "reading" ? "border-warm-blue/40 bg-warm-blue/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-blue/5"}`}
         >
           <BookOpen className="w-4 h-4 mx-auto mb-1 text-warm-blue" />
           <div className="text-xl font-bold text-foreground">
@@ -236,7 +236,7 @@ export default function ReadLaterPage() {
           onClick={() =>
             setFilterStatus(filterStatus === "read" ? "all" : "read")
           }
-          className={`rounded-xl p-3 text-center border transition-all ${filterStatus === "read" ? "border-warm-sage/40 bg-warm-sage/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-sage/5"}`}
+          className={`rounded-xl p-3 text-center border transition-all motion-safe:active:scale-[0.97] ${filterStatus === "read" ? "border-warm-sage/40 bg-warm-sage/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-sage/5"}`}
         >
           <CheckCircle2 className="w-4 h-4 mx-auto mb-1 text-warm-sage" />
           <div className="text-xl font-bold text-foreground">{readCount}</div>
@@ -262,7 +262,7 @@ export default function ReadLaterPage() {
               <button
                 key={tag}
                 onClick={() => setFilterTag(filterTag === tag ? null : tag)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
+                className={`text-xs px-2.5 py-1 rounded-full border transition-all motion-safe:active:scale-[0.97] ${
                   filterTag === tag
                     ? "bg-warm-lavender text-white border-warm-lavender"
                     : "bg-card text-muted-foreground border-white/15 dark:border-white/10 hover:border-warm-lavender/40"
@@ -320,7 +320,7 @@ export default function ReadLaterPage() {
                       {/* Status button */}
                       <button
                         onClick={() => handleStatusCycle(item)}
-                        className={`shrink-0 mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${cfg.bg} hover:opacity-80`}
+                        className={`shrink-0 mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center transition-all motion-safe:active:scale-[0.97] ${cfg.bg} hover:opacity-80`}
                         title={`Status: ${cfg.label} (click to cycle)`}
                       >
                         <StatusIcon className={`w-4 h-4 ${cfg.color}`} />
@@ -361,7 +361,7 @@ export default function ReadLaterPage() {
                             onClick={() =>
                               setExpandedId(isExpanded ? null : item.id)
                             }
-                            className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
+                            className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors motion-safe:active:scale-[0.97]"
                           >
                             {isExpanded ? (
                               <ChevronUp className="w-4 h-4" />
@@ -441,7 +441,7 @@ export default function ReadLaterPage() {
                                     onClick={() =>
                                       handleRemoveTag(item.id, tag)
                                     }
-                                    className="p-1 rounded hover:text-red-500 transition-colors"
+                                    className="p-1 rounded hover:text-red-500 transition-colors motion-safe:active:scale-[0.97]"
                                   >
                                     <X className="w-3.5 h-3.5" />
                                   </button>
@@ -637,7 +637,7 @@ function AddTagInline({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-warm-lavender px-2 py-1 rounded-full border border-dashed border-border hover:border-warm-lavender/40 transition-colors"
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-warm-lavender px-2 py-1 rounded-full border border-dashed border-border hover:border-warm-lavender/40 transition-colors motion-safe:active:scale-[0.97]"
       >
         <Plus className="w-3 h-3" /> Add tag
       </button>
@@ -665,13 +665,13 @@ function AddTagInline({
       </datalist>
       <button
         onClick={handleSubmit}
-        className="p-1.5 rounded text-warm-lavender hover:text-warm-lavender/80 hover:bg-warm-lavender/10 transition-colors"
+        className="p-1.5 rounded text-warm-lavender hover:text-warm-lavender/80 hover:bg-warm-lavender/10 transition-colors motion-safe:active:scale-[0.97]"
       >
         <Check className="w-4 h-4" />
       </button>
       <button
         onClick={() => setOpen(false)}
-        className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
+        className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors motion-safe:active:scale-[0.97]"
       >
         <X className="w-4 h-4" />
       </button>

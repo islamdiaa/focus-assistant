@@ -84,7 +84,7 @@ export default function CanvasPage() {
       <div className="glass-subtle border-b px-4 py-3 flex items-center justify-center gap-3">
         <button
           onClick={goBack}
-          className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-[oklch(0.20_0.015_155)] transition-colors"
+          className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-[oklch(0.20_0.015_155)] transition-colors motion-safe:active:scale-[0.97]"
           aria-label="Previous day"
         >
           <ChevronLeft className="h-4 w-4 text-warm-charcoal/70 dark:text-white/70" />
@@ -101,7 +101,7 @@ export default function CanvasPage() {
           onClick={goForward}
           disabled={isToday}
           className={cn(
-            "p-1.5 rounded-lg transition-colors",
+            "p-1.5 rounded-lg transition-colors motion-safe:active:scale-[0.97]",
             isToday
               ? "opacity-30 cursor-not-allowed"
               : "hover:bg-black/5 dark:hover:bg-[oklch(0.20_0.015_155)]"
@@ -114,7 +114,7 @@ export default function CanvasPage() {
         {!isToday && (
           <button
             onClick={goToday}
-            className="ml-1 px-2.5 py-1 text-xs font-medium rounded-md bg-warm-sage/10 text-warm-sage hover:bg-warm-sage/20 transition-colors"
+            className="ml-1 px-2.5 py-1 text-xs font-medium rounded-md bg-warm-sage/10 text-warm-sage hover:bg-warm-sage/20 transition-colors motion-safe:active:scale-[0.97]"
           >
             Today
           </button>

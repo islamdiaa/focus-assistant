@@ -85,6 +85,21 @@ const PAGE_MAP: Record<string, Page> = {
   "0": "help",
 };
 
+const PAGE_TITLES: Record<string, string> = {
+  planner: "Today",
+  tasks: "Tasks",
+  timer: "Timer",
+  matrix: "Matrix",
+  stats: "Stats",
+  reading: "Read Later",
+  reminders: "Reminders",
+  templates: "Templates",
+  review: "Weekly Review",
+  settings: "Settings",
+  help: "Help & Guide",
+  canvas: "Canvas",
+};
+
 export default function Home() {
   let { user, loading, error, isAuthenticated, logout } = useAuth();
 
@@ -244,6 +259,10 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  useEffect(() => {
+    document.title = `${PAGE_TITLES[activePage] || "Focus Assistant"} - Focus Assistant`;
+  }, [activePage]);
+
   return (
     <MotionConfig reducedMotion="user">
       <>
@@ -290,7 +309,7 @@ export default function Home() {
                 </button>
                 <div className="flex items-center gap-2">
                   <h1 className="font-serif text-sm lg:text-base text-foreground leading-tight">
-                    Focus Assistant
+                    {PAGE_TITLES[activePage] || "Focus Assistant"}
                   </h1>
                   <span className="hidden sm:inline text-xs text-muted-foreground/70 italic truncate max-w-48">
                     {subtitle}
@@ -355,42 +374,57 @@ export default function Home() {
 
             {/* Page content */}
             <main className="flex-1 overflow-y-auto">
-              <Suspense
-                fallback={
-                  <div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-sage" />
-                  </div>
-                }
-              >
-                {activePage === "planner" && (
-                  <DailyPlannerPage
-                    newTaskTrigger={newTaskTrigger}
-                    searchTrigger={searchTrigger}
-                    reminderTrigger={reminderTrigger}
-                  />
-                )}
-                {activePage === "tasks" && (
-                  <TasksPage
-                    newTaskTrigger={newTaskTrigger}
-                    searchTrigger={searchTrigger}
-                    reminderTrigger={reminderTrigger}
-                  />
-                )}
-                {activePage === "canvas" && <CanvasPage />}
-                {activePage === "timer" && <TimerPage />}
-                {activePage === "matrix" && <MatrixPage />}
-                {activePage === "stats" && <StatsPage />}
-                {activePage === "reading" && <ReadLaterPage />}
-                {activePage === "reminders" && (
-                  <RemindersPage reminderTrigger={reminderTrigger} />
-                )}
-                {activePage === "templates" && <TemplatesPage />}
-                {activePage === "review" && <WeeklyReviewPage />}
-                {activePage === "settings" && (
-                  <SettingsPage onNavigate={p => setActivePage(p as Page)} />
-                )}
-                {activePage === "help" && <HelpPage />}
-              </Suspense>
+              <div aria-live="polite" className="sr-only">
+                {PAGE_TITLES[activePage] || "Focus Assistant"} page
+              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activePage}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                >
+                  <Suspense
+                    fallback={
+                      <div className="flex items-center justify-center h-64">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-sage" />
+                      </div>
+                    }
+                  >
+                    {activePage === "planner" && (
+                      <DailyPlannerPage
+                        newTaskTrigger={newTaskTrigger}
+                        searchTrigger={searchTrigger}
+                        reminderTrigger={reminderTrigger}
+                      />
+                    )}
+                    {activePage === "tasks" && (
+                      <TasksPage
+                        newTaskTrigger={newTaskTrigger}
+                        searchTrigger={searchTrigger}
+                        reminderTrigger={reminderTrigger}
+                      />
+                    )}
+                    {activePage === "canvas" && <CanvasPage />}
+                    {activePage === "timer" && <TimerPage />}
+                    {activePage === "matrix" && <MatrixPage />}
+                    {activePage === "stats" && <StatsPage />}
+                    {activePage === "reading" && <ReadLaterPage />}
+                    {activePage === "reminders" && (
+                      <RemindersPage reminderTrigger={reminderTrigger} />
+                    )}
+                    {activePage === "templates" && <TemplatesPage />}
+                    {activePage === "review" && <WeeklyReviewPage />}
+                    {activePage === "settings" && (
+                      <SettingsPage
+                        onNavigate={p => setActivePage(p as Page)}
+                      />
+                    )}
+                    {activePage === "help" && <HelpPage />}
+                  </Suspense>
+                </motion.div>
+              </AnimatePresence>
             </main>
           </div>
         </div>
