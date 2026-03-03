@@ -427,7 +427,7 @@ function TodayTaskCard({
         {/* Status checkbox */}
         <button
           onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
-          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
+          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all motion-safe:active:scale-[0.97]
             ${task.status === "done" ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
         >
           {task.status === "done" && <Check className="w-3 h-3 text-white" />}
@@ -486,7 +486,7 @@ function TodayTaskCard({
                 dispatch({ type: "TOGGLE_FOCUS_GOAL", payload: task.id })
               }
               className={cn(
-                "p-1.5 rounded-md transition-colors",
+                "p-1.5 rounded-md transition-colors motion-safe:active:scale-[0.97]",
                 task.isFocusGoal
                   ? "text-amber-500"
                   : "text-muted-foreground hover:text-amber-500 hover:bg-amber-50"
@@ -511,7 +511,7 @@ function TodayTaskCard({
               onClick={() =>
                 dispatch({ type: "TOGGLE_MONITOR", payload: task.id })
               }
-              className="p-1.5 rounded-md text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light transition-colors"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light transition-colors motion-safe:active:scale-[0.97]"
               title="Monitor task (waiting)"
             >
               <Eye className="w-3.5 h-3.5" />
@@ -520,7 +520,7 @@ function TodayTaskCard({
           {/* Complete/reopen */}
           <button
             onClick={() => dispatch({ type: "TOGGLE_TASK", payload: task.id })}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors motion-safe:active:scale-[0.97]"
             title={task.status === "done" ? "Reopen task" : "Mark as done"}
           >
             <Check className="w-3.5 h-3.5" />
@@ -533,7 +533,7 @@ function TodayTaskCard({
               setEditPriority(task.priority);
               setEditing(!editing);
             }}
-            className={`p-1.5 rounded-md transition-colors ${
+            className={`p-1.5 rounded-md transition-colors motion-safe:active:scale-[0.97] ${
               editing
                 ? "text-warm-blue bg-warm-blue-light"
                 : "text-muted-foreground hover:text-warm-blue hover:bg-warm-blue-light"
@@ -549,7 +549,7 @@ function TodayTaskCard({
                 dispatch({ type: "UNPIN_FROM_TODAY", payload: task.id })
               }
               title="Remove from Today"
-              className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta/10 transition-colors"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta/10 transition-colors motion-safe:active:scale-[0.97]"
             >
               <PinOff className="w-3.5 h-3.5" />
             </button>
@@ -557,7 +557,7 @@ function TodayTaskCard({
           {/* Delete */}
           <button
             onClick={() => dispatch({ type: "DELETE_TASK", payload: task.id })}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors motion-safe:active:scale-[0.97]"
             title="Delete task"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -749,7 +749,7 @@ function TodayReminderCard({
                 ? "Acknowledge & advance to next"
                 : "Acknowledge"
             }
-            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors motion-safe:active:scale-[0.97]"
           >
             <Check className="w-3.5 h-3.5" />
           </button>
@@ -759,7 +759,7 @@ function TodayReminderCard({
               dispatch({ type: "UNACK_REMINDER", payload: reminder.id })
             }
             title="Undo acknowledge"
-            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light transition-colors"
+            className="p-1.5 rounded-md text-muted-foreground hover:text-warm-amber hover:bg-warm-amber-light transition-colors motion-safe:active:scale-[0.97]"
           >
             <Undo2 className="w-3.5 h-3.5" />
           </button>
@@ -768,7 +768,7 @@ function TodayReminderCard({
           onClick={() =>
             dispatch({ type: "DELETE_REMINDER", payload: reminder.id })
           }
-          className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 transition-colors"
+          className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 transition-colors motion-safe:active:scale-[0.97]"
           title="Delete reminder"
         >
           <Trash2 className="w-3.5 h-3.5" />
@@ -1358,7 +1358,7 @@ export default function DailyPlannerPage({
                     dispatch({ type: "TOGGLE_TASK", payload: t.id })
                   }
                   className={cn(
-                    "w-4 h-4 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
+                    "w-4 h-4 rounded-md border-2 flex items-center justify-center shrink-0 transition-all motion-safe:active:scale-[0.97]",
                     t.status === "done"
                       ? "bg-warm-sage border-warm-sage"
                       : "border-border hover:border-warm-sage"
@@ -1485,7 +1485,7 @@ export default function DailyPlannerPage({
                     onClick={() => {
                       dispatch({ type: "PIN_TO_TODAY", payload: t.id });
                     }}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-warm-sage-light/30 hover:border-warm-sage/30 transition-colors text-left group"
+                    className="w-full flex items-center gap-3 p-3 rounded-lg border border-white/15 dark:border-white/10 bg-background/50 hover:bg-warm-sage-light/30 hover:border-warm-sage/30 transition-colors text-left group motion-safe:active:scale-[0.97]"
                   >
                     <Plus className="w-4 h-4 text-muted-foreground group-hover:text-warm-sage transition-colors shrink-0" />
                     <div className="flex-1 min-w-0">
@@ -1720,7 +1720,7 @@ export default function DailyPlannerPage({
         <div className="glass rounded-xl p-5">
           <button
             onClick={() => setActionedExpanded(!actionedExpanded)}
-            className="w-full flex items-center justify-between"
+            className="w-full flex items-center justify-between motion-safe:active:scale-[0.97]"
           >
             <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
               <Activity className="w-5 h-5 text-warm-sage" />
@@ -1840,7 +1840,7 @@ export default function DailyPlannerPage({
                     key={p}
                     type="button"
                     onClick={() => setNewPriority(p)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
                     ${newPriority === p ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                   >
                     {PRIORITY_LABELS[p]}
@@ -1858,7 +1858,7 @@ export default function DailyPlannerPage({
                     key={c}
                     type="button"
                     onClick={() => setNewCategory(newCategory === c ? "" : c)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
                     ${newCategory === c ? "bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                   >
                     <span>{CATEGORY_CONFIG[c].emoji}</span>
@@ -1877,7 +1877,7 @@ export default function DailyPlannerPage({
                     key={e}
                     type="button"
                     onClick={() => setNewEnergy(newEnergy === e ? "" : e)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
                     ${newEnergy === e ? "bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                   >
                     <span>{ENERGY_CONFIG[e].emoji}</span>
@@ -1897,7 +1897,7 @@ export default function DailyPlannerPage({
                       key={r}
                       type="button"
                       onClick={() => setNewRecurrence(r)}
-                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
+                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
                     ${newRecurrence === r ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                     >
                       {RECURRENCE_CONFIG[r].label}
@@ -1983,7 +1983,7 @@ export default function DailyPlannerPage({
                       )
                     }
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-all duration-200",
+                      "px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]",
                       newEstimatedMinutes === opt.value
                         ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]"
                         : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"
@@ -2136,7 +2136,7 @@ export default function DailyPlannerPage({
                       key={c}
                       type="button"
                       onClick={() => setRemCategory(c)}
-                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 flex flex-col items-center gap-1
+                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 flex flex-col items-center gap-1 motion-safe:active:scale-[0.97]
                         ${remCategory === c ? `${cfg.bg} ${cfg.color} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                     >
                       <cfg.icon className="w-4 h-4" />
@@ -2156,7 +2156,7 @@ export default function DailyPlannerPage({
                     key={opt.value}
                     type="button"
                     onClick={() => setRemRecurrence(opt.value)}
-                    className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
+                    className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
                       ${remRecurrence === opt.value ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                   >
                     {opt.label}

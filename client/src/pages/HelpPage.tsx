@@ -57,7 +57,7 @@ function Section({
     <div className="glass rounded-2xl overflow-hidden mb-4">
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-6 py-4 text-left hover:bg-white/20 dark:hover:bg-[oklch(0.20_0.015_155)] transition-colors active:scale-[0.97] transform-gpu"
+        className="w-full flex items-center gap-3 px-6 py-4 text-left hover:bg-white/20 dark:hover:bg-[oklch(0.20_0.015_155)] transition-colors motion-safe:active:scale-[0.97]"
       >
         <div
           className={`w-8 h-8 rounded-xl flex items-center justify-center ${iconColor}`}

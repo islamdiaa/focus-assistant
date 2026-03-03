@@ -23,6 +23,8 @@ import {
   Globe,
   PenLine,
   HelpCircle,
+  FileText,
+  CalendarCheck,
 } from "lucide-react";
 import { DAILY_TIPS } from "@/lib/types";
 import type { ContextFilter } from "@/lib/types";
@@ -66,9 +68,16 @@ const NAV_ITEMS: {
   // Tools
   { id: "timer", label: "Focus Timer", icon: Timer, section: "Tools" },
   { id: "canvas", label: "Canvas", icon: PenLine, section: "Tools" },
+  { id: "templates", label: "Templates", icon: FileText, section: "Tools" },
   // Knowledge
   { id: "reading", label: "Read Later", icon: BookOpen, section: "Knowledge" },
   { id: "reminders", label: "Reminders", icon: Bell, section: "Knowledge" },
+  {
+    id: "review",
+    label: "Weekly Review",
+    icon: CalendarCheck,
+    section: "Knowledge",
+  },
   // Meta
   { id: "stats", label: "Stats", icon: BarChart3, section: "Meta" },
   { id: "settings", label: "Settings", icon: Settings, section: "Meta" },
@@ -104,9 +113,6 @@ export default function Sidebar({
     onNavigate(page);
     onClose();
   }
-
-  // Group items by section
-  let lastSection: string | undefined;
 
   return (
     <>
@@ -144,6 +150,7 @@ export default function Sidebar({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close sidebar"
             className="lg:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-[oklch(0.20_0.015_155)] transition-colors"
           >
             <X className="w-5 h-5" />
@@ -176,22 +183,26 @@ export default function Sidebar({
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map(item => {
+        <nav
+          aria-label="Main navigation"
+          className="flex-1 px-3 py-4 space-y-1 overflow-y-auto"
+        >
+          {NAV_ITEMS.map((item, i) => {
             const Icon = item.icon;
             const isActive = activePage === item.id;
-            const showSection = item.section && item.section !== lastSection;
-            if (item.section) lastSection = item.section;
+            const showSection =
+              i === 0 || NAV_ITEMS[i - 1].section !== item.section;
 
             return (
               <div key={item.id}>
                 {showSection && (
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 px-3 pt-4 pb-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 px-3 pt-4 pb-1">
                     {item.section}
                   </p>
                 )}
                 <button
                   onClick={() => handleNav(item.id)}
+                  aria-current={isActive ? "page" : undefined}
                   className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                     ${
                       isActive
@@ -214,7 +225,7 @@ export default function Sidebar({
           {/* Focus Mode button */}
           {onFocusMode && (
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-3 pt-4 pb-1">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 px-3 pt-4 pb-1">
                 Quick Actions
               </p>
               <button

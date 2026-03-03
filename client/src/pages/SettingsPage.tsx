@@ -331,7 +331,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
             <button
               key={sound.id}
               onClick={() => handleSoundChange(sound.id)}
-              className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all duration-200 active:scale-[0.97] transform-gpu
+              className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
                 ${
                   currentSound === sound.id
                     ? "bg-warm-amber-light border-warm-amber/40 shadow-sm"
@@ -701,7 +701,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
             <button
               key={preset.name}
               onClick={() => applyPreset(preset)}
-              className="text-left bg-background rounded-xl border border-white/15 dark:border-white/10 p-4 hover:border-warm-sage/40 hover:bg-warm-sage-light/30 transition-all duration-200 active:scale-[0.97] transform-gpu"
+              className="text-left bg-background rounded-xl border border-white/15 dark:border-white/10 p-4 hover:border-warm-sage/40 hover:bg-warm-sage-light/30 transition-all duration-200 motion-safe:active:scale-[0.97]"
             >
               <p className="text-sm font-medium text-foreground">
                 {preset.name}
