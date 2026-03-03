@@ -37,6 +37,7 @@ const TemplatesPage = lazy(() => import("./TemplatesPage"));
 const WeeklyReviewPage = lazy(() => import("./WeeklyReviewPage"));
 const ReadLaterPage = lazy(() => import("./ReadLaterPage"));
 const CanvasPage = lazy(() => import("./CanvasPage"));
+const HelpPage = lazy(() => import("./HelpPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
 import { useApp } from "@/contexts/AppContext";
 import CommandPalette from "@/components/CommandPalette";
@@ -81,6 +82,7 @@ const PAGE_MAP: Record<string, Page> = {
   "7": "templates",
   "8": "review",
   "9": "settings",
+  "0": "help",
 };
 
 export default function Home() {
@@ -215,6 +217,13 @@ export default function Home() {
           e.preventDefault();
           setReminderTrigger(t => t + 1);
         }
+        return;
+      }
+
+      // H: Open Help page
+      if ((e.key === "h" || e.key === "H") && !isMod) {
+        e.preventDefault();
+        setActivePage("help");
         return;
       }
 
@@ -376,7 +385,10 @@ export default function Home() {
               )}
               {activePage === "templates" && <TemplatesPage />}
               {activePage === "review" && <WeeklyReviewPage />}
-              {activePage === "settings" && <SettingsPage />}
+              {activePage === "settings" && (
+                <SettingsPage onNavigate={p => setActivePage(p as Page)} />
+              )}
+              {activePage === "help" && <HelpPage />}
             </Suspense>
           </main>
         </div>

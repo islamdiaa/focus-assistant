@@ -24,6 +24,7 @@ import {
   User,
   Globe,
   PenLine,
+  HelpCircle,
 } from "lucide-react";
 import { DAILY_TIPS } from "@/lib/types";
 import type { ContextFilter } from "@/lib/types";
@@ -40,7 +41,8 @@ export type Page =
   | "reminders"
   | "templates"
   | "review"
-  | "settings";
+  | "settings"
+  | "help";
 
 interface SidebarProps {
   activePage: Page;
@@ -70,6 +72,7 @@ const NAV_ITEMS: {
   { id: "templates", label: "Templates", icon: FileText, section: "Tools" },
   { id: "review", label: "Weekly Review", icon: CalendarCheck },
   { id: "settings", label: "Settings", icon: Settings, section: "System" },
+  { id: "help", label: "Help", icon: HelpCircle },
 ];
 
 const CONTEXT_OPTIONS: {

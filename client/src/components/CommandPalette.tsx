@@ -30,6 +30,7 @@ import {
   Settings,
   Search,
   PenLine,
+  HelpCircle,
 } from "lucide-react";
 
 interface CommandPaletteProps {
@@ -50,6 +51,7 @@ const PAGES: { id: Page; label: string; icon: typeof Sun }[] = [
   { id: "templates", label: "Templates", icon: FileText },
   { id: "review", label: "Weekly Review", icon: CalendarCheck },
   { id: "settings", label: "Settings", icon: Settings },
+  { id: "help", label: "Help", icon: HelpCircle },
 ];
 
 const PRIORITY_COLORS: Record<string, string> = {

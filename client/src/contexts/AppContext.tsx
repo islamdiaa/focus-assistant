@@ -393,7 +393,7 @@ function appReducer(state: AppState, action: Action): AppState {
     case "TOGGLE_TASK": {
       const task = state.tasks.find(t => t.id === action.payload);
       if (!task) return state;
-      const newStatus = task.status === "active" ? "done" : "active";
+      const newStatus = task.status === "done" ? "active" : "done";
       const todayStats = getTodayStats(state.dailyStats);
       const delta = newStatus === "done" ? 1 : -1;
 
