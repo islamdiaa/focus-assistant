@@ -1286,7 +1286,7 @@ export default function DailyPlannerPage({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mb-8 glass rounded-xl p-4"
+          className="mb-8 glass-subtle rounded-xl p-4"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1881,7 +1881,7 @@ export default function DailyPlannerPage({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="mb-8 relative overflow-hidden rounded-2xl glass ring-1 ring-warm-lavender/10 p-6"
+        className="mb-8 relative overflow-hidden rounded-2xl glass-subtle ring-1 ring-warm-lavender/10 p-6"
       >
         <Quote className="absolute top-3 right-3 w-10 h-10 text-warm-lavender/10 rotate-180" />
         <div className="relative">
