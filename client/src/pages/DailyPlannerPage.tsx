@@ -1498,7 +1498,10 @@ export default function DailyPlannerPage({
             animate={{ scale: 1, opacity: 1 }}
             className="flex items-center gap-2 p-3 rounded-lg bg-warm-sage-light/50 border border-warm-sage/20"
           >
-            <Sparkles className="w-5 h-5 text-warm-sage animate-pulse" />
+            <Sparkles
+              className="w-5 h-5 text-warm-sage animate-pulse"
+              aria-hidden="true"
+            />
             <p className="text-sm font-medium text-warm-sage">
               All focus goals completed! Great work today!
             </p>
