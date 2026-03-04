@@ -136,7 +136,7 @@ export default function ThoughtsDrawer({
                   Add
                 </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground/60 mt-1 keyboard-hint">
+              <p className="text-[10px] text-muted-foreground/70 mt-1 keyboard-hint">
                 Press{" "}
                 <kbd className="px-1 py-0.5 bg-warm-sand/50 rounded text-[9px] font-mono">
                   I
@@ -153,7 +153,7 @@ export default function ThoughtsDrawer({
                   <p className="text-sm font-medium text-muted-foreground">
                     Your ideas land here
                   </p>
-                  <p className="text-xs text-muted-foreground/60 mt-1">
+                  <p className="text-xs text-muted-foreground/70 mt-1">
                     Type a thought and hit Enter
                   </p>
                 </div>
@@ -174,27 +174,27 @@ export default function ThoughtsDrawer({
                           {note.text}
                         </p>
                         <div className="flex items-center justify-between mt-2">
-                          <span className="text-[10px] text-muted-foreground/60">
+                          <span className="text-[10px] text-muted-foreground/70">
                             {formatTime(note.createdAt)}
                           </span>
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleMakeTask(note.id)}
-                              className="p-1.5 rounded text-muted-foreground/60 hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
+                              className="p-1.5 rounded text-muted-foreground/70 hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
                               title="Make task"
                             >
                               <CheckSquare className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleMakeReminder(note.id)}
-                              className="p-1.5 rounded text-muted-foreground/60 hover:text-warm-blue hover:bg-warm-blue-light transition-colors"
+                              className="p-1.5 rounded text-muted-foreground/70 hover:text-warm-blue hover:bg-warm-blue-light transition-colors"
                               title="Make reminder"
                             >
                               <Bell className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDelete(note.id)}
-                              className="p-1.5 rounded text-muted-foreground/60 hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
+                              className="p-1.5 rounded text-muted-foreground/70 hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
                               title="Delete"
                             >
                               <Trash2 className="w-3.5 h-3.5" />

@@ -350,7 +350,7 @@ export default function MatrixPage() {
         onDragStart={() => handleDragStart(task.id)}
         className="bg-card/80 rounded-lg px-3 py-2 text-xs font-medium text-foreground flex items-center gap-2 cursor-grab active:cursor-grabbing hover:bg-card shadow-sm group"
       >
-        <GripVertical className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+        <GripVertical className="w-3 h-3 text-muted-foreground/70 shrink-0" />
         <div className="flex-1 min-w-0 flex items-center gap-1.5">
           <span className="truncate">{task.title}</span>
           {getPriorityBadge(task.priority)}
@@ -361,7 +361,7 @@ export default function MatrixPage() {
             setEditingTaskId(task.id);
           }}
           title="Edit task"
-          className="p-2 rounded text-muted-foreground/40 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors motion-safe:active:scale-[0.97] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover-action"
+          className="p-2 rounded text-muted-foreground/70 hover:text-warm-blue hover:bg-warm-blue-light/50 transition-colors motion-safe:active:scale-[0.97] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover-action"
         >
           <Pencil className="w-3.5 h-3.5" />
         </button>
@@ -494,7 +494,7 @@ export default function MatrixPage() {
 
                   {quadrantTasks.length === 0 ? (
                     <div className="border-2 border-dashed border-current/10 rounded-lg p-3 lg:p-4 text-center">
-                      <p className="text-xs text-muted-foreground/60">
+                      <p className="text-xs text-muted-foreground/70">
                         {q.description}
                       </p>
                     </div>
@@ -510,7 +510,7 @@ export default function MatrixPage() {
 
           {/* Axis labels bottom - hidden on very small screens */}
           <div className="hidden sm:flex mt-2">
-            <span className="text-xs text-muted-foreground/60 uppercase tracking-wider">
+            <span className="text-xs text-muted-foreground/70 uppercase tracking-wider">
               IMPORTANT ↑ · NOT IMPORTANT ↓
             </span>
           </div>
@@ -545,7 +545,7 @@ export default function MatrixPage() {
               </div>
 
               {unassigned.length === 0 ? (
-                <p className="text-xs text-muted-foreground/60 text-center py-4">
+                <p className="text-xs text-muted-foreground/70 text-center py-4">
                   All tasks have been assigned to quadrants! Add new tasks from
                   the Tasks tab.
                 </p>
@@ -554,10 +554,10 @@ export default function MatrixPage() {
                   {unassigned.map(task => renderTaskCard(task, true))}
                 </div>
               )}
-              <p className="text-xs text-muted-foreground/50 mt-3 text-center hidden lg:block">
+              <p className="text-xs text-muted-foreground/70 mt-3 text-center hidden lg:block">
                 Drag tasks into quadrants above
               </p>
-              <p className="text-xs text-muted-foreground/50 mt-3 text-center lg:hidden">
+              <p className="text-xs text-muted-foreground/70 mt-3 text-center lg:hidden">
                 Use "Move to..." to assign tasks
               </p>
             </div>

@@ -7,7 +7,7 @@
  * V1.2: Subtasks with progress bars, inline add/toggle/delete
  * Keyboard shortcuts: N=new task, /=focus search
  */
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useApp } from "@/contexts/AppContext";
 import {
   Plus,
@@ -32,6 +32,7 @@ import {
   EyeOff,
   Clock,
   Pin,
+  Sparkles,
 } from "lucide-react";
 import type { Reminder } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ import { DragDropProvider } from "@dnd-kit/react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { fireConfetti, getMilestoneMessage } from "@/components/Confetti";
 
 interface TasksPageProps {
   newTaskTrigger?: number;
@@ -502,6 +504,7 @@ function SortableTaskCard({
   selectionMode,
   selected,
   onToggleSelect,
+  onTaskComplete,
 }: {
   task: Task;
   index: number;
@@ -513,6 +516,7 @@ function SortableTaskCard({
   selectionMode: boolean;
   selected: boolean;
   onToggleSelect: (id: string) => void;
+  onTaskComplete: (taskId: string) => void;
 }) {
   const { ref, isDragSource } = useSortable({
     id: task.id,
@@ -583,7 +587,10 @@ function SortableTaskCard({
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
           onClick={() => {
             dispatch({ type: "TOGGLE_TASK", payload: task.id });
-            if (task.status !== "done") toast.success("Task completed");
+            if (task.status !== "done") {
+              toast.success("Task completed");
+              onTaskComplete(task.id);
+            }
           }}
           className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
             ${task.status === "done" ? "bg-warm-sage border-warm-sage" : ""}
@@ -678,7 +685,10 @@ function SortableTaskCard({
           <button
             onClick={() => {
               dispatch({ type: "TOGGLE_TASK", payload: task.id });
-              if (task.status !== "done") toast.success("Task completed");
+              if (task.status !== "done") {
+                toast.success("Task completed");
+                onTaskComplete(task.id);
+              }
             }}
             className="p-1.5 rounded-md text-muted-foreground/50 hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
             title={task.status === "done" ? "Reopen task" : "Mark as done"}
@@ -937,6 +947,7 @@ export default function TasksPage({
     dispatch({ type, payload: payload ?? Array.from(selectedIds) });
     if (type === "BULK_COMPLETE_TASKS") {
       toast.success(`${count} tasks completed`);
+      fireConfetti();
     } else if (type === "BULK_DELETE_TASKS") {
       toast(`${count} tasks deleted`, {
         action: { label: "Undo", onClick: () => dispatch({ type: "UNDO" }) },
@@ -1029,6 +1040,33 @@ export default function TasksPage({
       t => t.status === "active" && (!t.dueDate || t.dueDate <= today)
     ).length;
   }, [contextTasks]);
+
+  // Milestone celebration state
+  const [milestoneMsg, setMilestoneMsg] = useState<string | null>(null);
+  const milestoneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleTaskComplete = useCallback(() => {
+    fireConfetti();
+    // Count tasks completed today (including the one just toggled)
+    const today = new Date().toISOString().split("T")[0];
+    const completedToday =
+      state.tasks.filter(
+        t => t.status === "done" && t.completedAt?.startsWith(today)
+      ).length + 1; // +1 because state hasn't updated yet
+    const msg = getMilestoneMessage(completedToday);
+    if (msg) {
+      setMilestoneMsg(msg);
+      if (milestoneTimer.current) clearTimeout(milestoneTimer.current);
+      milestoneTimer.current = setTimeout(() => setMilestoneMsg(null), 3000);
+    }
+  }, [state.tasks]);
+
+  // Cleanup milestone timer on unmount
+  useEffect(() => {
+    return () => {
+      if (milestoneTimer.current) clearTimeout(milestoneTimer.current);
+    };
+  }, []);
 
   function handleAddTask() {
     if (!newTitle.trim()) return;
@@ -1680,6 +1718,24 @@ export default function TasksPage({
         </DialogContent>
       </Dialog>
 
+      {/* Milestone celebration banner */}
+      <AnimatePresence>
+        {milestoneMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: -12, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="mb-4 flex items-center gap-2 rounded-xl px-4 py-3 backdrop-blur-sm bg-warm-sage/90 dark:bg-warm-sage/80 text-white shadow-lg border border-warm-sage/30"
+            role="status"
+            aria-live="polite"
+          >
+            <Sparkles className="w-5 h-5 shrink-0" />
+            <span className="text-sm font-medium">{milestoneMsg}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Search Bar */}
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -1801,6 +1857,7 @@ export default function TasksPage({
                   selectionMode={selectionMode}
                   selected={selectedIds.has(task.id)}
                   onToggleSelect={handleToggleSelect}
+                  onTaskComplete={handleTaskComplete}
                 />
               ))}
             </AnimatePresence>

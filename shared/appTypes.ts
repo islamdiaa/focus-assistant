@@ -201,6 +201,14 @@ export const canvasEntrySchema = z.object({
   createdAt: z.string(),
 });
 
+export const dailyRitualSchema = z.object({
+  date: z.string(),
+  morningCompleted: z.boolean().optional(),
+  eveningCompleted: z.boolean().optional(),
+  focusIntention: z.string().nullable().optional(),
+  carryForward: z.array(z.string()).nullable().optional(),
+});
+
 /**
  * The main AppState schema — used for save endpoint validation.
  * .strict() ensures unknown fields cause errors instead of being silently stripped.
@@ -218,6 +226,7 @@ export const appStateSchema = z
     reminders: z.array(reminderSchema).nullable().optional(),
     scratchPad: z.array(scratchNoteSchema).nullable().optional(),
     canvas: z.array(canvasEntrySchema).nullable().optional(),
+    dailyRituals: z.array(dailyRitualSchema).nullable().optional(),
   })
   .strict();
 
@@ -252,6 +261,7 @@ export type ReadingItem = z.infer<typeof readingItemSchema>;
 export type AppPreferences = z.infer<typeof appPreferencesSchema>;
 export type ScratchNote = z.infer<typeof scratchNoteSchema>;
 export type CanvasEntry = z.infer<typeof canvasEntrySchema>;
+export type DailyRitual = z.infer<typeof dailyRitualSchema>;
 export type ContextFilter = z.infer<typeof contextFilterSchema>;
 export type AppState = z.infer<typeof appStateSchema>;
 export type StorageMode = z.infer<typeof storageConfigSchema>["mode"];

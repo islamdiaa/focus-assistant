@@ -28,6 +28,7 @@ export {
   type AppPreferences,
   type ScratchNote,
   type CanvasEntry,
+  type DailyRitual,
   type ContextFilter,
   type AppState,
   type StorageMode,

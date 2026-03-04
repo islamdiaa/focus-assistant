@@ -30,6 +30,7 @@ import type {
   ContextFilter,
   ScratchNote,
   CanvasEntry,
+  DailyRitual,
 } from "@/lib/types";
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from "@/lib/types";
 import {
@@ -163,6 +164,7 @@ type Action =
       type: "BULK_SET_QUADRANT";
       payload: { taskIds: string[]; quadrant: QuadrantType };
     }
+  | { type: "SET_DAILY_RITUAL"; payload: DailyRitual }
   | { type: "UNDO" }
   | { type: "REDO" };
 
@@ -178,6 +180,7 @@ const initialState: AppState = {
   reminders: [],
   scratchPad: [],
   canvas: [],
+  dailyRituals: [],
 };
 
 function getToday(): string {
@@ -285,6 +288,7 @@ const NON_UNDOABLE_ACTIONS = new Set([
   "UPDATE_DAILY_STATS",
   "SET_STREAK",
   "SET_CANVAS_ENTRY",
+  "SET_DAILY_RITUAL",
 ]);
 
 function appReducer(state: AppState, action: Action): AppState {
@@ -298,6 +302,7 @@ function appReducer(state: AppState, action: Action): AppState {
         reminders: action.payload.reminders || [],
         scratchPad: action.payload.scratchPad || [],
         canvas: action.payload.canvas || [],
+        dailyRituals: action.payload.dailyRituals ?? [],
       };
 
     case "ADD_TASK": {
@@ -1151,6 +1156,17 @@ function appReducer(state: AppState, action: Action): AppState {
           ids.has(t.id) ? { ...t, quadrant: action.payload.quadrant } : t
         ),
       };
+    }
+
+    case "SET_DAILY_RITUAL": {
+      const existing = state.dailyRituals ?? [];
+      const idx = existing.findIndex(r => r.date === action.payload.date);
+      if (idx >= 0) {
+        const updated = [...existing];
+        updated[idx] = { ...existing[idx], ...action.payload };
+        return { ...state, dailyRituals: updated };
+      }
+      return { ...state, dailyRituals: [...existing, action.payload] };
     }
 
     default:

@@ -15,7 +15,14 @@ import {
   ListChecks,
   Maximize2,
   Minimize2,
+  Coffee,
+  AlertTriangle,
 } from "lucide-react";
+import {
+  checkBreakReminder,
+  getBreakSeverityStyles,
+  type BreakReminder,
+} from "@/lib/breakReminder";
 import { Button } from "@/components/ui/button";
 import type { Task } from "@/lib/types";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,6 +44,13 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerPhase, setTimerPhase] = useState<"focus" | "break">("focus");
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
+
+  // Hyperfocus Guard — break reminder state
+  const [dismissedBreaks, setDismissedBreaks] = useState<number[]>([]);
+  const [focusStartTime, setFocusStartTime] = useState<Date | null>(null);
+  const [breakReminder, setBreakReminder] = useState<BreakReminder | null>(
+    null
+  );
 
   const activeTasks = useMemo(
     () => state.tasks.filter(t => t.status === "active"),
@@ -98,6 +112,10 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
     setTimerRunning(false);
     setTimerPhase("focus");
     setTimerSeconds(state.settings.focusDuration * 60);
+    // Reset break reminders
+    setDismissedBreaks([]);
+    setFocusStartTime(null);
+    setBreakReminder(null);
   }
 
   function toggleFullscreen() {
@@ -122,6 +140,50 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
     return () =>
       document.removeEventListener("fullscreenchange", handleFsChange);
   }, []);
+
+  // Track focus start time when timer starts
+  useEffect(() => {
+    if (timerRunning && !focusStartTime) {
+      setFocusStartTime(new Date());
+    }
+  }, [timerRunning, focusStartTime]);
+
+  // Hyperfocus Guard — check for break reminders every 30 seconds
+  useEffect(() => {
+    if (!focusStartTime || !timerRunning || timerPhase !== "focus") return;
+
+    function checkReminder() {
+      if (!focusStartTime) return;
+      const elapsedMs = Date.now() - focusStartTime.getTime();
+      const elapsedMinutes = elapsedMs / 60000;
+      const reminder = checkBreakReminder(elapsedMinutes, dismissedBreaks);
+      setBreakReminder(reminder);
+    }
+
+    checkReminder();
+    const interval = setInterval(checkReminder, 30000);
+    return () => clearInterval(interval);
+  }, [focusStartTime, dismissedBreaks, timerRunning, timerPhase]);
+
+  function dismissBreakReminder() {
+    if (breakReminder) {
+      const thresholdMinutes = [25, 50, 90, 120].filter(
+        t => t <= breakReminder.minutesWorked
+      );
+      const currentThreshold = thresholdMinutes[thresholdMinutes.length - 1];
+      if (currentThreshold) {
+        setDismissedBreaks(prev =>
+          prev.includes(currentThreshold) ? prev : [...prev, currentThreshold]
+        );
+      }
+      setBreakReminder(null);
+    }
+  }
+
+  function takeBreakFromFocus() {
+    setTimerRunning(false);
+    dismissBreakReminder();
+  }
 
   function completeTask() {
     if (selectedTaskId) {
@@ -172,6 +234,61 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
           </Button>
         </div>
       </div>
+
+      {/* Hyperfocus Guard — break reminder overlay */}
+      <AnimatePresence>
+        {breakReminder && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-16 left-4 right-4 z-10 max-w-lg mx-auto"
+          >
+            {(() => {
+              const styles = getBreakSeverityStyles(breakReminder.severity);
+              const Icon =
+                breakReminder.severity === "gentle" ? Coffee : AlertTriangle;
+              return (
+                <div
+                  className={`flex items-start gap-3 rounded-xl border p-4 backdrop-blur-md ${styles.bg} ${styles.border}`}
+                  role="alert"
+                >
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${styles.bg}`}
+                  >
+                    <Icon className={`w-4 h-4 ${styles.icon}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${styles.text}`}>
+                      Hyperfocus Guard
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {breakReminder.message}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={takeBreakFromFocus}
+                      className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${styles.text} ${styles.border} hover:${styles.bg}`}
+                    >
+                      <span className="flex items-center gap-1">
+                        <Pause className="w-3 h-3" /> Break
+                      </span>
+                    </button>
+                    <button
+                      onClick={dismissBreakReminder}
+                      className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                      aria-label="Dismiss break reminder"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Phase indicator */}
       <motion.div

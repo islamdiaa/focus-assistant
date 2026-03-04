@@ -339,7 +339,7 @@ export default function RemindersPage({
                   className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
                 >
                   Time{" "}
-                  <span className="text-muted-foreground/60 normal-case font-normal">
+                  <span className="text-muted-foreground/70 normal-case font-normal">
                     (optional)
                   </span>
                 </label>

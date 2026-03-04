@@ -21,7 +21,15 @@ import {
   ChevronRight,
   Check,
   ListChecks,
+  Coffee,
+  AlertTriangle,
+  X,
 } from "lucide-react";
+import {
+  checkBreakReminder,
+  getBreakSeverityStyles,
+  type BreakReminder,
+} from "@/lib/breakReminder";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -273,6 +281,13 @@ export default function TimerPage() {
   const [tick, setTick] = useState(0);
   const completedRef = useRef<Set<string>>(new Set());
 
+  // Hyperfocus Guard — break reminder state
+  const [dismissedBreaks, setDismissedBreaks] = useState<number[]>([]);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [breakReminder, setBreakReminder] = useState<BreakReminder | null>(
+    null
+  );
+
   const activeCount = state.pomodoros.filter(
     p => p.status === "running"
   ).length;
@@ -324,6 +339,36 @@ export default function TimerPage() {
       Notification.requestPermission();
     }
   }, []);
+
+  // Track session start time — set when any timer starts running
+  useEffect(() => {
+    const hasRunning = state.pomodoros.some(p => p.status === "running");
+    if (hasRunning && !sessionStartTime) {
+      setSessionStartTime(new Date());
+    } else if (!hasRunning && sessionStartTime) {
+      // All timers stopped — keep sessionStartTime so cumulative tracking persists
+    }
+  }, [state.pomodoros, sessionStartTime]);
+
+  // Hyperfocus Guard — check for break reminders every 30 seconds
+  useEffect(() => {
+    if (!sessionStartTime) return;
+    const hasRunning = state.pomodoros.some(p => p.status === "running");
+    if (!hasRunning) return;
+
+    function checkReminder() {
+      if (!sessionStartTime) return;
+      const elapsedMs = Date.now() - sessionStartTime.getTime();
+      const elapsedMinutes = elapsedMs / 60000;
+      const reminder = checkBreakReminder(elapsedMinutes, dismissedBreaks);
+      setBreakReminder(reminder);
+    }
+
+    // Check immediately and then every 30 seconds
+    checkReminder();
+    const interval = setInterval(checkReminder, 30000);
+    return () => clearInterval(interval);
+  }, [sessionStartTime, dismissedBreaks, state.pomodoros]);
 
   const handleToggleLink = useCallback((link: PomodoroLink) => {
     setSelectedLinks(prev => {
@@ -412,9 +457,51 @@ export default function TimerPage() {
           accumulatedSeconds: 0,
         },
       });
+      // Reset break reminders when resetting a pomodoro
+      setDismissedBreaks([]);
+      setSessionStartTime(null);
+      setBreakReminder(null);
     },
     [dispatch]
   );
+
+  /** Dismiss current break reminder */
+  const dismissBreakReminder = useCallback(() => {
+    if (breakReminder) {
+      setDismissedBreaks(prev => [...prev, breakReminder.minutesWorked]);
+      // Dismiss at the threshold level, not exact minutes
+      const thresholdMinutes = [25, 50, 90, 120].filter(
+        t => t <= breakReminder.minutesWorked
+      );
+      const currentThreshold = thresholdMinutes[thresholdMinutes.length - 1];
+      if (currentThreshold) {
+        setDismissedBreaks(prev =>
+          prev.includes(currentThreshold) ? prev : [...prev, currentThreshold]
+        );
+      }
+      setBreakReminder(null);
+    }
+  }, [breakReminder]);
+
+  /** Take a break — pause all running timers */
+  const takeBreak = useCallback(() => {
+    state.pomodoros.forEach(pom => {
+      if (pom.status === "running") {
+        const elapsed = getEffectiveElapsed(pom);
+        dispatch({
+          type: "UPDATE_POMODORO",
+          payload: {
+            id: pom.id,
+            status: "paused",
+            elapsed,
+            startedAt: undefined,
+            accumulatedSeconds: elapsed,
+          },
+        });
+      }
+    });
+    dismissBreakReminder();
+  }, [state.pomodoros, dispatch, dismissBreakReminder]);
 
   return (
     <div className="p-4 lg:p-8 max-w-5xl mx-auto">
@@ -533,6 +620,61 @@ export default function TimerPage() {
           <Volume2 className="w-3 h-3" /> Sound on complete
         </span>
       </div>
+
+      {/* Hyperfocus Guard — break reminder banner */}
+      <AnimatePresence>
+        {breakReminder && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            style={{ overflow: "hidden" }}
+          >
+            {(() => {
+              const styles = getBreakSeverityStyles(breakReminder.severity);
+              const Icon =
+                breakReminder.severity === "gentle" ? Coffee : AlertTriangle;
+              return (
+                <div
+                  className={`flex items-start gap-3 rounded-xl border p-4 ${styles.bg} ${styles.border}`}
+                  role="alert"
+                >
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${styles.bg}`}
+                  >
+                    <Icon className={`w-4 h-4 ${styles.icon}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${styles.text}`}>
+                      Hyperfocus Guard
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {breakReminder.message}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={takeBreak}
+                      className={`text-xs h-7 gap-1 ${styles.text} border-current/20 hover:${styles.bg}`}
+                    >
+                      <Pause className="w-3 h-3" /> Take a break
+                    </Button>
+                    <button
+                      onClick={dismissBreakReminder}
+                      className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                      aria-label="Dismiss break reminder"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Pomodoro list */}
       {state.pomodoros.length === 0 ? (

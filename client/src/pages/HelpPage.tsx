@@ -134,7 +134,7 @@ function KbdRow({ keys, action }: { keys: string; action: string }) {
           {keys.split(" / ").map((k, i) => (
             <span key={i} className="flex items-center gap-1">
               {i > 0 && (
-                <span className="text-muted-foreground/50 text-[10px]">/</span>
+                <span className="text-muted-foreground/70 text-[10px]">/</span>
               )}
               <kbd className="inline-flex items-center rounded-md border border-border bg-muted px-2 py-1 text-[11px] font-mono font-medium text-foreground shadow-sm">
                 {k}
@@ -632,10 +632,10 @@ export default function HelpPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/15 dark:border-white/10">
-                <th className="text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-4 py-2.5">
+                <th className="text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 px-4 py-2.5">
                   Shortcut
                 </th>
-                <th className="text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-4 py-2.5">
+                <th className="text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 px-4 py-2.5">
                   Action
                 </th>
               </tr>
@@ -691,7 +691,7 @@ export default function HelpPage() {
             </tbody>
           </table>
         </div>
-        <p className="text-[10px] text-muted-foreground/60 mt-3 px-1">
+        <p className="text-[10px] text-muted-foreground/70 mt-3 px-1">
           Keyboard shortcuts are disabled when you're typing in an input field
           or text editor (except Ctrl+K, Ctrl+Z, and Ctrl+Shift+Z which always
           work).
