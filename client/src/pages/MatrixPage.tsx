@@ -7,6 +7,7 @@
  * Desktop: side-by-side layout
  */
 import { useState, useMemo, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
 import {
   Info,
@@ -225,6 +226,9 @@ function InlineEditForm({
 
 export default function MatrixPage() {
   const { state, dispatch } = useApp();
+  const [bannerDismissed, setBannerDismissed] = useState(
+    () => localStorage.getItem("matrix-banner-dismissed") === "true"
+  );
   const [showPanel, setShowPanel] = useState(true);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverQuadrant, setDragOverQuadrant] = useState<QuadrantType | null>(
@@ -279,6 +283,11 @@ export default function MatrixPage() {
     }
     setDraggingId(null);
     setDragOverQuadrant(null);
+  }
+
+  function dismissBanner() {
+    setBannerDismissed(true);
+    localStorage.setItem("matrix-banner-dismissed", "true");
   }
 
   // Mobile: tap to assign via select
@@ -384,15 +393,35 @@ export default function MatrixPage() {
       </div>
 
       {/* Info banner */}
-      <div className="bg-warm-sage-light rounded-xl border border-warm-sage/20 p-4 mb-6 flex gap-3">
-        <Info className="w-4 h-4 text-warm-sage mt-0.5 shrink-0" />
-        <p className="text-xs text-foreground/80 leading-relaxed">
-          <strong>How it works:</strong> Categorize your tasks based on two
-          dimensions — <strong>Urgency</strong> (time-sensitive) and{" "}
-          <strong>Importance</strong> (contributes to long-term goals). Focus on
-          Q1 first, then invest time in Q2 to prevent future crises.
-        </p>
-      </div>
+      <AnimatePresence>
+        {!bannerDismissed && (
+          <motion.div
+            initial={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ overflow: "hidden" }}
+            className="bg-warm-sage-light rounded-xl border border-warm-sage/20 p-4 mb-6"
+          >
+            <div className="flex gap-3">
+              <Info className="w-4 h-4 text-warm-sage mt-0.5 shrink-0" />
+              <p className="text-xs text-foreground/80 leading-relaxed flex-1">
+                <strong>How it works:</strong> Categorize your tasks based on
+                two dimensions — <strong>Urgency</strong> (time-sensitive) and{" "}
+                <strong>Importance</strong> (contributes to long-term goals).
+                Focus on Q1 first, then invest time in Q2 to prevent future
+                crises.
+              </p>
+              <button
+                onClick={dismissBanner}
+                aria-label="Dismiss onboarding tip"
+                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-white/40 dark:hover:bg-white/10 transition-colors shrink-0 -mt-1 -mr-1"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Counts */}
       <div className="flex gap-3 mb-6">
