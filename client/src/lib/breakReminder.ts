@@ -65,11 +65,18 @@ export function checkBreakReminder(
 /**
  * Get severity-based styling classes
  */
-export function getBreakSeverityStyles(severity: BreakSeverity) {
+export function getBreakSeverityStyles(severity: BreakSeverity): {
+  bg: string;
+  hoverBg: string;
+  border: string;
+  text: string;
+  icon: string;
+} {
   switch (severity) {
     case "gentle":
       return {
         bg: "bg-warm-sage/10 dark:bg-warm-sage/15",
+        hoverBg: "hover:bg-warm-sage/20",
         border: "border-warm-sage/30",
         text: "text-warm-sage",
         icon: "text-warm-sage",
@@ -77,6 +84,7 @@ export function getBreakSeverityStyles(severity: BreakSeverity) {
     case "moderate":
       return {
         bg: "bg-warm-amber/10 dark:bg-warm-amber/15",
+        hoverBg: "hover:bg-warm-amber/20",
         border: "border-warm-amber/30",
         text: "text-warm-amber",
         icon: "text-warm-amber",
@@ -84,6 +92,7 @@ export function getBreakSeverityStyles(severity: BreakSeverity) {
     case "urgent":
       return {
         bg: "bg-warm-terracotta/10 dark:bg-warm-terracotta/15",
+        hoverBg: "hover:bg-warm-terracotta/20",
         border: "border-warm-terracotta/30",
         text: "text-warm-terracotta",
         icon: "text-warm-terracotta",
