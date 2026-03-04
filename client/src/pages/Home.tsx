@@ -39,6 +39,7 @@ const ReadLaterPage = lazy(() => import("./ReadLaterPage"));
 const CanvasPage = lazy(() => import("./CanvasPage"));
 const HelpPage = lazy(() => import("./HelpPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
+const DailyRitual = lazy(() => import("@/components/DailyRitual"));
 
 import PageSkeleton from "@/components/PageSkeleton";
 import { useApp } from "@/contexts/AppContext";
@@ -109,6 +110,9 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [scratchPadOpen, setScratchPadOpen] = useState(false);
+  const [showRitual, setShowRitual] = useState<"morning" | "evening" | null>(
+    null
+  );
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [thoughtReminderOpen, setThoughtReminderOpen] = useState(false);
   const [thoughtReminderText, setThoughtReminderText] = useState("");
@@ -265,6 +269,17 @@ export default function Home() {
     document.title = `${PAGE_TITLES[activePage] || "Focus Assistant"} - Focus Assistant`;
   }, [activePage]);
 
+  // Auto-show morning ritual once per day (before noon, if not completed)
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const ritual = state.dailyRituals?.find(
+      (r: { date: string }) => r.date === today
+    );
+    if (!ritual?.morningCompleted && new Date().getHours() < 12) {
+      setShowRitual("morning");
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <MotionConfig reducedMotion="user">
       <>
@@ -274,6 +289,32 @@ export default function Home() {
         >
           Skip to main content
         </a>
+
+        {/* Daily Ritual Overlay */}
+        {showRitual && (
+          <Suspense fallback={null}>
+            <DailyRitual
+              mode={showRitual}
+              tasks={state.tasks}
+              onComplete={data => {
+                const today = new Date().toISOString().split("T")[0];
+                dispatch({
+                  type: "SET_DAILY_RITUAL",
+                  payload: {
+                    date: today,
+                    ...(showRitual === "morning"
+                      ? { morningCompleted: true }
+                      : { eveningCompleted: true }),
+                    focusIntention: data.focusIntention ?? null,
+                    carryForward: data.carryForward,
+                  },
+                });
+                setShowRitual(null);
+              }}
+              onDismiss={() => setShowRitual(null)}
+            />
+          </Suspense>
+        )}
 
         {/* Focus Mode Overlay */}
         {focusMode && (

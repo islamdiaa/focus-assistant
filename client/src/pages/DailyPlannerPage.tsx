@@ -1006,6 +1006,7 @@ export default function DailyPlannerPage({
   // Task paralysis breaker — "What should I do next?" suggestion
   const [suggestion, setSuggestion] =
     useState<ReturnType<typeof suggestNextTask>>(null);
+  const [noSuggestion, setNoSuggestion] = useState(false);
   const [skippedTaskIds, setSkippedTaskIds] = useState<string[]>([]);
 
   // Focus goals: pinned today + isFocusGoal
@@ -1315,10 +1316,12 @@ export default function DailyPlannerPage({
       </div>
 
       {/* Time Budget Bar (component from Agent 4) */}
-      <TimeBudgetBar
-        tasks={todayTasks}
-        availableHours={state.preferences?.availableHoursPerDay ?? 8}
-      />
+      <div className="mb-6">
+        <TimeBudgetBar
+          tasks={todayTasks}
+          availableHours={state.preferences?.availableHoursPerDay ?? 8}
+        />
+      </div>
 
       {/* Task Paralysis Breaker — "What should I do next?" */}
       <motion.div
@@ -1330,13 +1333,19 @@ export default function DailyPlannerPage({
         <Button
           onClick={() => {
             setSkippedTaskIds([]);
-            setSuggestion(suggestNextTask(todayTasks));
+            const result = suggestNextTask(todayTasks);
+            setSuggestion(result);
+            if (result) {
+              setNoSuggestion(false);
+            } else {
+              setNoSuggestion(true);
+            }
           }}
           variant="outline"
           size="sm"
           className="gap-1.5 border-warm-sage/30 text-warm-sage hover:bg-warm-sage-light motion-safe:active:scale-[0.97]"
         >
-          <Sparkles className="w-4 h-4" />
+          <Sparkles className="w-4 h-4" aria-hidden="true" />
           What should I do next?
         </Button>
 
@@ -1349,11 +1358,18 @@ export default function DailyPlannerPage({
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="overflow-hidden"
             >
-              <div className="glass-subtle rounded-xl p-4 mt-3 border border-warm-sage/20">
+              <div
+                className="glass-subtle rounded-xl p-4 mt-3 border border-warm-sage/20"
+                role="status"
+                aria-live="polite"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <Sparkles className="w-4 h-4 text-warm-sage shrink-0" />
+                      <Sparkles
+                        className="w-4 h-4 text-warm-sage shrink-0"
+                        aria-hidden="true"
+                      />
                       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         Suggested Next
                       </span>
@@ -1370,9 +1386,6 @@ export default function DailyPlannerPage({
                           {reason}
                         </span>
                       ))}
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
-                        score: {suggestion.score}
-                      </span>
                     </div>
                   </div>
                   <button
@@ -1397,7 +1410,7 @@ export default function DailyPlannerPage({
                     className="bg-warm-sage hover:bg-warm-sage/90 text-white gap-1.5 motion-safe:active:scale-[0.97]"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    Start
+                    Complete
                   </Button>
                   <Button
                     onClick={() => {
@@ -1409,7 +1422,11 @@ export default function DailyPlannerPage({
                       const remaining = todayTasks.filter(
                         t => !newSkipped.includes(t.id)
                       );
-                      setSuggestion(suggestNextTask(remaining));
+                      const result = suggestNextTask(remaining);
+                      setSuggestion(result);
+                      if (!result) {
+                        setNoSuggestion(true);
+                      }
                     }}
                     variant="outline"
                     size="sm"
@@ -1423,6 +1440,16 @@ export default function DailyPlannerPage({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {noSuggestion && !suggestion && (
+          <motion.p
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-sm text-muted-foreground text-center mt-3"
+          >
+            You're all caught up! No more tasks to suggest.
+          </motion.p>
+        )}
       </motion.div>
 
       {/* Search Bar */}

@@ -203,8 +203,8 @@ export const canvasEntrySchema = z.object({
 
 export const dailyRitualSchema = z.object({
   date: z.string(),
-  morningCompleted: z.boolean().optional(),
-  eveningCompleted: z.boolean().optional(),
+  morningCompleted: z.boolean().nullable().optional(),
+  eveningCompleted: z.boolean().nullable().optional(),
   focusIntention: z.string().nullable().optional(),
   carryForward: z.array(z.string()).nullable().optional(),
 });

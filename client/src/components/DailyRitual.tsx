@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sun, Moon, ChevronRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,12 +7,31 @@ import type { Task } from "@/lib/types";
 interface DailyRitualProps {
   mode: "morning" | "evening";
   tasks: Task[];
-  onComplete: (ritual: {
+  onComplete: (data: {
     focusIntention?: string;
-    carryForward?: string[];
+    carryForward: string[];
   }) => void;
   onDismiss: () => void;
 }
+
+// Animation variants — static, no dependency on props/state
+const overlayVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: 20 },
+  visible: { opacity: 1, scale: 1, y: 0 },
+  exit: { opacity: 0, scale: 0.95, y: 20 },
+};
+
+const stepVariants = {
+  enter: { opacity: 0, x: 40 },
+  center: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -40 },
+};
 
 /**
  * Daily Planning Ritual — guided start/end of day overlay for ADHD users.
@@ -114,24 +133,42 @@ export default function DailyRitual({
     }
   };
 
-  // ---- Animation variants ----
-  const overlayVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 },
-    exit: { opacity: 0 },
-  };
+  // ---- Focus trap ----
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<Element | null>(null);
 
-  const cardVariants = {
-    hidden: { opacity: 0, scale: 0.95, y: 20 },
-    visible: { opacity: 1, scale: 1, y: 0 },
-    exit: { opacity: 0, scale: 0.95, y: 20 },
-  };
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement;
+    dialogRef.current?.focus();
+    return () => {
+      (previousFocusRef.current as HTMLElement)?.focus?.();
+    };
+  }, []);
 
-  const stepVariants = {
-    enter: { opacity: 0, x: 40 },
-    center: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -40 },
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onDismiss();
+        return;
+      }
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [onDismiss]
+  );
 
   // ---- Accent color ----
   const accentClass = isMorning ? "text-warm-sage" : "text-warm-amber";
@@ -150,14 +187,17 @@ export default function DailyRitual({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 glass-heavy bg-black/40 dark:bg-black/60"
+        className="absolute inset-0 backdrop-blur-sm bg-black/40 dark:bg-black/60"
         onClick={onDismiss}
         aria-hidden="true"
       />
 
       {/* Card */}
       <motion.div
-        className="relative z-10 w-full max-w-lg mx-4 rounded-2xl glass-heavy border border-white/20 dark:border-white/10 shadow-2xl p-6 sm:p-8 text-foreground"
+        ref={dialogRef}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="relative z-10 w-full max-w-lg mx-4 rounded-2xl glass-heavy border border-white/20 dark:border-white/10 shadow-2xl p-6 sm:p-8 text-foreground outline-none"
         variants={cardVariants}
         initial="hidden"
         animate="visible"
@@ -358,7 +398,7 @@ function FocusIntentionStep({
         autoFocus
         maxLength={200}
       />
-      <p className="text-xs text-muted-foreground/60 mt-2 text-right">
+      <p className="text-xs text-muted-foreground/70 mt-2 text-right">
         {value.length}/200
       </p>
     </div>

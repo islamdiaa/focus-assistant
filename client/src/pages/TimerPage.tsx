@@ -28,6 +28,7 @@ import {
 import {
   checkBreakReminder,
   getBreakSeverityStyles,
+  BREAK_THRESHOLDS,
   type BreakReminder,
 } from "@/lib/breakReminder";
 import { Button } from "@/components/ui/button";
@@ -288,6 +289,11 @@ export default function TimerPage() {
     null
   );
 
+  const hasRunningPomodoro = useMemo(
+    () => state.pomodoros.some(p => p.status === "running"),
+    [state.pomodoros]
+  );
+
   const activeCount = state.pomodoros.filter(
     p => p.status === "running"
   ).length;
@@ -353,8 +359,7 @@ export default function TimerPage() {
   // Hyperfocus Guard — check for break reminders every 30 seconds
   useEffect(() => {
     if (!sessionStartTime) return;
-    const hasRunning = state.pomodoros.some(p => p.status === "running");
-    if (!hasRunning) return;
+    if (!hasRunningPomodoro) return;
 
     function checkReminder() {
       if (!sessionStartTime) return;
@@ -368,7 +373,7 @@ export default function TimerPage() {
     checkReminder();
     const interval = setInterval(checkReminder, 30000);
     return () => clearInterval(interval);
-  }, [sessionStartTime, dismissedBreaks, state.pomodoros]);
+  }, [sessionStartTime, dismissedBreaks, hasRunningPomodoro]);
 
   const handleToggleLink = useCallback((link: PomodoroLink) => {
     setSelectedLinks(prev => {
@@ -468,9 +473,8 @@ export default function TimerPage() {
   /** Dismiss current break reminder */
   const dismissBreakReminder = useCallback(() => {
     if (breakReminder) {
-      setDismissedBreaks(prev => [...prev, breakReminder.minutesWorked]);
       // Dismiss at the threshold level, not exact minutes
-      const thresholdMinutes = [25, 50, 90, 120].filter(
+      const thresholdMinutes = BREAK_THRESHOLDS.map(t => t.minutes).filter(
         t => t <= breakReminder.minutesWorked
       );
       const currentThreshold = thresholdMinutes[thresholdMinutes.length - 1];
@@ -642,7 +646,10 @@ export default function TimerPage() {
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${styles.bg}`}
                   >
-                    <Icon className={`w-4 h-4 ${styles.icon}`} />
+                    <Icon
+                      className={`w-4 h-4 ${styles.icon}`}
+                      aria-hidden="true"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium ${styles.text}`}>
@@ -657,9 +664,10 @@ export default function TimerPage() {
                       size="sm"
                       variant="outline"
                       onClick={takeBreak}
-                      className={`text-xs h-7 gap-1 ${styles.text} border-current/20 hover:${styles.bg}`}
+                      className={`text-xs h-7 gap-1 ${styles.text} border-current/20 ${styles.hoverBg}`}
                     >
-                      <Pause className="w-3 h-3" /> Take a break
+                      <Pause className="w-3 h-3" aria-hidden="true" /> Take a
+                      break
                     </Button>
                     <button
                       onClick={dismissBreakReminder}

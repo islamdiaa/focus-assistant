@@ -21,6 +21,7 @@ import {
 import {
   checkBreakReminder,
   getBreakSeverityStyles,
+  BREAK_THRESHOLDS,
   type BreakReminder,
 } from "@/lib/breakReminder";
 import { Button } from "@/components/ui/button";
@@ -167,7 +168,7 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
 
   function dismissBreakReminder() {
     if (breakReminder) {
-      const thresholdMinutes = [25, 50, 90, 120].filter(
+      const thresholdMinutes = BREAK_THRESHOLDS.map(t => t.minutes).filter(
         t => t <= breakReminder.minutesWorked
       );
       const currentThreshold = thresholdMinutes[thresholdMinutes.length - 1];
@@ -256,7 +257,10 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${styles.bg}`}
                   >
-                    <Icon className={`w-4 h-4 ${styles.icon}`} />
+                    <Icon
+                      className={`w-4 h-4 ${styles.icon}`}
+                      aria-hidden="true"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium ${styles.text}`}>
@@ -269,15 +273,17 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={takeBreakFromFocus}
-                      className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${styles.text} ${styles.border} hover:${styles.bg}`}
+                      className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors motion-safe:active:scale-[0.97] ${styles.text} ${styles.border} ${styles.hoverBg}`}
+                      aria-label="Take a break"
                     >
                       <span className="flex items-center gap-1">
-                        <Pause className="w-3 h-3" /> Break
+                        <Pause className="w-3 h-3" aria-hidden="true" /> Take a
+                        break
                       </span>
                     </button>
                     <button
                       onClick={dismissBreakReminder}
-                      className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                      className="text-muted-foreground hover:text-foreground p-1 transition-colors motion-safe:active:scale-[0.97]"
                       aria-label="Dismiss break reminder"
                     >
                       <X className="w-3.5 h-3.5" />
