@@ -228,7 +228,7 @@ export default function WeeklyReviewPage() {
                     </p>
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground/40 mt-1.5">—</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1.5">—</p>
                 )}
               </div>
             );

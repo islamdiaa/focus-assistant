@@ -765,7 +765,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
                     onChange={e => setSheetId(e.target.value)}
                     className="bg-background text-sm"
                   />
-                  <p className="text-xs text-muted-foreground/60 mt-1">
+                  <p className="text-xs text-muted-foreground/70 mt-1">
                     Found in the Sheet URL after /d/
                   </p>
                 </div>

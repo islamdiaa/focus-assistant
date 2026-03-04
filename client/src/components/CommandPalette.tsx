@@ -213,7 +213,7 @@ export default function CommandPalette({
           {/* Pages section */}
           {filteredPages.length > 0 && (
             <div>
-              <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+              <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
                 Pages
               </p>
               {filteredPages.map((page, i) => {
@@ -243,7 +243,7 @@ export default function CommandPalette({
           {/* Tasks section */}
           {filteredTasks.length > 0 && (
             <div>
-              <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mt-1">
+              <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 mt-1">
                 Tasks
               </p>
               {filteredTasks.map((task, i) => {

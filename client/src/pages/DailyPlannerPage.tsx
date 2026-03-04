@@ -70,6 +70,8 @@ import { useSortable } from "@dnd-kit/react/sortable";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { suggestNextTask } from "@/lib/taskSuggestion";
+import TimeBudgetBar from "@/components/TimeBudgetBar";
 
 const ENERGY_EMOJI: Record<EnergyLevel, string> = {
   low: "🔋",
@@ -972,6 +974,19 @@ export default function DailyPlannerPage({
       .slice(0, 5);
   }, [contextTasks, timeOfDay, searchQuery]);
 
+  // Combined today tasks (pinned + due) for suggestion engine and TimeBudgetBar
+  const todayTasks = useMemo(() => {
+    const ids = new Set<string>();
+    const combined: Task[] = [];
+    for (const t of [...pinnedTasks, ...dueTasks, ...highPriorityTasks]) {
+      if (!ids.has(t.id)) {
+        ids.add(t.id);
+        combined.push(t);
+      }
+    }
+    return combined;
+  }, [pinnedTasks, dueTasks, highPriorityTasks]);
+
   // Actioned Today: tasks completed or moved to monitored today (using statusChangedAt)
   const actionedToday = useMemo(() => {
     return contextTasks.filter(
@@ -987,6 +1002,12 @@ export default function DailyPlannerPage({
   // H12: Progressive disclosure — secondary sections collapsed by default
   const [showReminders, setShowReminders] = useState(false);
   const [showReadingQueue, setShowReadingQueue] = useState(false);
+
+  // Task paralysis breaker — "What should I do next?" suggestion
+  const [suggestion, setSuggestion] =
+    useState<ReturnType<typeof suggestNextTask>>(null);
+  const [noSuggestion, setNoSuggestion] = useState(false);
+  const [skippedTaskIds, setSkippedTaskIds] = useState<string[]>([]);
 
   // Focus goals: pinned today + isFocusGoal
   const focusGoals = useMemo(() => {
@@ -1294,42 +1315,142 @@ export default function DailyPlannerPage({
         ))}
       </div>
 
-      {/* Time Budget Bar */}
-      {hasAnyEstimate && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-8 glass-subtle rounded-xl p-4"
+      {/* Time Budget Bar (component from Agent 4) */}
+      <div className="mb-6">
+        <TimeBudgetBar
+          tasks={todayTasks}
+          availableHours={state.preferences?.availableHoursPerDay ?? 8}
+        />
+      </div>
+
+      {/* Task Paralysis Breaker — "What should I do next?" */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="mb-6"
+      >
+        <Button
+          onClick={() => {
+            setSkippedTaskIds([]);
+            const result = suggestNextTask(todayTasks);
+            setSuggestion(result);
+            if (result) {
+              setNoSuggestion(false);
+            } else {
+              setNoSuggestion(true);
+            }
+          }}
+          variant="outline"
+          size="sm"
+          className="gap-1.5 border-warm-sage/30 text-warm-sage hover:bg-warm-sage-light motion-safe:active:scale-[0.97]"
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Time Budget
-            </span>
-            <span className="text-sm font-medium text-foreground">
-              {formatEstimatedTime(totalEstimatedMinutes)} planned /{" "}
-              {availableHours}h available
-            </span>
-          </div>
-          <Progress
-            value={Math.min(timeBudgetPercent, 100)}
-            className={cn(
-              "h-2.5",
-              timeBudgetPercent > 100
-                ? "[&>[data-slot=progress-indicator]]:bg-red-500"
-                : timeBudgetPercent >= 75
-                  ? "[&>[data-slot=progress-indicator]]:bg-amber-500"
-                  : "[&>[data-slot=progress-indicator]]:bg-warm-sage"
-            )}
-          />
-          {timeBudgetPercent > 100 && (
-            <p className="text-[10px] text-red-500 mt-1">
-              Over budget by{" "}
-              {formatEstimatedTime(totalEstimatedMinutes - availableMinutes)}
-            </p>
+          <Sparkles className="w-4 h-4" aria-hidden="true" />
+          What should I do next?
+        </Button>
+
+        <AnimatePresence>
+          {suggestion && (
+            <motion.div
+              initial={{ opacity: 0, y: -8, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -8, height: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="overflow-hidden"
+            >
+              <div
+                className="glass-subtle rounded-xl p-4 mt-3 border border-warm-sage/20"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles
+                        className="w-4 h-4 text-warm-sage shrink-0"
+                        aria-hidden="true"
+                      />
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Suggested Next
+                      </span>
+                    </div>
+                    <p className="font-semibold text-foreground text-sm mb-2">
+                      {suggestion.task.title}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {suggestion.reasons.map((reason, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-warm-sage-light text-warm-sage border border-warm-sage/20"
+                        >
+                          {reason}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSuggestion(null)}
+                    className="p-1 rounded text-muted-foreground hover:text-foreground shrink-0"
+                    aria-label="Dismiss suggestion"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
+                  <Button
+                    onClick={() => {
+                      dispatch({
+                        type: "TOGGLE_TASK",
+                        payload: suggestion.task.id,
+                      });
+                      toast.success("Task completed!");
+                      setSuggestion(null);
+                    }}
+                    size="sm"
+                    className="bg-warm-sage hover:bg-warm-sage/90 text-white gap-1.5 motion-safe:active:scale-[0.97]"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    Complete
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const newSkipped = [
+                        ...skippedTaskIds,
+                        suggestion.task.id,
+                      ];
+                      setSkippedTaskIds(newSkipped);
+                      const remaining = todayTasks.filter(
+                        t => !newSkipped.includes(t.id)
+                      );
+                      const result = suggestNextTask(remaining);
+                      setSuggestion(result);
+                      if (!result) {
+                        setNoSuggestion(true);
+                      }
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-muted-foreground hover:text-foreground motion-safe:active:scale-[0.97]"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                    Skip
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
           )}
-        </motion.div>
-      )}
+        </AnimatePresence>
+
+        {noSuggestion && !suggestion && (
+          <motion.p
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-sm text-muted-foreground text-center mt-3"
+          >
+            You're all caught up! No more tasks to suggest.
+          </motion.p>
+        )}
+      </motion.div>
 
       {/* Search Bar */}
       <div className="relative mb-6">
@@ -1377,7 +1498,10 @@ export default function DailyPlannerPage({
             animate={{ scale: 1, opacity: 1 }}
             className="flex items-center gap-2 p-3 rounded-lg bg-warm-sage-light/50 border border-warm-sage/20"
           >
-            <Sparkles className="w-5 h-5 text-warm-sage animate-pulse" />
+            <Sparkles
+              className="w-5 h-5 text-warm-sage animate-pulse"
+              aria-hidden="true"
+            />
             <p className="text-sm font-medium text-warm-sage">
               All focus goals completed! Great work today!
             </p>

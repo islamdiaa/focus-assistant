@@ -39,6 +39,7 @@ const ReadLaterPage = lazy(() => import("./ReadLaterPage"));
 const CanvasPage = lazy(() => import("./CanvasPage"));
 const HelpPage = lazy(() => import("./HelpPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
+const DailyRitual = lazy(() => import("@/components/DailyRitual"));
 
 import PageSkeleton from "@/components/PageSkeleton";
 import { useApp } from "@/contexts/AppContext";
@@ -109,6 +110,9 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [scratchPadOpen, setScratchPadOpen] = useState(false);
+  const [showRitual, setShowRitual] = useState<"morning" | "evening" | null>(
+    null
+  );
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [thoughtReminderOpen, setThoughtReminderOpen] = useState(false);
   const [thoughtReminderText, setThoughtReminderText] = useState("");
@@ -265,6 +269,17 @@ export default function Home() {
     document.title = `${PAGE_TITLES[activePage] || "Focus Assistant"} - Focus Assistant`;
   }, [activePage]);
 
+  // Auto-show morning ritual once per day (before noon, if not completed)
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const ritual = state.dailyRituals?.find(
+      (r: { date: string }) => r.date === today
+    );
+    if (!ritual?.morningCompleted && new Date().getHours() < 12) {
+      setShowRitual("morning");
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <MotionConfig reducedMotion="user">
       <>
@@ -274,6 +289,32 @@ export default function Home() {
         >
           Skip to main content
         </a>
+
+        {/* Daily Ritual Overlay */}
+        {showRitual && (
+          <Suspense fallback={null}>
+            <DailyRitual
+              mode={showRitual}
+              tasks={state.tasks}
+              onComplete={data => {
+                const today = new Date().toISOString().split("T")[0];
+                dispatch({
+                  type: "SET_DAILY_RITUAL",
+                  payload: {
+                    date: today,
+                    ...(showRitual === "morning"
+                      ? { morningCompleted: true }
+                      : { eveningCompleted: true }),
+                    focusIntention: data.focusIntention ?? null,
+                    carryForward: data.carryForward,
+                  },
+                });
+                setShowRitual(null);
+              }}
+              onDismiss={() => setShowRitual(null)}
+            />
+          </Suspense>
+        )}
 
         {/* Focus Mode Overlay */}
         {focusMode && (
@@ -307,7 +348,7 @@ export default function Home() {
 
           <div className="flex-1 flex flex-col min-w-0">
             {/* Top bar */}
-            <header className="h-11 border-b border-white/15 bg-white/40 dark:bg-[oklch(0.22_0.02_155)] backdrop-blur-xl flex items-center justify-between px-4 md:px-8 sticky top-0 z-10">
+            <header className="h-11 border-b border-white/15 bg-white/40 dark:bg-[oklch(0.22_0.02_155/0.85)] backdrop-blur-xl flex items-center justify-between px-4 md:px-8 sticky top-0 z-10">
               <div className="flex items-center gap-3">
                 {/* Hamburger - mobile only */}
                 <button
@@ -363,7 +404,7 @@ export default function Home() {
 
             {/* Save error banner */}
             {saveStatus === "error" && (
-              <div className="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center gap-2 text-sm text-red-700">
+              <div className="bg-red-50 dark:bg-red-950/50 border-b border-red-200 dark:border-red-800 px-4 py-2 flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
                 <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                 <span className="flex-1">
                   {saveError ||
@@ -375,7 +416,7 @@ export default function Home() {
                       m.saveState(state)
                     );
                   }}
-                  className="text-xs font-medium px-2 py-1 rounded bg-red-100 hover:bg-red-200 transition-colors"
+                  className="text-xs font-medium px-2 py-1 rounded bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 transition-colors motion-safe:active:scale-[0.97]"
                 >
                   Retry
                 </button>
