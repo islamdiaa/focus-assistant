@@ -287,7 +287,10 @@ export default function TemplatesPage() {
 
       {/* Template List */}
       {templates.length === 0 ? (
-        <div className="bg-card rounded-2xl border border-border p-12 text-center">
+        <div
+          className="bg-card rounded-2xl border border-border p-12 text-center"
+          aria-live="polite"
+        >
           <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
           <h3 className="font-semibold text-xl text-foreground mb-2">
             No templates yet

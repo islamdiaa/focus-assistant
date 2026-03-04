@@ -374,6 +374,7 @@ export default function Home() {
                     onClick={undo}
                     disabled={!canUndo}
                     title="Undo (Ctrl+Z)"
+                    aria-label="Undo"
                     className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <Undo2 className="w-4 h-4" />
@@ -382,10 +383,38 @@ export default function Home() {
                     onClick={redo}
                     disabled={!canRedo}
                     title="Redo (Ctrl+Shift+Z)"
+                    aria-label="Redo"
                     className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <Redo2 className="w-4 h-4" />
                   </button>
+                </div>
+                <div
+                  role="status"
+                  aria-live="polite"
+                  aria-label={
+                    saveStatus === "saving"
+                      ? "Saving changes"
+                      : saveStatus === "error"
+                        ? "Save failed"
+                        : "All changes saved"
+                  }
+                  title={
+                    saveStatus === "saving"
+                      ? "Saving..."
+                      : saveStatus === "error"
+                        ? "Save failed"
+                        : "Saved"
+                  }
+                  className="p-1 text-muted-foreground"
+                >
+                  {saveStatus === "error" ? (
+                    <CloudOff className="w-4 h-4 text-destructive" />
+                  ) : (
+                    <Cloud
+                      className={`w-4 h-4 ${saveStatus === "saving" ? "animate-pulse" : "text-warm-sage"}`}
+                    />
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-sage/15 shadow-sm px-2 md:px-2.5 py-1 rounded-full border border-warm-sage/20">
                   <Smile className="w-3.5 h-3.5 text-warm-sage" />
@@ -480,6 +509,7 @@ export default function Home() {
             onClick={() => setScratchPadOpen(o => !o)}
             className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full bg-warm-amber hover:bg-warm-amber/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
             title="Thoughts (I)"
+            aria-label="Open scratch pad"
           >
             <Lightbulb className="w-5 h-5" />
           </button>

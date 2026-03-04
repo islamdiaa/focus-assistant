@@ -135,7 +135,7 @@ export default function CanvasPage() {
       {/* Footer bar */}
       <div className="border-t border-black/5 dark:border-white/5 px-4 py-2 flex items-center justify-between">
         <CanvasSaveIndicator status={saveStatus} />
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-muted-foreground" aria-live="polite">
           {wordCount} {wordCount === 1 ? "word" : "words"}
         </span>
       </div>

@@ -72,6 +72,16 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { suggestNextTask } from "@/lib/taskSuggestion";
 import TimeBudgetBar from "@/components/TimeBudgetBar";
+import {
+  PRIORITY_COLORS,
+  PRIORITY_LABELS,
+  CATEGORY_CONFIG,
+  ENERGY_CONFIG,
+} from "@/lib/constants";
+import {
+  getEnergyMatchLabel,
+  getCurrentEnergyZone,
+} from "@/lib/energyTimeMatch";
 
 const ENERGY_EMOJI: Record<EnergyLevel, string> = {
   low: "🔋",
@@ -79,35 +89,8 @@ const ENERGY_EMOJI: Record<EnergyLevel, string> = {
   high: "🔥",
 };
 
-const PRIORITY_COLORS: Record<Priority, string> = {
-  urgent:
-    "bg-warm-terracotta/15 text-warm-terracotta border-warm-terracotta/30",
-  high: "bg-warm-terracotta-light text-warm-terracotta border-warm-terracotta/20",
-  medium: "bg-warm-amber-light text-warm-amber border-warm-amber/20",
-  low: "bg-warm-sage-light text-warm-sage border-warm-sage/20",
-};
-
-const PRIORITY_LABELS: Record<Priority, string> = {
-  urgent: "Urgent",
-  high: "High",
-  medium: "Medium",
-  low: "Low",
-};
-
-const CATEGORY_CONFIG: Record<Category, { emoji: string; label: string }> = {
-  work: { emoji: "💼", label: "Work" },
-  personal: { emoji: "🏠", label: "Personal" },
-  health: { emoji: "💪", label: "Health" },
-  learning: { emoji: "📚", label: "Learning" },
-  errands: { emoji: "🛒", label: "Errands" },
-  other: { emoji: "📌", label: "Other" },
-};
-
-const ENERGY_CONFIG: Record<EnergyLevel, { emoji: string; label: string }> = {
-  low: { emoji: "🔋", label: "Low Energy" },
-  medium: { emoji: "⚡", label: "Medium Energy" },
-  high: { emoji: "🔥", label: "High Energy" },
-};
+// PRIORITY_COLORS, PRIORITY_LABELS, CATEGORY_CONFIG, ENERGY_CONFIG
+// are now imported from @/lib/constants
 
 const RECURRENCE_CONFIG: Record<RecurrenceFrequency, { label: string }> = {
   none: { label: "No Repeat" },
@@ -1315,6 +1298,42 @@ export default function DailyPlannerPage({
         ))}
       </div>
 
+      {/* Energy Zone Indicator */}
+      {(() => {
+        const zone = getCurrentEnergyZone();
+        const zoneColor =
+          zone.recommended === "high"
+            ? "text-warm-sage"
+            : zone.recommended === "medium"
+              ? "text-warm-amber"
+              : "text-muted-foreground";
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="glass-subtle rounded-lg px-4 py-2.5 mb-4 flex items-center gap-2 border border-white/15 dark:border-white/10"
+          >
+            <Activity
+              className={`w-4 h-4 ${zoneColor} shrink-0`}
+              aria-hidden="true"
+            />
+            <div className="flex-1 min-w-0">
+              <span className={`text-sm font-medium ${zoneColor}`}>
+                {zone.name}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {" "}
+                &mdash; {zone.description}
+              </span>
+            </div>
+            <span className="text-xs text-muted-foreground/70 shrink-0">
+              Best for {zone.recommended} energy tasks
+            </span>
+          </motion.div>
+        );
+      })()}
+
       {/* Time Budget Bar (component from Agent 4) */}
       <div className="mb-6">
         <TimeBudgetBar
@@ -1386,6 +1405,16 @@ export default function DailyPlannerPage({
                           {reason}
                         </span>
                       ))}
+                      {(() => {
+                        const matchLabel = getEnergyMatchLabel(suggestion.task);
+                        if (!matchLabel) return null;
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-warm-amber-light text-warm-amber border border-warm-amber/20">
+                            <Zap className="w-2.5 h-2.5" aria-hidden="true" />
+                            Matches your energy
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                   <button
@@ -1640,12 +1669,6 @@ export default function DailyPlannerPage({
               </p>
             ) : (
               pickableTasks.map(t => {
-                const PRIORITY_COLORS: Record<string, string> = {
-                  urgent: "bg-warm-terracotta/15 text-warm-terracotta",
-                  high: "bg-warm-terracotta-light text-warm-terracotta",
-                  medium: "bg-warm-amber-light text-warm-amber",
-                  low: "bg-warm-sage-light text-warm-sage",
-                };
                 return (
                   <button
                     key={t.id}

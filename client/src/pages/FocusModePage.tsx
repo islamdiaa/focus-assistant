@@ -304,6 +304,7 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
         className="mb-6"
       >
         <span
+          aria-live="polite"
           className={`text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full ${
             timerPhase === "focus"
               ? "bg-warm-sage-light text-warm-sage"
@@ -346,7 +347,11 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
         </svg>
         {/* Timer text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-5xl lg:text-6xl font-light text-foreground tabular-nums">
+          <span
+            aria-live="off"
+            aria-atomic="true"
+            className="font-mono text-5xl lg:text-6xl font-light text-foreground tabular-nums"
+          >
             {String(minutes).padStart(2, "0")}:
             {String(seconds).padStart(2, "0")}
           </span>

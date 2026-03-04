@@ -72,7 +72,7 @@ function CircularProgress({
         fill="none"
         stroke="currentColor"
         strokeWidth={strokeWidth}
-        className="text-warm-sand"
+        className="text-warm-sand dark:text-[oklch(0.3_0.02_75)]"
       />
       <circle
         cx={size / 2}
@@ -203,7 +203,7 @@ function TaskPicker({
 
         return (
           <div key={task.id}>
-            <div className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-warm-sand/30 transition-colors">
+            <div className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-warm-sand/30 dark:hover:bg-muted/50 transition-colors">
               {hasSubtasks && (
                 <button
                   type="button"
@@ -244,7 +244,7 @@ function TaskPicker({
                     return (
                       <div
                         key={subtask.id}
-                        className="flex items-center gap-2 py-1 px-2 rounded-md hover:bg-warm-sand/20 transition-colors"
+                        className="flex items-center gap-2 py-1 px-2 rounded-md hover:bg-warm-sand/20 dark:hover:bg-muted/40 transition-colors"
                       >
                         <button
                           type="button"
@@ -617,10 +617,10 @@ export default function TimerPage() {
 
       {/* Active count */}
       <div className="flex items-center gap-2 mb-6">
-        <span className="text-xs px-3 py-1 rounded-full bg-warm-sage-light text-warm-sage border border-warm-sage/20 font-medium">
+        <span className="text-xs px-3 py-1 rounded-full bg-warm-sage-light dark:bg-warm-sage/15 text-warm-sage border border-warm-sage/20 font-medium">
           {activeCount} active
         </span>
-        <span className="text-xs px-3 py-1 rounded-full bg-warm-blue-light text-warm-blue border border-warm-blue/20 font-medium flex items-center gap-1">
+        <span className="text-xs px-3 py-1 rounded-full bg-warm-blue-light dark:bg-warm-blue/15 text-warm-blue border border-warm-blue/20 font-medium flex items-center gap-1">
           <Volume2 className="w-3 h-3" /> Sound on complete
         </span>
       </div>
@@ -690,7 +690,7 @@ export default function TimerPage() {
           <img
             src={EMPTY_TIMER_IMG}
             alt="No pomodoros"
-            className="w-48 h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80"
+            className="w-48 h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80 dark:opacity-70 dark:brightness-90"
           />
           <h3 className="font-semibold text-xl text-foreground mb-2">
             No Pomodoros yet
@@ -728,7 +728,7 @@ export default function TimerPage() {
               <div
                 key={pom.id}
                 className={`glass rounded-2xl p-6 transition-all duration-200 hover:shadow-md
-                  ${isCompleted ? "opacity-60" : ""} ${isRunning ? "ring-2 ring-warm-sage/40 bg-warm-sage/5" : ""}`}
+                  ${isCompleted ? "opacity-60" : ""} ${isRunning ? "ring-2 ring-warm-sage/40 bg-warm-sage/5 dark:bg-warm-sage/10" : ""}`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0">
@@ -836,8 +836,8 @@ export default function TimerPage() {
       )}
 
       {/* How it works */}
-      <div className="mt-8 bg-warm-peach-light rounded-2xl border border-warm-peach/30 p-5 flex gap-4">
-        <div className="w-10 h-10 rounded-xl bg-warm-peach/30 flex items-center justify-center shrink-0">
+      <div className="mt-8 bg-warm-peach-light dark:bg-warm-terracotta/10 rounded-2xl border border-warm-peach/30 dark:border-warm-terracotta/20 p-5 flex gap-4">
+        <div className="w-10 h-10 rounded-xl bg-warm-peach/30 dark:bg-warm-terracotta/20 flex items-center justify-center shrink-0">
           <Info className="w-5 h-5 text-warm-terracotta" />
         </div>
         <div>

@@ -435,7 +435,7 @@ export default function MatrixPage() {
       </AnimatePresence>
 
       {/* Counts */}
-      <div className="flex gap-3 mb-6">
+      <div className="flex gap-3 mb-6" aria-live="polite">
         <span className="text-xs px-3 py-1 rounded-full bg-warm-sage-light text-warm-sage border border-warm-sage/20 font-medium">
           {assigned.length} assigned
         </span>
@@ -545,7 +545,10 @@ export default function MatrixPage() {
               </div>
 
               {unassigned.length === 0 ? (
-                <p className="text-xs text-muted-foreground/70 text-center py-4">
+                <p
+                  className="text-xs text-muted-foreground/70 text-center py-4"
+                  aria-live="polite"
+                >
                   All tasks have been assigned to quadrants! Add new tasks from
                   the Tasks tab.
                 </p>
@@ -587,7 +590,10 @@ export default function MatrixPage() {
 
       {/* Empty state when no tasks at all */}
       {activeTasks.length === 0 && (
-        <div className="mt-8 glass rounded-2xl p-8 lg:p-16 text-center">
+        <div
+          className="mt-8 glass rounded-2xl p-8 lg:p-16 text-center"
+          aria-live="polite"
+        >
           <img
             src={EMPTY_MATRIX_IMG}
             alt="No tasks"

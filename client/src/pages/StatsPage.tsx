@@ -131,7 +131,10 @@ export default function StatsPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+        aria-live="polite"
+      >
         {/* Streak */}
         <div className="min-w-0 backdrop-blur-xl bg-warm-peach/30 dark:bg-warm-peach/10 border border-white/30 dark:border-white/10 shadow-card ring-1 ring-warm-peach/20 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
@@ -269,7 +272,10 @@ export default function StatsPage() {
             Task Overview{activeContext !== "all" ? ` (${activeContext})` : ""}
           </h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+          aria-live="polite"
+        >
           <div className="min-w-0 bg-warm-sage-light/50 dark:bg-warm-sage/10 rounded-xl p-3 text-center">
             <p className="font-semibold text-xl text-foreground">
               {taskSummary.open}
