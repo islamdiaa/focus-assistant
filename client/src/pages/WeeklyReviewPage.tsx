@@ -289,7 +289,7 @@ export default function WeeklyReviewPage() {
                   <div className="mt-1.5 space-y-0.5">
                     <p className="text-xs font-medium text-foreground">
                       {dayStat.tasksCompleted}
-                      <Check className="w-3 h-3 inline" />
+                      <Check className="w-3 h-3 inline" aria-hidden="true" />
                     </p>
                     <p className="text-[10px] text-muted-foreground">
                       {dayStat.focusMinutes}m

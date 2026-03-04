@@ -297,6 +297,16 @@ export default function TimerPage() {
     linkedTaskId?: string;
   } | null>(null);
 
+  // Clean up breakCountdown interval on unmount
+  useEffect(() => {
+    return () => {
+      if (breakCountdownRef.current) {
+        clearInterval(breakCountdownRef.current);
+        breakCountdownRef.current = null;
+      }
+    };
+  }, []);
+
   // Hyperfocus Guard — break reminder state
   const [dismissedBreaks, setDismissedBreaks] = useState<number[]>([]);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
@@ -309,9 +319,10 @@ export default function TimerPage() {
     [state.pomodoros]
   );
 
-  const activeCount = state.pomodoros.filter(
-    p => p.status === "running"
-  ).length;
+  const activeCount = useMemo(
+    () => state.pomodoros.filter(p => p.status === "running").length,
+    [state.pomodoros]
+  );
 
   // Auto-generate title from selected tasks
   const autoTitle = useMemo(() => {
@@ -348,18 +359,24 @@ export default function TimerPage() {
     }, 1000);
   }, []);
 
+  // Snapshot sessionQueue when countdown starts so the effect doesn't need it as a dep
+  const sessionQueueSnapshotRef = useRef(0);
+
   // When breakCountdown reaches null (finished) after having been active,
   // auto-create and start the next session from the queue
   const breakCountdownActiveRef = useRef(false);
   useEffect(() => {
     if (breakCountdown !== null) {
       breakCountdownActiveRef.current = true;
+      // Capture queue count at countdown start
+      if (breakCountdown === 5) {
+        sessionQueueSnapshotRef.current = sessionQueue;
+      }
     } else if (breakCountdownActiveRef.current) {
       breakCountdownActiveRef.current = false;
       // Countdown just finished — create and start the next queued session
       const settings = lastCompletedSettingsRef.current;
-      if (!settings || sessionQueue <= 0) return;
-      const id = crypto.randomUUID();
+      if (!settings || sessionQueueSnapshotRef.current <= 0) return;
       dispatch({
         type: "ADD_POMODORO",
         payload: {
@@ -370,17 +387,12 @@ export default function TimerPage() {
         },
       });
       setSessionQueue(q => Math.max(0, q - 1));
-      // We need to start the newly created pomodoro; we do that in a follow-up
-      // effect once it appears in state.pomodoros (keyed by title+duration match).
-      // Instead, dispatch ADD_POMODORO then immediately start via a one-shot ref.
       pendingAutoStartRef.current = {
         title: settings.title,
         duration: settings.duration,
       };
-      void id; // suppress unused warning
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [breakCountdown]);
+  }, [breakCountdown, sessionQueue, dispatch]);
 
   // One-shot ref: if set, we auto-start the first matching idle pomodoro with that title/duration
   const pendingAutoStartRef = useRef<{
@@ -623,9 +635,7 @@ export default function TimerPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="font-serif text-2xl lg:text-3xl text-foreground">
-            Focus Timer
-          </h2>
+          <h2 className="font-serif text-3xl text-foreground">Focus Timer</h2>
           <p className="text-sm text-muted-foreground mt-1">
             Link tasks to pomodoros · Track focus time per task
           </p>
@@ -956,8 +966,7 @@ export default function TimerPage() {
             exit={{ opacity: 0, y: -8 }}
             className="mt-6 glass rounded-2xl p-6 flex flex-col items-center gap-3 border border-warm-sage/30 bg-warm-sage/5 dark:bg-warm-sage/10"
             role="status"
-            aria-live="polite"
-            aria-label={`Break time. Next session starts in ${breakCountdown} seconds`}
+            aria-label="Break time before next session"
           >
             <Coffee className="w-6 h-6 text-warm-sage" aria-hidden="true" />
             <p className="text-sm font-medium text-foreground">
@@ -972,9 +981,10 @@ export default function TimerPage() {
                   clearInterval(breakCountdownRef.current);
                 breakCountdownRef.current = null;
                 breakCountdownActiveRef.current = false;
+                pendingAutoStartRef.current = null;
                 setBreakCountdown(null);
               }}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors mt-1"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors mt-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Cancel auto-start"
             >
               Cancel
@@ -997,6 +1007,7 @@ export default function TimerPage() {
             </span>
           </div>
           <button
+            type="button"
             onClick={() => {
               setAutoChain(v => !v);
               // If turning off, clear any active countdown
@@ -1005,17 +1016,18 @@ export default function TimerPage() {
                   clearInterval(breakCountdownRef.current);
                 breakCountdownRef.current = null;
                 breakCountdownActiveRef.current = false;
+                pendingAutoStartRef.current = null;
                 setBreakCountdown(null);
               }
             }}
             role="switch"
             aria-checked={autoChain}
             aria-label="Toggle auto-chain sessions"
-            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warm-sage/60 motion-safe:active:scale-[0.97]
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-safe:active:scale-[0.97]
               ${autoChain ? "bg-warm-sage" : "bg-muted"}`}
           >
             <span
-              className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform
+              className={`inline-block h-4 w-4 rounded-full bg-background shadow-sm transition-transform
                 ${autoChain ? "translate-x-6" : "translate-x-1"}`}
             />
           </button>

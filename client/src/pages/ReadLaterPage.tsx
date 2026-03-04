@@ -168,9 +168,9 @@ const ReadingCard = memo(function ReadingCard({
           <button
             onClick={() => onStatusCycle(item)}
             className={`shrink-0 mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center transition-opacity motion-safe:active:scale-[0.97] ${cfg.bg} hover:opacity-80`}
-            title={`Status: ${cfg.label} (click to cycle)`}
+            aria-label={`Status: ${cfg.label} (click to cycle)`}
           >
-            <StatusIcon className={`w-4 h-4 ${cfg.color}`} />
+            <StatusIcon className={`w-4 h-4 ${cfg.color}`} aria-hidden="true" />
           </button>
 
           {/* Content */}

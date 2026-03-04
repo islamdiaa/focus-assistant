@@ -74,7 +74,7 @@ export default function DashboardLayout({
               window.location.href = getLoginUrl();
             }}
             size="lg"
-            className="w-full shadow-lg hover:shadow-xl transition-[colors,box-shadow]"
+            className="w-full shadow-lg hover:shadow-xl transition-[color,background-color,border-color,box-shadow]"
           >
             Sign in
           </Button>

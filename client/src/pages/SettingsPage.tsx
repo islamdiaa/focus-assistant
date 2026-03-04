@@ -938,7 +938,8 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
             >
               {integrityResult.ok ? (
                 <span className="flex items-center gap-1.5">
-                  <Check className="w-4 h-4" /> All checks passed
+                  <Check className="w-4 h-4" aria-hidden="true" /> All checks
+                  passed
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5">
@@ -967,7 +968,8 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
                       key={i}
                       className="text-xs text-muted-foreground flex items-center gap-1"
                     >
-                      <Check className="w-4 h-4 shrink-0" /> {fix}
+                      <Check className="w-4 h-4 shrink-0" aria-hidden="true" />{" "}
+                      {fix}
                     </li>
                   ))}
                 </ul>

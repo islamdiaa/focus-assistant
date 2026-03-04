@@ -22,6 +22,7 @@ import {
   Flame,
   CalendarClock,
   Users,
+  Feather,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -489,7 +490,7 @@ export default function MatrixPage() {
                       ) : q.id === "delegate" ? (
                         <Users className="w-3 h-3" />
                       ) : (
-                        <span className="text-xs">🪶</span>
+                        <Feather className="w-3 h-3" />
                       )}
                     </div>
                     <h3 className="text-sm font-semibold text-foreground">

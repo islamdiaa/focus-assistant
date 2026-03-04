@@ -40,9 +40,7 @@ const CanvasPage = lazy(() => import("./CanvasPage"));
 const HelpPage = lazy(() => import("./HelpPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
 const DailyRitual = lazy(() => import("@/components/DailyRitual"));
-const KeyboardShortcutsOverlay = lazy(
-  () => import("@/components/KeyboardShortcutsOverlay")
-);
+import KeyboardShortcutsOverlay from "@/components/KeyboardShortcutsOverlay";
 
 import PageSkeleton from "@/components/PageSkeleton";
 import { useApp } from "@/contexts/AppContext";
@@ -268,7 +266,7 @@ export default function Home() {
         return;
       }
     },
-    [activePage, undo, redo, focusMode, setReminderTrigger]
+    [activePage, undo, redo, focusMode]
   );
 
   useEffect(() => {
@@ -618,12 +616,10 @@ export default function Home() {
         />
 
         {/* Keyboard Shortcuts Overlay (?) */}
-        <Suspense fallback={null}>
-          <KeyboardShortcutsOverlay
-            open={shortcutsOpen}
-            onClose={() => setShortcutsOpen(false)}
-          />
-        </Suspense>
+        <KeyboardShortcutsOverlay
+          open={shortcutsOpen}
+          onClose={() => setShortcutsOpen(false)}
+        />
       </>
     </MotionConfig>
   );
