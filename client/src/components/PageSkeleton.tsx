@@ -2,11 +2,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PageSkeleton() {
   return (
-    <div className="p-4 lg:p-8 max-w-5xl mx-auto">
+    <div
+      className="p-4 lg:p-8 max-w-5xl mx-auto"
+      role="status"
+      aria-label="Loading page content"
+    >
+      <span className="sr-only">Loading page content...</span>
       {/* Page header */}
       <div className="mb-8">
         <Skeleton className="h-8 w-48 rounded-lg mb-2" />
-        <Skeleton className="h-4 w-72 rounded-md" />
+        <Skeleton className="h-4 max-w-72 w-full rounded-md" />
       </div>
 
       {/* Content cards */}

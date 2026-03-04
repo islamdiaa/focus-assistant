@@ -39,6 +39,7 @@ const ReadLaterPage = lazy(() => import("./ReadLaterPage"));
 const CanvasPage = lazy(() => import("./CanvasPage"));
 const HelpPage = lazy(() => import("./HelpPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
+
 import PageSkeleton from "@/components/PageSkeleton";
 import { useApp } from "@/contexts/AppContext";
 import CommandPalette from "@/components/CommandPalette";
@@ -271,8 +272,8 @@ export default function Home() {
         {focusMode && (
           <Suspense
             fallback={
-              <div className="fixed inset-0 bg-background flex items-center justify-center z-50">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-sage" />
+              <div className="fixed inset-0 bg-background z-50">
+                <PageSkeleton />
               </div>
             }
           >
