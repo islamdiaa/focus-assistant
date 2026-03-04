@@ -534,6 +534,7 @@ export default function MatrixPage() {
                 <button
                   onClick={() => setShowPanel(false)}
                   className="text-muted-foreground hover:text-foreground"
+                  aria-label="Collapse unassigned panel"
                 >
                   <span className="hidden lg:block">
                     <ChevronRight className="w-4 h-4" />
@@ -545,7 +546,10 @@ export default function MatrixPage() {
               </div>
 
               {unassigned.length === 0 ? (
-                <p className="text-xs text-muted-foreground/70 text-center py-4">
+                <p
+                  className="text-xs text-muted-foreground/70 text-center py-4"
+                  aria-live="polite"
+                >
                   All tasks have been assigned to quadrants! Add new tasks from
                   the Tasks tab.
                 </p>
@@ -590,7 +594,8 @@ export default function MatrixPage() {
         <div className="mt-8 glass rounded-2xl p-8 lg:p-16 text-center">
           <img
             src={EMPTY_MATRIX_IMG}
-            alt="No tasks"
+            alt=""
+            role="presentation"
             className="w-40 lg:w-48 h-40 lg:h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80"
           />
           <h3 className="font-semibold text-lg lg:text-xl text-foreground mb-2">

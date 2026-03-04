@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -513,6 +514,10 @@ export default function ReadLaterPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="font-semibold">Save a Link</DialogTitle>
+            <DialogDescription className="sr-only">
+              Save a URL to your reading list with optional title, description,
+              and tags
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
@@ -606,6 +611,9 @@ export default function ReadLaterPage() {
             <DialogTitle className="font-semibold">
               {notesItem?.notes ? "Edit Notes" : "Add Notes"}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Add or edit notes for this reading list article
+            </DialogDescription>
             {notesItem && (
               <p className="text-sm text-muted-foreground line-clamp-1">
                 {notesItem.title}

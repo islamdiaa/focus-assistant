@@ -374,6 +374,7 @@ export default function Home() {
                     onClick={undo}
                     disabled={!canUndo}
                     title="Undo (Ctrl+Z)"
+                    aria-label="Undo"
                     className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <Undo2 className="w-4 h-4" />
@@ -382,20 +383,52 @@ export default function Home() {
                     onClick={redo}
                     disabled={!canRedo}
                     title="Redo (Ctrl+Shift+Z)"
+                    aria-label="Redo"
                     className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <Redo2 className="w-4 h-4" />
                   </button>
                 </div>
+                <div
+                  role="status"
+                  aria-atomic="true"
+                  title={
+                    saveStatus === "saving"
+                      ? "Saving..."
+                      : saveStatus === "error"
+                        ? "Save failed"
+                        : "Saved"
+                  }
+                  className="p-1 text-muted-foreground"
+                >
+                  <span className="sr-only">
+                    {saveStatus === "saving"
+                      ? "Saving changes"
+                      : saveStatus === "error"
+                        ? "Save failed"
+                        : ""}
+                  </span>
+                  {saveStatus === "error" ? (
+                    <CloudOff
+                      className="w-4 h-4 text-destructive"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <Cloud
+                      className={`w-4 h-4 ${saveStatus === "saving" ? "motion-safe:animate-pulse" : "text-warm-sage"}`}
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
                 <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-sage/15 shadow-sm px-2 md:px-2.5 py-1 rounded-full border border-warm-sage/20">
                   <Smile className="w-3.5 h-3.5 text-warm-sage" />
-                  <span className="text-xs font-medium text-warm-charcoal">
+                  <span className="text-xs font-medium text-foreground">
                     {completedToday}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-blue/15 shadow-sm px-2 md:px-2.5 py-1 rounded-full border border-warm-blue/20">
                   <Clock className="w-3.5 h-3.5 text-warm-blue" />
-                  <span className="text-xs font-medium text-warm-charcoal">
+                  <span className="text-xs font-medium text-foreground">
                     {focusToday}m
                   </span>
                 </div>
@@ -480,6 +513,7 @@ export default function Home() {
             onClick={() => setScratchPadOpen(o => !o)}
             className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full bg-warm-amber hover:bg-warm-amber/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
             title="Thoughts (I)"
+            aria-label="Open scratch pad"
           >
             <Lightbulb className="w-5 h-5" />
           </button>

@@ -151,7 +151,7 @@ export default function Sidebar({
           <button
             onClick={onClose}
             aria-label="Close sidebar"
-            className="md:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-[oklch(0.20_0.015_155)] transition-colors"
+            className="md:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-surface-elevated transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -159,7 +159,7 @@ export default function Sidebar({
 
         {/* Context Switcher */}
         <div className="px-3 pt-3 pb-1">
-          <div className="flex backdrop-blur-md bg-white/30 dark:bg-[oklch(0.20_0.015_155)] rounded-xl p-0.5 gap-0.5">
+          <div className="flex backdrop-blur-md bg-white/30 dark:bg-surface-elevated rounded-xl p-0.5 gap-0.5">
             {CONTEXT_OPTIONS.map(opt => {
               const Icon = opt.icon;
               const isActive = activeContext === opt.id;
@@ -170,7 +170,7 @@ export default function Sidebar({
                   className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200
                     ${
                       isActive
-                        ? "bg-white/70 dark:bg-[oklch(0.25_0.025_155)] text-warm-charcoal dark:text-foreground shadow-md backdrop-blur-sm"
+                        ? "bg-white/70 dark:bg-surface-active text-foreground shadow-md backdrop-blur-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                 >
@@ -206,8 +206,8 @@ export default function Sidebar({
                   className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                     ${
                       isActive
-                        ? "bg-warm-sage/15 text-warm-charcoal backdrop-blur-md shadow-sm ring-1 ring-warm-sage/10"
-                        : "text-muted-foreground hover:bg-white/40 dark:hover:bg-[oklch(0.20_0.015_155)] hover:text-foreground"
+                        ? "bg-warm-sage/15 text-foreground backdrop-blur-md shadow-sm ring-1 ring-warm-sage/10"
+                        : "text-muted-foreground hover:bg-white/40 dark:hover:bg-surface-elevated hover:text-foreground"
                     }`}
                 >
                   {isActive && (
@@ -256,13 +256,11 @@ export default function Sidebar({
           <div className="backdrop-blur-md bg-warm-amber/10 shadow-md shadow-warm-amber/5 rounded-xl p-4 border border-warm-amber/20">
             <div className="flex items-center gap-1.5 mb-2">
               <Sparkles className="w-3.5 h-3.5 text-warm-amber" />
-              <span className="text-xs font-semibold text-warm-charcoal uppercase tracking-wide">
+              <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
                 Daily Tip
               </span>
             </div>
-            <p className="text-xs text-warm-charcoal/80 leading-relaxed">
-              {tip}
-            </p>
+            <p className="text-xs text-foreground/80 leading-relaxed">{tip}</p>
           </div>
         </div>
       </aside>

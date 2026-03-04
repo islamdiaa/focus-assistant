@@ -465,7 +465,10 @@ export default function RemindersPage({
       {/* Reminder list */}
       {filteredReminders.length === 0 ? (
         <div className="glass rounded-2xl p-12 text-center">
-          <Bell className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
+          <Bell
+            className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30"
+            aria-hidden="true"
+          />
           <h3 className="font-semibold text-xl text-foreground mb-2">
             {reminders.length === 0
               ? "No reminders yet"

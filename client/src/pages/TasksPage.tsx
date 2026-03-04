@@ -55,6 +55,13 @@ import type {
   Subtask,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import {
+  PRIORITY_COLORS,
+  PRIORITY_LABELS,
+  CATEGORY_CONFIG,
+  ENERGY_CONFIG,
+  RECURRENCE_CONFIG,
+} from "@/lib/constants";
 import { filterTasksByContext } from "@/lib/contextFilter";
 import { DragDropProvider } from "@dnd-kit/react";
 import { useSortable } from "@dnd-kit/react/sortable";
@@ -67,48 +74,6 @@ interface TasksPageProps {
   searchTrigger?: number;
   reminderTrigger?: number;
 }
-
-const PRIORITY_COLORS: Record<Priority, string> = {
-  urgent:
-    "bg-warm-terracotta/15 text-warm-terracotta border-warm-terracotta/30",
-  high: "bg-warm-terracotta-light text-warm-terracotta border-warm-terracotta/20",
-  medium: "bg-warm-amber-light text-warm-amber border-warm-amber/20",
-  low: "bg-warm-sage-light text-warm-sage border-warm-sage/20",
-};
-
-const PRIORITY_LABELS: Record<Priority, string> = {
-  urgent: "Urgent",
-  high: "High",
-  medium: "Medium",
-  low: "Low",
-};
-
-const CATEGORY_CONFIG: Record<Category, { emoji: string; label: string }> = {
-  work: { emoji: "💼", label: "Work" },
-  personal: { emoji: "🏠", label: "Personal" },
-  health: { emoji: "💪", label: "Health" },
-  learning: { emoji: "📚", label: "Learning" },
-  errands: { emoji: "🛒", label: "Errands" },
-  other: { emoji: "📌", label: "Other" },
-};
-
-const ENERGY_CONFIG: Record<EnergyLevel, { emoji: string; label: string }> = {
-  low: { emoji: "🔋", label: "Low Energy" },
-  medium: { emoji: "⚡", label: "Medium Energy" },
-  high: { emoji: "🔥", label: "High Energy" },
-};
-
-const RECURRENCE_CONFIG: Record<
-  RecurrenceFrequency,
-  { label: string; short: string }
-> = {
-  none: { label: "No Repeat", short: "" },
-  daily: { label: "Daily", short: "Daily" },
-  weekly: { label: "Weekly", short: "Weekly" },
-  monthly: { label: "Monthly", short: "Monthly" },
-  quarterly: { label: "Quarterly", short: "Quarterly" },
-  weekdays: { label: "Weekdays", short: "Weekdays" },
-};
 
 type Filter = "all" | "active" | "monitored" | "done";
 type Sort = "newest" | "priority" | "dueDate" | "manual";
@@ -1771,7 +1736,7 @@ export default function TasksPage({
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border
-                  ${filter === f ? "bg-warm-sage/15 text-warm-charcoal border-warm-sage/30 backdrop-blur-md shadow-md" : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/15 dark:hover:border-white/10 hover:bg-warm-sand/30"}`}
+                  ${filter === f ? "bg-warm-sage/15 text-foreground border-warm-sage/30 backdrop-blur-md shadow-md" : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/15 dark:hover:border-white/10 hover:bg-warm-sand/30"}`}
               >
                 {labels[f]} ({counts[f]})
               </button>
@@ -1784,7 +1749,7 @@ export default function TasksPage({
               key={s}
               onClick={() => setSort(s)}
               className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 border
-                ${sort === s ? "bg-warm-blue/10 text-warm-charcoal border-warm-blue/25 shadow-sm" : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/15 dark:hover:border-white/10 hover:bg-warm-sand/30"}`}
+                ${sort === s ? "bg-warm-blue/10 text-foreground border-warm-blue/25 shadow-sm" : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/15 dark:hover:border-white/10 hover:bg-warm-sand/30"}`}
             >
               {s === "manual" && <GripVertical className="w-3.5 h-3.5" />}
               {s === "newest" && <ArrowUpDown className="w-3.5 h-3.5" />}

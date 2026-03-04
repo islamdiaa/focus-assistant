@@ -72,51 +72,18 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { suggestNextTask } from "@/lib/taskSuggestion";
 import TimeBudgetBar from "@/components/TimeBudgetBar";
+import {
+  PRIORITY_COLORS,
+  PRIORITY_LABELS,
+  CATEGORY_CONFIG,
+  ENERGY_CONFIG,
+} from "@/lib/constants";
+import {
+  getEnergyMatchLabel,
+  getCurrentEnergyZone,
+} from "@/lib/energyTimeMatch";
 
-const ENERGY_EMOJI: Record<EnergyLevel, string> = {
-  low: "🔋",
-  medium: "⚡",
-  high: "🔥",
-};
-
-const PRIORITY_COLORS: Record<Priority, string> = {
-  urgent:
-    "bg-warm-terracotta/15 text-warm-terracotta border-warm-terracotta/30",
-  high: "bg-warm-terracotta-light text-warm-terracotta border-warm-terracotta/20",
-  medium: "bg-warm-amber-light text-warm-amber border-warm-amber/20",
-  low: "bg-warm-sage-light text-warm-sage border-warm-sage/20",
-};
-
-const PRIORITY_LABELS: Record<Priority, string> = {
-  urgent: "Urgent",
-  high: "High",
-  medium: "Medium",
-  low: "Low",
-};
-
-const CATEGORY_CONFIG: Record<Category, { emoji: string; label: string }> = {
-  work: { emoji: "💼", label: "Work" },
-  personal: { emoji: "🏠", label: "Personal" },
-  health: { emoji: "💪", label: "Health" },
-  learning: { emoji: "📚", label: "Learning" },
-  errands: { emoji: "🛒", label: "Errands" },
-  other: { emoji: "📌", label: "Other" },
-};
-
-const ENERGY_CONFIG: Record<EnergyLevel, { emoji: string; label: string }> = {
-  low: { emoji: "🔋", label: "Low Energy" },
-  medium: { emoji: "⚡", label: "Medium Energy" },
-  high: { emoji: "🔥", label: "High Energy" },
-};
-
-const RECURRENCE_CONFIG: Record<RecurrenceFrequency, { label: string }> = {
-  none: { label: "No Repeat" },
-  daily: { label: "Daily" },
-  weekly: { label: "Weekly" },
-  monthly: { label: "Monthly" },
-  quarterly: { label: "Quarterly" },
-  weekdays: { label: "Weekdays" },
-};
+import { RECURRENCE_CONFIG } from "@/lib/constants";
 
 const REMINDER_CATEGORIES: Record<
   Reminder["category"],
@@ -471,7 +438,8 @@ function TodayTaskCard({
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             {task.energy && (
               <span className="text-[10px] text-muted-foreground">
-                {ENERGY_EMOJI[task.energy]} {task.energy}
+                {ENERGY_CONFIG[task.energy].emoji}{" "}
+                {ENERGY_CONFIG[task.energy].label}
               </span>
             )}
             {task.dueDate && (
@@ -509,7 +477,7 @@ function TodayTaskCard({
                 "p-1.5 rounded-md transition-colors motion-safe:active:scale-[0.97]",
                 task.isFocusGoal
                   ? "text-amber-500"
-                  : "text-muted-foreground hover:text-amber-500 hover:bg-amber-50"
+                  : "text-muted-foreground hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-warm-amber/10"
               )}
               title={
                 task.isFocusGoal
@@ -1315,6 +1283,42 @@ export default function DailyPlannerPage({
         ))}
       </div>
 
+      {/* Energy Zone Indicator */}
+      {(() => {
+        const zone = getCurrentEnergyZone();
+        const zoneColor =
+          zone.recommended === "high"
+            ? "text-warm-sage"
+            : zone.recommended === "medium"
+              ? "text-warm-amber"
+              : "text-muted-foreground";
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="glass-subtle rounded-lg px-4 py-2.5 mb-4 flex items-center gap-2 border border-white/15 dark:border-white/10"
+          >
+            <Activity
+              className={`w-4 h-4 ${zoneColor} shrink-0`}
+              aria-hidden="true"
+            />
+            <div className="flex-1 min-w-0">
+              <span className={`text-sm font-medium ${zoneColor}`}>
+                {zone.name}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {" "}
+                &mdash; {zone.description}
+              </span>
+            </div>
+            <span className="hidden sm:inline text-xs text-muted-foreground/70 shrink-0">
+              Best for {zone.recommended} energy tasks
+            </span>
+          </motion.div>
+        );
+      })()}
+
       {/* Time Budget Bar (component from Agent 4) */}
       <div className="mb-6">
         <TimeBudgetBar
@@ -1381,11 +1385,21 @@ export default function DailyPlannerPage({
                       {suggestion.reasons.map((reason, i) => (
                         <span
                           key={i}
-                          className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-warm-sage-light text-warm-sage border border-warm-sage/20"
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-warm-sage-light dark:bg-warm-sage/15 text-warm-sage border border-warm-sage/20"
                         >
                           {reason}
                         </span>
                       ))}
+                      {(() => {
+                        const matchLabel = getEnergyMatchLabel(suggestion.task);
+                        if (!matchLabel) return null;
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-warm-amber-light dark:bg-warm-amber/15 text-warm-amber border border-warm-amber/20">
+                            <Zap className="w-2.5 h-2.5" aria-hidden="true" />
+                            {matchLabel}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                   <button
@@ -1477,7 +1491,7 @@ export default function DailyPlannerPage({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25 }}
-        className="bg-gradient-to-br from-amber-50/50 via-card to-amber-50/30 rounded-xl border border-amber-200/30 p-5 mb-4"
+        className="bg-gradient-to-br from-amber-50/50 via-card to-amber-50/30 dark:from-warm-amber/10 dark:via-card dark:to-warm-amber/5 rounded-xl border border-amber-200/30 dark:border-warm-amber/20 p-5 mb-4"
       >
         <div className="flex items-center gap-2 mb-3">
           <Star className="w-5 h-5 text-amber-500 fill-current" />
@@ -1496,10 +1510,10 @@ export default function DailyPlannerPage({
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="flex items-center gap-2 p-3 rounded-lg bg-warm-sage-light/50 border border-warm-sage/20"
+            className="flex items-center gap-2 p-3 rounded-lg bg-warm-sage-light/50 dark:bg-warm-sage/10 border border-warm-sage/20"
           >
             <Sparkles
-              className="w-5 h-5 text-warm-sage animate-pulse"
+              className="w-5 h-5 text-warm-sage motion-safe:animate-pulse"
               aria-hidden="true"
             />
             <p className="text-sm font-medium text-warm-sage">
@@ -1515,7 +1529,7 @@ export default function DailyPlannerPage({
                   "flex items-center gap-3 p-2.5 rounded-lg border transition-colors",
                   t.status === "done"
                     ? "border-warm-sage/20 bg-warm-sage-light/30 opacity-70"
-                    : "border-amber-200/30 bg-white/50"
+                    : "border-amber-200/30 dark:border-warm-amber/20 bg-white/50 dark:bg-warm-amber/5"
                 )}
               >
                 <Star className="w-4 h-4 text-amber-500 fill-current shrink-0" />
@@ -1640,12 +1654,6 @@ export default function DailyPlannerPage({
               </p>
             ) : (
               pickableTasks.map(t => {
-                const PRIORITY_COLORS: Record<string, string> = {
-                  urgent: "bg-warm-terracotta/15 text-warm-terracotta",
-                  high: "bg-warm-terracotta-light text-warm-terracotta",
-                  medium: "bg-warm-amber-light text-warm-amber",
-                  low: "bg-warm-sage-light text-warm-sage",
-                };
                 return (
                   <button
                     key={t.id}

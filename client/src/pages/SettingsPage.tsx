@@ -923,6 +923,8 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
         </Button>
         {integrityResult && (
           <div
+            role="status"
+            aria-live="polite"
             className={`mt-4 rounded-xl border p-4 ${
               integrityResult.ok
                 ? "border-warm-sage/40 bg-warm-sage-light/20"
