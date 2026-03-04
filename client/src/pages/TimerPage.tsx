@@ -567,7 +567,8 @@ export default function TimerPage() {
                     <h4 className="font-medium text-sm text-foreground truncate flex items-center gap-1.5">
                       {isRunning && (
                         <span
-                          className="w-2 h-2 rounded-full bg-warm-sage shrink-0"
+                          className="w-2 h-2 rounded-full bg-warm-sage shrink-0 motion-safe:animate-pulse"
+                          role="img"
                           aria-label="Timer running"
                         />
                       )}
@@ -614,6 +615,7 @@ export default function TimerPage() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
+                        style={{ overflow: "hidden" }}
                         className="text-xs text-muted-foreground/70 italic mt-2 text-center"
                       >
                         Tip: Link a task for better tracking

@@ -5,6 +5,7 @@
  */
 import { useMemo } from "react";
 import { useApp } from "@/contexts/AppContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   Flame,
   CheckCircle2,
@@ -44,6 +45,7 @@ function formatDayLabel(dateStr: string): string {
 
 export default function StatsPage() {
   const { state } = useApp();
+  const { theme } = useTheme();
   const activeContext = state.preferences?.activeContext || "all";
   const contextTasks = useMemo(
     () => filterTasksByContext(state.tasks, activeContext),
@@ -103,6 +105,18 @@ export default function StatsPage() {
     () => state.dailyStats.reduce((sum, s) => sum + s.pomodorosCompleted, 0),
     [state.dailyStats]
   );
+
+  const chartTickStyle = {
+    fontSize: 12,
+    fill: theme === "dark" ? "#A09A94" : "#8B8680",
+  };
+
+  const chartTooltipStyle: React.CSSProperties = {
+    background: theme === "dark" ? "#2A2723" : "#FAF7F2",
+    border: `1px solid ${theme === "dark" ? "#3D3A36" : "#E8E2DA"}`,
+    borderRadius: "8px",
+    fontSize: "12px",
+  };
 
   return (
     <div className="p-4 lg:p-8 max-w-5xl mx-auto">
@@ -187,7 +201,7 @@ export default function StatsPage() {
         {/* Tasks Completed */}
         <div className="mb-6">
           <p className="text-xs text-muted-foreground mb-3">Tasks Completed</p>
-          <div className="h-64">
+          <div className="h-40 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyTaskData}>
                 <CartesianGrid
@@ -197,25 +211,18 @@ export default function StatsPage() {
                 />
                 <XAxis
                   dataKey="day"
-                  tick={{ fontSize: 11, fill: "#8B8680" }}
+                  tick={chartTickStyle}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 12, fill: "#8B8680" }}
+                  tick={chartTickStyle}
                   axisLine={false}
                   tickLine={false}
                   width={40}
                   allowDecimals={false}
                 />
-                <Tooltip
-                  contentStyle={{
-                    background: "#FAF7F2",
-                    border: "1px solid #E8E2DA",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                />
+                <Tooltip contentStyle={chartTooltipStyle} />
                 <Bar dataKey="value" fill="#8BAA7E" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -225,7 +232,7 @@ export default function StatsPage() {
         {/* Focus Minutes */}
         <div>
           <p className="text-xs text-muted-foreground mb-3">Focus Minutes</p>
-          <div className="h-64">
+          <div className="h-40 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyFocusData}>
                 <CartesianGrid
@@ -235,25 +242,18 @@ export default function StatsPage() {
                 />
                 <XAxis
                   dataKey="day"
-                  tick={{ fontSize: 11, fill: "#8B8680" }}
+                  tick={chartTickStyle}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 12, fill: "#8B8680" }}
+                  tick={chartTickStyle}
                   axisLine={false}
                   tickLine={false}
                   width={40}
                   allowDecimals={false}
                 />
-                <Tooltip
-                  contentStyle={{
-                    background: "#FAF7F2",
-                    border: "1px solid #E8E2DA",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                />
+                <Tooltip contentStyle={chartTooltipStyle} />
                 <Bar dataKey="value" fill="#7BA3C4" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

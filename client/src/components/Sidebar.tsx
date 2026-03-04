@@ -224,7 +224,7 @@ export default function Sidebar({
         </nav>
 
         {/* Focus Mode & Thoughts */}
-        <div className="px-3 pb-2">
+        <div className="px-3 pb-2 pt-2 border-t border-white/10">
           {onFocusMode && (
             <button
               onClick={() => {

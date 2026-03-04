@@ -303,6 +303,7 @@ export default function Home() {
                 {/* Hamburger - mobile only */}
                 <button
                   onClick={() => setSidebarOpen(true)}
+                  aria-label="Open sidebar menu"
                   className="md:hidden p-1.5 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
                 >
                   <Menu className="w-5 h-5" />
