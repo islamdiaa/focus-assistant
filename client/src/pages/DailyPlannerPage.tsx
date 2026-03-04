@@ -1979,6 +1979,8 @@ export default function DailyPlannerPage({
                   <button
                     key={p}
                     type="button"
+                    role="radio"
+                    aria-checked={newPriority === p}
                     onClick={() => setNewPriority(p)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
                     ${newPriority === p ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -1997,13 +1999,14 @@ export default function DailyPlannerPage({
               </label>
               <div
                 className="grid grid-cols-3 gap-2"
-                role="radiogroup"
+                role="group"
                 aria-labelledby="planner-new-category-label"
               >
                 {(Object.keys(CATEGORY_CONFIG) as Category[]).map(c => (
                   <button
                     key={c}
                     type="button"
+                    aria-pressed={newCategory === c}
                     onClick={() => setNewCategory(newCategory === c ? "" : c)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
                     ${newCategory === c ? "bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -2023,13 +2026,14 @@ export default function DailyPlannerPage({
               </label>
               <div
                 className="grid grid-cols-3 gap-2"
-                role="radiogroup"
+                role="group"
                 aria-labelledby="planner-new-energy-label"
               >
                 {(Object.keys(ENERGY_CONFIG) as EnergyLevel[]).map(e => (
                   <button
                     key={e}
                     type="button"
+                    aria-pressed={newEnergy === e}
                     onClick={() => setNewEnergy(newEnergy === e ? "" : e)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
                     ${newEnergy === e ? "bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -2057,6 +2061,8 @@ export default function DailyPlannerPage({
                     <button
                       key={r}
                       type="button"
+                      role="radio"
+                      aria-checked={newRecurrence === r}
                       onClick={() => setNewRecurrence(r)}
                       className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
                     ${newRecurrence === r ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -2140,7 +2146,7 @@ export default function DailyPlannerPage({
               </label>
               <div
                 className="flex flex-wrap gap-2 mb-2"
-                role="radiogroup"
+                role="group"
                 aria-labelledby="planner-new-estimated-time-label"
               >
                 {[
@@ -2153,6 +2159,7 @@ export default function DailyPlannerPage({
                   <button
                     key={opt.value}
                     type="button"
+                    aria-pressed={newEstimatedMinutes === opt.value}
                     onClick={() =>
                       setNewEstimatedMinutes(
                         newEstimatedMinutes === opt.value ? "" : opt.value
@@ -2348,6 +2355,8 @@ export default function DailyPlannerPage({
                     <button
                       key={c}
                       type="button"
+                      role="radio"
+                      aria-checked={remCategory === c}
                       onClick={() => setRemCategory(c)}
                       className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 flex flex-col items-center gap-1 motion-safe:active:scale-[0.97]
                         ${remCategory === c ? `${cfg.bg} ${cfg.color} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -2375,6 +2384,8 @@ export default function DailyPlannerPage({
                   <button
                     key={opt.value}
                     type="button"
+                    role="radio"
+                    aria-checked={remRecurrence === opt.value}
                     onClick={() => setRemRecurrence(opt.value)}
                     className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
                       ${remRecurrence === opt.value ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}

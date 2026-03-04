@@ -462,11 +462,13 @@ export default function TimerPage() {
                 >
                   Link Tasks (optional)
                 </label>
-                <TaskPicker
-                  tasks={state.tasks}
-                  selectedLinks={selectedLinks}
-                  onToggle={handleToggleLink}
-                />
+                <div aria-labelledby="link-tasks-label">
+                  <TaskPicker
+                    tasks={state.tasks}
+                    selectedLinks={selectedLinks}
+                    onToggle={handleToggleLink}
+                  />
+                </div>
                 {selectedLinks.length > 0 && (
                   <p className="text-xs text-warm-sage mt-1.5">
                     {selectedLinks.length} item

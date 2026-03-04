@@ -360,6 +360,8 @@ function InlineEditForm({
             <button
               key={p}
               type="button"
+              role="radio"
+              aria-checked={priority === p}
               onClick={() => setPriority(p)}
               className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200
                 ${priority === p ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -378,13 +380,14 @@ function InlineEditForm({
         </label>
         <div
           className="grid grid-cols-3 gap-2"
-          role="radiogroup"
+          role="group"
           aria-labelledby="task-edit-category-label"
         >
           {(Object.keys(CATEGORY_CONFIG) as Category[]).map(c => (
             <button
               key={c}
               type="button"
+              aria-pressed={category === c}
               onClick={() => setCategory(category === c ? "" : c)}
               className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
                 ${category === c ? "bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -404,13 +407,14 @@ function InlineEditForm({
         </label>
         <div
           className="grid grid-cols-3 gap-2"
-          role="radiogroup"
+          role="group"
           aria-labelledby="task-edit-energy-label"
         >
           {(Object.keys(ENERGY_CONFIG) as EnergyLevel[]).map(e => (
             <button
               key={e}
               type="button"
+              aria-pressed={energy === e}
               onClick={() => setEnergy(energy === e ? "" : e)}
               className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
                 ${energy === e ? "bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -437,6 +441,8 @@ function InlineEditForm({
             <button
               key={r}
               type="button"
+              role="radio"
+              aria-checked={recurrence === r}
               onClick={() => setRecurrence(r)}
               className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
                 ${recurrence === r ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -1193,6 +1199,8 @@ export default function TasksPage({
                         <button
                           key={p}
                           type="button"
+                          role="radio"
+                          aria-checked={newPriority === p}
                           onClick={() => setNewPriority(p)}
                           className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200
                         ${newPriority === p ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -1212,13 +1220,14 @@ export default function TasksPage({
                   </label>
                   <div
                     className="grid grid-cols-3 gap-2"
-                    role="radiogroup"
+                    role="group"
                     aria-labelledby="tasks-new-category-label"
                   >
                     {(Object.keys(CATEGORY_CONFIG) as Category[]).map(c => (
                       <button
                         key={c}
                         type="button"
+                        aria-pressed={newCategory === c}
                         onClick={() =>
                           setNewCategory(newCategory === c ? "" : c)
                         }
@@ -1240,13 +1249,14 @@ export default function TasksPage({
                   </label>
                   <div
                     className="grid grid-cols-3 gap-2"
-                    role="radiogroup"
+                    role="group"
                     aria-labelledby="tasks-new-energy-label"
                   >
                     {(Object.keys(ENERGY_CONFIG) as EnergyLevel[]).map(e => (
                       <button
                         key={e}
                         type="button"
+                        aria-pressed={newEnergy === e}
                         onClick={() => setNewEnergy(newEnergy === e ? "" : e)}
                         className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5
                         ${newEnergy === e ? "bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -1275,6 +1285,8 @@ export default function TasksPage({
                       <button
                         key={r}
                         type="button"
+                        role="radio"
+                        aria-checked={newRecurrence === r}
                         onClick={() => setNewRecurrence(r)}
                         className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
                         ${newRecurrence === r ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -1429,13 +1441,14 @@ export default function TasksPage({
                   </label>
                   <div
                     className="flex flex-wrap gap-2"
-                    role="radiogroup"
+                    role="group"
                     aria-labelledby="tasks-new-estimated-time-label"
                   >
                     {[15, 30, 60, 120, 240].map(mins => (
                       <button
                         key={mins}
                         type="button"
+                        aria-pressed={newEstimatedMinutes === mins}
                         onClick={() =>
                           setNewEstimatedMinutes(
                             newEstimatedMinutes === mins ? "" : mins
@@ -1616,6 +1629,8 @@ export default function TasksPage({
                     <button
                       key={c}
                       type="button"
+                      role="radio"
+                      aria-checked={remCategory === c}
                       onClick={() => setRemCategory(c)}
                       className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 flex flex-col items-center gap-1
                         ${remCategory === c ? `${cfg.bg} ${cfg.color} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -1643,6 +1658,8 @@ export default function TasksPage({
                   <button
                     key={opt.value}
                     type="button"
+                    role="radio"
+                    aria-checked={remRecurrence === opt.value}
                     onClick={() => setRemRecurrence(opt.value)}
                     className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200
                       ${remRecurrence === opt.value ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}

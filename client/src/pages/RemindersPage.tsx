@@ -371,6 +371,8 @@ export default function RemindersPage({
                       <button
                         key={c}
                         type="button"
+                        role="radio"
+                        aria-checked={category === c}
                         onClick={() => setCategory(c)}
                         className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97] flex flex-col items-center gap-1
                         ${category === c ? `${cfg.bg} ${cfg.color} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
@@ -399,6 +401,8 @@ export default function RemindersPage({
                   <button
                     key={opt.value}
                     type="button"
+                    role="radio"
+                    aria-checked={recurrence === opt.value}
                     onClick={() => setRecurrence(opt.value)}
                     className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
                       ${recurrence === opt.value ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
