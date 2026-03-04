@@ -292,25 +292,41 @@ export default function RemindersPage({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
-            <Input
-              placeholder="Reminder title..."
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              className="bg-background"
-              autoFocus
-            />
-            <Input
-              placeholder="Description (optional)"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              className="bg-background"
-            />
+            <div>
+              <label htmlFor="reminder-title" className="sr-only">
+                Reminder title
+              </label>
+              <Input
+                id="reminder-title"
+                placeholder="Reminder title..."
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                className="bg-background"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label htmlFor="reminder-description" className="sr-only">
+                Description
+              </label>
+              <Input
+                id="reminder-description"
+                placeholder="Description (optional)"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                className="bg-background"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                <label
+                  htmlFor="reminder-date"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                >
                   Date
                 </label>
                 <Input
+                  id="reminder-date"
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
@@ -318,13 +334,17 @@ export default function RemindersPage({
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                <label
+                  htmlFor="reminder-time"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                >
                   Time{" "}
                   <span className="text-muted-foreground/60 normal-case font-normal">
                     (optional)
                   </span>
                 </label>
                 <Input
+                  id="reminder-time"
                   type="time"
                   value={time}
                   onChange={e => setTime(e.target.value)}
@@ -333,10 +353,17 @@ export default function RemindersPage({
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              <label
+                id="reminder-category-label"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block"
+              >
                 Category
               </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div
+                className="grid grid-cols-4 gap-2"
+                role="radiogroup"
+                aria-labelledby="reminder-category-label"
+              >
                 {(Object.keys(CATEGORY_CONFIG) as Reminder["category"][]).map(
                   c => {
                     const cfg = CATEGORY_CONFIG[c];
@@ -357,10 +384,17 @@ export default function RemindersPage({
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              <label
+                id="reminder-recurrence-label"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block"
+              >
                 Repeats
               </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div
+                className="grid grid-cols-4 gap-2"
+                role="radiogroup"
+                aria-labelledby="reminder-recurrence-label"
+              >
                 {RECURRENCE_OPTIONS.map(opt => (
                   <button
                     key={opt.value}

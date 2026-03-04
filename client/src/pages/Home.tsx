@@ -268,6 +268,13 @@ export default function Home() {
   return (
     <MotionConfig reducedMotion="user">
       <>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-warm-sage focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:outline-none"
+        >
+          Skip to main content
+        </a>
+
         {/* Focus Mode Overlay */}
         {focusMode && (
           <Suspense
@@ -376,7 +383,7 @@ export default function Home() {
             )}
 
             {/* Page content */}
-            <main className="flex-1 overflow-y-auto">
+            <main id="main-content" className="flex-1 overflow-y-auto">
               <div aria-live="polite" className="sr-only">
                 {PAGE_TITLES[activePage] || "Focus Assistant"} page
               </div>
@@ -467,10 +474,14 @@ export default function Home() {
                 {thoughtReminderText}
               </p>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                <label
+                  htmlFor="thought-reminder-date"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                >
                   Date
                 </label>
                 <Input
+                  id="thought-reminder-date"
                   type="date"
                   value={thoughtReminderDate}
                   onChange={e => setThoughtReminderDate(e.target.value)}

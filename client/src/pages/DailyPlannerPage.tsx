@@ -1932,10 +1932,14 @@ export default function DailyPlannerPage({
           </DialogHeader>
           <div className="space-y-5 mt-2">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+              <label
+                htmlFor="planner-new-title"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+              >
                 Title
               </label>
               <Input
+                id="planner-new-title"
                 placeholder="e.g., Finish the report..."
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
@@ -1944,10 +1948,14 @@ export default function DailyPlannerPage({
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+              <label
+                htmlFor="planner-new-description"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+              >
                 Description (optional)
               </label>
               <Textarea
+                id="planner-new-description"
                 placeholder="Add more details..."
                 value={newDesc}
                 onChange={e => setNewDesc(e.target.value)}
@@ -1956,10 +1964,17 @@ export default function DailyPlannerPage({
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              <label
+                id="planner-new-priority-label"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block"
+              >
                 Priority
               </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div
+                className="grid grid-cols-4 gap-2"
+                role="radiogroup"
+                aria-labelledby="planner-new-priority-label"
+              >
                 {(["low", "medium", "high", "urgent"] as Priority[]).map(p => (
                   <button
                     key={p}
@@ -1974,10 +1989,17 @@ export default function DailyPlannerPage({
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              <label
+                id="planner-new-category-label"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block"
+              >
                 Category
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div
+                className="grid grid-cols-3 gap-2"
+                role="radiogroup"
+                aria-labelledby="planner-new-category-label"
+              >
                 {(Object.keys(CATEGORY_CONFIG) as Category[]).map(c => (
                   <button
                     key={c}
@@ -1993,10 +2015,17 @@ export default function DailyPlannerPage({
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              <label
+                id="planner-new-energy-label"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block"
+              >
                 Energy Level
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div
+                className="grid grid-cols-3 gap-2"
+                role="radiogroup"
+                aria-labelledby="planner-new-energy-label"
+              >
                 {(Object.keys(ENERGY_CONFIG) as EnergyLevel[]).map(e => (
                   <button
                     key={e}
@@ -2012,10 +2041,17 @@ export default function DailyPlannerPage({
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              <label
+                id="planner-new-recurrence-label"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block"
+              >
                 Repeat
               </label>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              <div
+                className="grid grid-cols-3 sm:grid-cols-6 gap-2"
+                role="radiogroup"
+                aria-labelledby="planner-new-recurrence-label"
+              >
                 {(Object.keys(RECURRENCE_CONFIG) as RecurrenceFrequency[]).map(
                   r => (
                     <button
@@ -2037,10 +2073,14 @@ export default function DailyPlannerPage({
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="flex-1">
-                      <label className="text-[10px] text-muted-foreground mb-0.5 block">
+                      <label
+                        htmlFor="planner-new-quarterly-day"
+                        className="text-[10px] text-muted-foreground mb-0.5 block"
+                      >
                         Day of month
                       </label>
                       <Input
+                        id="planner-new-quarterly-day"
                         type="number"
                         min={1}
                         max={28}
@@ -2053,10 +2093,14 @@ export default function DailyPlannerPage({
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] text-muted-foreground mb-0.5 block">
+                      <label
+                        htmlFor="planner-new-quarterly-month"
+                        className="text-[10px] text-muted-foreground mb-0.5 block"
+                      >
                         Starting month
                       </label>
                       <select
+                        id="planner-new-quarterly-month"
                         value={newQuarterlyStartMonth}
                         onChange={e =>
                           setNewQuarterlyStartMonth(parseInt(e.target.value))
@@ -2088,10 +2132,17 @@ export default function DailyPlannerPage({
               )}
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              <label
+                id="planner-new-estimated-time-label"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block"
+              >
                 Estimated Time
               </label>
-              <div className="flex flex-wrap gap-2 mb-2">
+              <div
+                className="flex flex-wrap gap-2 mb-2"
+                role="radiogroup"
+                aria-labelledby="planner-new-estimated-time-label"
+              >
                 {[
                   { label: "15m", value: 15 },
                   { label: "30m", value: 30 },
@@ -2120,6 +2171,7 @@ export default function DailyPlannerPage({
               </div>
               <div className="flex items-center gap-2">
                 <Input
+                  id="planner-new-custom-minutes"
                   type="number"
                   min={1}
                   placeholder="Custom minutes..."
@@ -2131,15 +2183,20 @@ export default function DailyPlannerPage({
                     );
                   }}
                   className="bg-background h-8 text-sm w-32"
+                  aria-label="Custom estimated minutes"
                 />
                 <span className="text-xs text-muted-foreground">minutes</span>
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+              <label
+                htmlFor="planner-new-due-date"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+              >
                 Due Date (optional)
               </label>
               <Input
+                id="planner-new-due-date"
                 type="date"
                 value={newDueDate}
                 onChange={e => setNewDueDate(e.target.value)}
@@ -2148,7 +2205,10 @@ export default function DailyPlannerPage({
             </div>
             {/* Subtasks section */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              <label
+                htmlFor="planner-new-subtask-input"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block"
+              >
                 Subtasks (optional)
               </label>
               {newSubtasks.map((s, i) => (
@@ -2167,6 +2227,7 @@ export default function DailyPlannerPage({
               ))}
               <div className="flex gap-1.5">
                 <Input
+                  id="planner-new-subtask-input"
                   value={newSubtaskInput}
                   onChange={e => setNewSubtaskInput(e.target.value)}
                   onKeyDown={e =>
@@ -2207,25 +2268,41 @@ export default function DailyPlannerPage({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
-            <Input
-              placeholder="Reminder title..."
-              value={remTitle}
-              onChange={e => setRemTitle(e.target.value)}
-              className="bg-background"
-              autoFocus
-            />
-            <Input
-              placeholder="Description (optional)"
-              value={remDescription}
-              onChange={e => setRemDescription(e.target.value)}
-              className="bg-background"
-            />
+            <div>
+              <label htmlFor="planner-rem-title" className="sr-only">
+                Reminder title
+              </label>
+              <Input
+                id="planner-rem-title"
+                placeholder="Reminder title..."
+                value={remTitle}
+                onChange={e => setRemTitle(e.target.value)}
+                className="bg-background"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label htmlFor="planner-rem-description" className="sr-only">
+                Description
+              </label>
+              <Input
+                id="planner-rem-description"
+                placeholder="Description (optional)"
+                value={remDescription}
+                onChange={e => setRemDescription(e.target.value)}
+                className="bg-background"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                <label
+                  htmlFor="planner-rem-date"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                >
                   Date
                 </label>
                 <Input
+                  id="planner-rem-date"
                   type="date"
                   value={remDate}
                   onChange={e => setRemDate(e.target.value)}
@@ -2233,13 +2310,17 @@ export default function DailyPlannerPage({
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                <label
+                  htmlFor="planner-rem-time"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                >
                   Time{" "}
                   <span className="text-muted-foreground/60 normal-case font-normal">
                     (optional)
                   </span>
                 </label>
                 <Input
+                  id="planner-rem-time"
                   type="time"
                   value={remTime}
                   onChange={e => setRemTime(e.target.value)}
@@ -2248,10 +2329,17 @@ export default function DailyPlannerPage({
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              <label
+                id="planner-rem-category-label"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block"
+              >
                 Category
               </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div
+                className="grid grid-cols-4 gap-2"
+                role="radiogroup"
+                aria-labelledby="planner-rem-category-label"
+              >
                 {(
                   Object.keys(REMINDER_CATEGORIES) as Reminder["category"][]
                 ).map(c => {
@@ -2272,10 +2360,17 @@ export default function DailyPlannerPage({
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              <label
+                id="planner-rem-recurrence-label"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block"
+              >
                 Repeats
               </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div
+                className="grid grid-cols-4 gap-2"
+                role="radiogroup"
+                aria-labelledby="planner-rem-recurrence-label"
+              >
                 {REMINDER_RECURRENCE.map(opt => (
                   <button
                     key={opt.value}
