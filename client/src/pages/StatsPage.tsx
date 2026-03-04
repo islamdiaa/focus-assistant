@@ -15,7 +15,15 @@ import {
   Eye,
 } from "lucide-react";
 import { filterTasksByContext } from "@/lib/contextFilter";
-import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 
 function getWeekDays(): string[] {
   const days = [];
@@ -97,7 +105,7 @@ export default function StatsPage() {
   );
 
   return (
-    <div className="p-4 lg:p-8 max-w-4xl">
+    <div className="p-4 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
         <h2 className="font-serif text-2xl lg:text-3xl text-foreground">
@@ -179,14 +187,26 @@ export default function StatsPage() {
         {/* Tasks Completed */}
         <div className="mb-6">
           <p className="text-xs text-muted-foreground mb-3">Tasks Completed</p>
-          <div className="h-24">
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyTaskData}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  opacity={0.3}
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="day"
                   tick={{ fontSize: 11, fill: "#8B8680" }}
                   axisLine={false}
                   tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "#8B8680" }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
+                  allowDecimals={false}
                 />
                 <Tooltip
                   contentStyle={{
@@ -205,14 +225,26 @@ export default function StatsPage() {
         {/* Focus Minutes */}
         <div>
           <p className="text-xs text-muted-foreground mb-3">Focus Minutes</p>
-          <div className="h-24">
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyFocusData}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  opacity={0.3}
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="day"
                   tick={{ fontSize: 11, fill: "#8B8680" }}
                   axisLine={false}
                   tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "#8B8680" }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
+                  allowDecimals={false}
                 />
                 <Tooltip
                   contentStyle={{

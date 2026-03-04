@@ -298,17 +298,17 @@ export default function Home() {
 
           <div className="flex-1 flex flex-col min-w-0">
             {/* Top bar */}
-            <header className="h-11 border-b border-white/15 bg-white/40 dark:bg-[oklch(0.22_0.02_155)] backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10">
+            <header className="h-11 border-b border-white/15 bg-white/40 dark:bg-[oklch(0.22_0.02_155)] backdrop-blur-xl flex items-center justify-between px-4 md:px-8 sticky top-0 z-10">
               <div className="flex items-center gap-3">
                 {/* Hamburger - mobile only */}
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden p-1.5 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
+                  className="md:hidden p-1.5 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
                 >
                   <Menu className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-2">
-                  <h1 className="font-semibold text-sm lg:text-base text-foreground leading-tight">
+                  <h1 className="font-semibold text-sm md:text-base text-foreground leading-tight">
                     {PAGE_TITLES[activePage] || "Focus Assistant"}
                   </h1>
                   <span className="hidden sm:inline text-xs text-muted-foreground/70 italic truncate max-w-48">
@@ -316,7 +316,7 @@ export default function Home() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 lg:gap-3">
+              <div className="flex items-center gap-2 md:gap-3">
                 {/* Undo/Redo buttons */}
                 <div className="flex items-center gap-0.5">
                   <button
@@ -336,13 +336,13 @@ export default function Home() {
                     <Redo2 className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-sage/15 shadow-sm px-2 lg:px-2.5 py-1 rounded-full border border-warm-sage/20">
+                <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-sage/15 shadow-sm px-2 md:px-2.5 py-1 rounded-full border border-warm-sage/20">
                   <Smile className="w-3.5 h-3.5 text-warm-sage" />
                   <span className="text-xs font-medium text-warm-charcoal">
                     {completedToday}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-blue/15 shadow-sm px-2 lg:px-2.5 py-1 rounded-full border border-warm-blue/20">
+                <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-blue/15 shadow-sm px-2 md:px-2.5 py-1 rounded-full border border-warm-blue/20">
                   <Clock className="w-3.5 h-3.5 text-warm-blue" />
                   <span className="text-xs font-medium text-warm-charcoal">
                     {focusToday}m

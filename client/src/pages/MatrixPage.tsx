@@ -368,7 +368,7 @@ export default function MatrixPage() {
   }
 
   return (
-    <div className="p-4 lg:p-8">
+    <div className="p-4 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
         <h2 className="font-serif text-2xl lg:text-3xl text-foreground">

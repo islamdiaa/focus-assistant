@@ -6,6 +6,7 @@
  * V1.8.1: Task-linked pomodoros — select multiple tasks/subtasks when creating
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
 import type { PomodoroLink, Task } from "@/lib/types";
 import {
@@ -416,7 +417,7 @@ export default function TimerPage() {
   );
 
   return (
-    <div className="p-4 lg:p-8 max-w-4xl">
+    <div className="p-4 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -559,11 +560,17 @@ export default function TimerPage() {
               <div
                 key={pom.id}
                 className={`glass rounded-2xl p-6 transition-all duration-200 hover:shadow-md
-                  ${isCompleted ? "opacity-60" : ""} ${isRunning ? "ring-2 ring-warm-sage/30" : ""}`}
+                  ${isCompleted ? "opacity-60" : ""} ${isRunning ? "ring-2 ring-warm-sage/40 bg-warm-sage/5" : ""}`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm text-foreground truncate">
+                    <h4 className="font-medium text-sm text-foreground truncate flex items-center gap-1.5">
+                      {isRunning && (
+                        <span
+                          className="w-2 h-2 rounded-full bg-warm-sage shrink-0"
+                          aria-label="Timer running"
+                        />
+                      )}
                       {pom.title}
                     </h4>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -587,15 +594,32 @@ export default function TimerPage() {
                 </div>
 
                 {/* Timer circle */}
-                <div className="flex items-center justify-center mb-4 relative">
-                  <CircularProgress
-                    progress={progress}
-                    size={100}
-                    strokeWidth={5}
-                  />
-                  <span className="absolute text-lg font-mono font-medium text-foreground">
-                    {formatTime(remaining)}
-                  </span>
+                <div className="flex flex-col items-center mb-4">
+                  <div
+                    className={`flex items-center justify-center relative rounded-full p-1 transition-shadow duration-300
+                    ${isRunning ? "shadow-[0_0_16px_oklch(0.65_0.11_155/0.25)]" : ""}`}
+                  >
+                    <CircularProgress
+                      progress={progress}
+                      size={100}
+                      strokeWidth={5}
+                    />
+                    <span className="absolute text-lg font-mono font-medium text-foreground">
+                      {formatTime(remaining)}
+                    </span>
+                  </div>
+                  <AnimatePresence>
+                    {isRunning && !linkedLabel && (
+                      <motion.p
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="text-xs text-muted-foreground/70 italic mt-2 text-center"
+                      >
+                        Tip: Link a task for better tracking
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Controls */}

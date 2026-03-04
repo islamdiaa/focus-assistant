@@ -304,7 +304,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
   }, [reloadState]);
 
   return (
-    <div className="p-4 lg:p-8 max-w-3xl">
+    <div className="p-4 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h2 className="font-serif text-2xl lg:text-3xl text-foreground">
@@ -313,6 +313,191 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
         <p className="text-sm text-muted-foreground mt-1">
           Customize your focus experience
         </p>
+      </div>
+
+      {/* ========== APPEARANCE ========== */}
+      <div className="glass rounded-2xl p-6 mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          {theme === "dark" ? (
+            <Moon className="w-4 h-4 text-warm-lavender" />
+          ) : (
+            <Sun className="w-4 h-4 text-warm-amber" />
+          )}
+          <h3 className="font-semibold text-sm text-foreground">Appearance</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Switch between light and dark themes.
+        </p>
+        <div className="flex items-center justify-between bg-background rounded-xl border border-white/15 dark:border-white/10 p-4">
+          <div className="flex items-center gap-3">
+            <div
+              className={`p-2 rounded-lg ${theme === "dark" ? "bg-warm-lavender/10" : "bg-warm-amber-light"}`}
+            >
+              {theme === "dark" ? (
+                <Moon className="w-4 h-4 text-warm-lavender" />
+              ) : (
+                <Sun className="w-4 h-4 text-warm-amber" />
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                {theme === "dark" ? "Dark Mode" : "Light Mode"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {theme === "dark"
+                  ? "Warm dark palette for low-light environments"
+                  : "Warm cream palette for daytime use"}
+              </p>
+            </div>
+          </div>
+          <Switch
+            checked={theme === "dark"}
+            onCheckedChange={() => toggleTheme?.()}
+          />
+        </div>
+      </div>
+
+      {/* ========== QUICK PRESETS ========== */}
+      <div className="glass rounded-2xl p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Timer className="w-4 h-4 text-warm-sage" />
+          <h3 className="font-semibold text-sm text-foreground">
+            Quick Presets
+          </h3>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {PRESETS.map(preset => (
+            <button
+              key={preset.name}
+              onClick={() => applyPreset(preset)}
+              className="text-left bg-background rounded-xl border border-white/15 dark:border-white/10 p-4 hover:border-warm-sage/40 hover:bg-warm-sage-light/30 transition-all duration-200 motion-safe:active:scale-[0.97]"
+            >
+              <p className="text-sm font-medium text-foreground">
+                {preset.name}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {preset.description}
+              </p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ========== CUSTOM TIMER SETTINGS ========== */}
+      <div className="glass rounded-2xl p-6 mb-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Timer className="w-4 h-4 text-warm-sage" />
+          <h3 className="font-semibold text-sm text-foreground">
+            Custom Timer Settings
+          </h3>
+        </div>
+
+        <div className="space-y-6">
+          {/* Focus Duration */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Focus Duration: {settings.focusDuration} min
+              </label>
+            </div>
+            <Slider
+              value={[settings.focusDuration]}
+              onValueChange={([v]) =>
+                setSettings(s => ({ ...s, focusDuration: v }))
+              }
+              min={5}
+              max={90}
+              step={5}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground/50 mt-1">
+              <span>5 min</span>
+              <span>90 min</span>
+            </div>
+          </div>
+
+          {/* Short Break */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Short Break: {settings.shortBreak} min
+              </label>
+            </div>
+            <Slider
+              value={[settings.shortBreak]}
+              onValueChange={([v]) =>
+                setSettings(s => ({ ...s, shortBreak: v }))
+              }
+              min={1}
+              max={15}
+              step={1}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground/50 mt-1">
+              <span>1 min</span>
+              <span>15 min</span>
+            </div>
+          </div>
+
+          {/* Long Break */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Long Break: {settings.longBreak} min
+              </label>
+            </div>
+            <Slider
+              value={[settings.longBreak]}
+              onValueChange={([v]) =>
+                setSettings(s => ({ ...s, longBreak: v }))
+              }
+              min={5}
+              max={45}
+              step={5}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground/50 mt-1">
+              <span>5 min</span>
+              <span>45 min</span>
+            </div>
+          </div>
+
+          {/* Sessions Before Long Break */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Sessions Before Long Break: {settings.sessionsBeforeLongBreak}
+              </label>
+            </div>
+            <Slider
+              value={[settings.sessionsBeforeLongBreak]}
+              onValueChange={([v]) =>
+                setSettings(s => ({ ...s, sessionsBeforeLongBreak: v }))
+              }
+              min={2}
+              max={8}
+              step={1}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground/50 mt-1">
+              <span>2</span>
+              <span>8</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Save / Reset */}
+        <div className="flex gap-3 mt-6">
+          <Button
+            onClick={handleSave}
+            className="flex-1 bg-warm-sage hover:bg-warm-sage/90 text-white gap-2"
+          >
+            <Save className="w-4 h-4" /> Save Settings
+          </Button>
+          <Button onClick={handleReset} variant="outline" className="gap-2">
+            <RotateCcw className="w-4 h-4" /> Reset
+          </Button>
+        </div>
       </div>
 
       {/* ========== NOTIFICATION SOUNDS ========== */}
@@ -353,6 +538,37 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
               </p>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* ========== AUTOMATION ========== */}
+      <div className="glass rounded-2xl p-6 mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Zap className="w-4 h-4 text-warm-amber" />
+          <h3 className="font-semibold text-sm text-foreground">Automation</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Automate repetitive task management actions.
+        </p>
+        <div className="flex items-center justify-between bg-background rounded-xl border border-white/15 dark:border-white/10 p-4">
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              Auto-complete parent task
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Automatically mark a task as done when all its subtasks are
+              completed
+            </p>
+          </div>
+          <Switch
+            checked={state.preferences?.autoCompleteParent ?? false}
+            onCheckedChange={checked =>
+              dispatch({
+                type: "UPDATE_PREFERENCES",
+                payload: { autoCompleteParent: checked },
+              })
+            }
+          />
         </div>
       </div>
 
@@ -576,261 +792,6 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
         </div>
       </div>
 
-      {/* ========== APPEARANCE ========== */}
-      <div className="glass rounded-2xl p-6 mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          {theme === "dark" ? (
-            <Moon className="w-4 h-4 text-warm-lavender" />
-          ) : (
-            <Sun className="w-4 h-4 text-warm-amber" />
-          )}
-          <h3 className="font-semibold text-sm text-foreground">Appearance</h3>
-        </div>
-        <p className="text-xs text-muted-foreground mb-4">
-          Switch between light and dark themes.
-        </p>
-        <div className="flex items-center justify-between bg-background rounded-xl border border-white/15 dark:border-white/10 p-4">
-          <div className="flex items-center gap-3">
-            <div
-              className={`p-2 rounded-lg ${theme === "dark" ? "bg-warm-lavender/10" : "bg-warm-amber-light"}`}
-            >
-              {theme === "dark" ? (
-                <Moon className="w-4 h-4 text-warm-lavender" />
-              ) : (
-                <Sun className="w-4 h-4 text-warm-amber" />
-              )}
-            </div>
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                {theme === "dark" ? "Dark Mode" : "Light Mode"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {theme === "dark"
-                  ? "Warm dark palette for low-light environments"
-                  : "Warm cream palette for daytime use"}
-              </p>
-            </div>
-          </div>
-          <Switch
-            checked={theme === "dark"}
-            onCheckedChange={() => toggleTheme?.()}
-          />
-        </div>
-      </div>
-
-      {/* ========== AUTOMATION ========== */}
-      <div className="glass rounded-2xl p-6 mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <Zap className="w-4 h-4 text-warm-amber" />
-          <h3 className="font-semibold text-sm text-foreground">Automation</h3>
-        </div>
-        <p className="text-xs text-muted-foreground mb-4">
-          Automate repetitive task management actions.
-        </p>
-        <div className="flex items-center justify-between bg-background rounded-xl border border-white/15 dark:border-white/10 p-4">
-          <div>
-            <p className="text-sm font-medium text-foreground">
-              Auto-complete parent task
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Automatically mark a task as done when all its subtasks are
-              completed
-            </p>
-          </div>
-          <Switch
-            checked={state.preferences?.autoCompleteParent ?? false}
-            onCheckedChange={checked =>
-              dispatch({
-                type: "UPDATE_PREFERENCES",
-                payload: { autoCompleteParent: checked },
-              })
-            }
-          />
-        </div>
-      </div>
-
-      {/* ========== PLANNING ========== */}
-      <div className="glass rounded-2xl p-6 mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <Clock className="w-4 h-4 text-warm-blue" />
-          <h3 className="font-semibold text-sm text-foreground">Planning</h3>
-        </div>
-        <p className="text-xs text-muted-foreground mb-4">
-          Configure your daily planning preferences.
-        </p>
-        <div className="bg-background rounded-xl border border-white/15 dark:border-white/10 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                Available hours per day
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Set your daily time budget for the Today view progress bar
-              </p>
-            </div>
-            <span className="text-sm font-semibold text-foreground tabular-nums">
-              {state.preferences?.availableHoursPerDay ?? 8}h
-            </span>
-          </div>
-          <Slider
-            value={[state.preferences?.availableHoursPerDay ?? 8]}
-            onValueChange={([v]) =>
-              dispatch({
-                type: "UPDATE_PREFERENCES",
-                payload: { availableHoursPerDay: v },
-              })
-            }
-            min={1}
-            max={16}
-            step={0.5}
-            className="w-full"
-          />
-        </div>
-      </div>
-
-      {/* ========== QUICK PRESETS ========== */}
-      <div className="glass rounded-2xl p-6 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Timer className="w-4 h-4 text-warm-sage" />
-          <h3 className="font-semibold text-sm text-foreground">
-            Quick Presets
-          </h3>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {PRESETS.map(preset => (
-            <button
-              key={preset.name}
-              onClick={() => applyPreset(preset)}
-              className="text-left bg-background rounded-xl border border-white/15 dark:border-white/10 p-4 hover:border-warm-sage/40 hover:bg-warm-sage-light/30 transition-all duration-200 motion-safe:active:scale-[0.97]"
-            >
-              <p className="text-sm font-medium text-foreground">
-                {preset.name}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {preset.description}
-              </p>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ========== CUSTOM TIMER SETTINGS ========== */}
-      <div className="glass rounded-2xl p-6 mb-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Timer className="w-4 h-4 text-warm-sage" />
-          <h3 className="font-semibold text-sm text-foreground">
-            Custom Timer Settings
-          </h3>
-        </div>
-
-        <div className="space-y-6">
-          {/* Focus Duration */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Focus Duration: {settings.focusDuration} min
-              </label>
-            </div>
-            <Slider
-              value={[settings.focusDuration]}
-              onValueChange={([v]) =>
-                setSettings(s => ({ ...s, focusDuration: v }))
-              }
-              min={5}
-              max={90}
-              step={5}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground/50 mt-1">
-              <span>5 min</span>
-              <span>90 min</span>
-            </div>
-          </div>
-
-          {/* Short Break */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Short Break: {settings.shortBreak} min
-              </label>
-            </div>
-            <Slider
-              value={[settings.shortBreak]}
-              onValueChange={([v]) =>
-                setSettings(s => ({ ...s, shortBreak: v }))
-              }
-              min={1}
-              max={15}
-              step={1}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground/50 mt-1">
-              <span>1 min</span>
-              <span>15 min</span>
-            </div>
-          </div>
-
-          {/* Long Break */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Long Break: {settings.longBreak} min
-              </label>
-            </div>
-            <Slider
-              value={[settings.longBreak]}
-              onValueChange={([v]) =>
-                setSettings(s => ({ ...s, longBreak: v }))
-              }
-              min={5}
-              max={45}
-              step={5}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground/50 mt-1">
-              <span>5 min</span>
-              <span>45 min</span>
-            </div>
-          </div>
-
-          {/* Sessions Before Long Break */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Sessions Before Long Break: {settings.sessionsBeforeLongBreak}
-              </label>
-            </div>
-            <Slider
-              value={[settings.sessionsBeforeLongBreak]}
-              onValueChange={([v]) =>
-                setSettings(s => ({ ...s, sessionsBeforeLongBreak: v }))
-              }
-              min={2}
-              max={8}
-              step={1}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground/50 mt-1">
-              <span>2</span>
-              <span>8</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Save / Reset */}
-        <div className="flex gap-3 mt-6">
-          <Button
-            onClick={handleSave}
-            className="flex-1 bg-warm-sage hover:bg-warm-sage/90 text-white gap-2"
-          >
-            <Save className="w-4 h-4" /> Save Settings
-          </Button>
-          <Button onClick={handleReset} variant="outline" className="gap-2">
-            <RotateCcw className="w-4 h-4" /> Reset
-          </Button>
-        </div>
-      </div>
-
       {/* ========== EXPORT / IMPORT ========== */}
       <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-2">
@@ -970,7 +931,6 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
         </div>
       </div>
 
-      {/* ========== NEED HELP? ========== */}
       {onNavigate && (
         <div className="glass rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">

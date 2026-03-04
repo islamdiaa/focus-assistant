@@ -99,7 +99,7 @@ export default function WeeklyReviewPage() {
   const focusMins = weekStats.totalFocusMin % 60;
 
   return (
-    <div className="p-4 lg:p-8 max-w-4xl">
+    <div className="p-4 lg:p-8 max-w-5xl mx-auto">
       {/* Header with week navigation */}
       <div className="flex items-center justify-between mb-8">
         <div>
