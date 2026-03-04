@@ -39,6 +39,8 @@ const ReadLaterPage = lazy(() => import("./ReadLaterPage"));
 const CanvasPage = lazy(() => import("./CanvasPage"));
 const HelpPage = lazy(() => import("./HelpPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
+
+import PageSkeleton from "@/components/PageSkeleton";
 import { useApp } from "@/contexts/AppContext";
 import CommandPalette from "@/components/CommandPalette";
 import ScratchPadDrawer from "@/components/ScratchPadDrawer";
@@ -270,8 +272,8 @@ export default function Home() {
         {focusMode && (
           <Suspense
             fallback={
-              <div className="fixed inset-0 bg-background flex items-center justify-center z-50">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-sage" />
+              <div className="fixed inset-0 bg-background z-50">
+                <PageSkeleton />
               </div>
             }
           >
@@ -386,13 +388,7 @@ export default function Home() {
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
                 >
-                  <Suspense
-                    fallback={
-                      <div className="flex items-center justify-center h-64">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-sage" />
-                      </div>
-                    }
-                  >
+                  <Suspense fallback={<PageSkeleton />}>
                     {activePage === "planner" && (
                       <DailyPlannerPage
                         newTaskTrigger={newTaskTrigger}
