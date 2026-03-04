@@ -191,10 +191,14 @@ function InlineEditForm({
         ))}
       </div>
       <div>
-        <label className="text-[10px] text-muted-foreground block mb-1">
+        <label
+          htmlFor="matrix-edit-due-date"
+          className="text-[10px] text-muted-foreground block mb-1"
+        >
           Due date
         </label>
         <Input
+          id="matrix-edit-due-date"
           type="date"
           value={dueDate}
           onChange={e => setDueDate(e.target.value)}
@@ -480,9 +484,9 @@ export default function MatrixPage() {
                               : "🪶"}
                       </span>
                     </div>
-                    <h4 className="text-sm font-semibold text-foreground">
+                    <h3 className="text-sm font-semibold text-foreground">
                       {q.title}
-                    </h4>
+                    </h3>
                   </div>
                   <p className="text-xs text-muted-foreground mb-3">
                     {q.subtitle}
@@ -521,12 +525,12 @@ export default function MatrixPage() {
           >
             <div className="glass rounded-xl p-4 lg:sticky lg:top-8">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   Unassigned
                   <span className="text-xs bg-warm-sand px-2 py-0.5 rounded-full text-muted-foreground">
                     {unassigned.length}
                   </span>
-                </h4>
+                </h3>
                 <button
                   onClick={() => setShowPanel(false)}
                   className="text-muted-foreground hover:text-foreground"

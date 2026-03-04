@@ -162,6 +162,7 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
             variant="ghost"
             size="sm"
             className="text-muted-foreground"
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
           >
             {isFullscreen ? (
               <Minimize2 className="w-4 h-4" />
@@ -236,6 +237,7 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
           variant="outline"
           size="lg"
           className="rounded-full w-12 h-12 p-0"
+          aria-label="Reset timer"
         >
           <RotateCcw className="w-5 h-5" />
         </Button>
@@ -247,6 +249,7 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
               ? "bg-warm-sage hover:bg-warm-sage/90"
               : "bg-warm-blue hover:bg-warm-blue/90"
           } text-white`}
+          aria-label={timerRunning ? "Pause timer" : "Start timer"}
         >
           {timerRunning ? (
             <Pause className="w-6 h-6" />
@@ -260,6 +263,7 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
             variant="outline"
             size="lg"
             className="rounded-full w-12 h-12 p-0 text-warm-sage hover:bg-warm-sage-light"
+            aria-label="Complete task"
           >
             <Check className="w-5 h-5" />
           </Button>
@@ -299,6 +303,11 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
                       }
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all
                         ${sub.done ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
+                      aria-label={
+                        sub.done
+                          ? `Mark "${sub.title}" as incomplete`
+                          : `Mark "${sub.title}" as complete`
+                      }
                     >
                       {sub.done && <Check className="w-3 h-3 text-white" />}
                     </button>

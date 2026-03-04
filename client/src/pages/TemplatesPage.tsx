@@ -167,10 +167,14 @@ export default function TemplatesPage() {
               </DialogHeader>
               <div className="space-y-4 mt-2">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                  <label
+                    htmlFor="template-name"
+                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                  >
                     Template Name
                   </label>
                   <Input
+                    id="template-name"
                     value={name}
                     onChange={e => setName(e.target.value)}
                     placeholder="e.g., Sprint Planning"
@@ -178,10 +182,14 @@ export default function TemplatesPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                  <label
+                    htmlFor="template-description"
+                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+                  >
                     Description (optional)
                   </label>
                   <Textarea
+                    id="template-description"
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     placeholder="What is this template for?"
@@ -192,7 +200,10 @@ export default function TemplatesPage() {
 
                 {/* Tasks in template */}
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                  <label
+                    htmlFor="template-task-title"
+                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block"
+                  >
                     Tasks ({tasks.length})
                   </label>
                   <div className="space-y-1.5 mb-3">
@@ -227,6 +238,7 @@ export default function TemplatesPage() {
                   </div>
                   <div className="flex gap-2">
                     <Input
+                      id="template-task-title"
                       value={taskTitle}
                       onChange={e => setTaskTitle(e.target.value)}
                       onKeyDown={e =>
@@ -237,11 +249,13 @@ export default function TemplatesPage() {
                       className="bg-background text-sm flex-1"
                     />
                     <select
+                      id="template-task-priority"
                       value={taskPriority}
                       onChange={e =>
                         setTaskPriority(e.target.value as Priority)
                       }
                       className="bg-background border border-border rounded-md px-2 text-xs"
+                      aria-label="Task priority"
                     >
                       <option value="low">Low</option>
                       <option value="medium">Med</option>

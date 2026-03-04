@@ -516,10 +516,14 @@ export default function ReadLaterPage() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              <label
+                htmlFor="reading-url"
+                className="text-xs font-medium text-muted-foreground mb-1 block"
+              >
                 URL *
               </label>
               <Input
+                id="reading-url"
                 value={addUrl}
                 onChange={e => setAddUrl(e.target.value)}
                 placeholder="https://example.com/article"
@@ -529,10 +533,14 @@ export default function ReadLaterPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              <label
+                htmlFor="reading-title"
+                className="text-xs font-medium text-muted-foreground mb-1 block"
+              >
                 Title
               </label>
               <Input
+                id="reading-title"
                 value={addTitle}
                 onChange={e => setAddTitle(e.target.value)}
                 placeholder="Auto-detected from URL if empty"
@@ -540,10 +548,14 @@ export default function ReadLaterPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              <label
+                htmlFor="reading-description"
+                className="text-xs font-medium text-muted-foreground mb-1 block"
+              >
                 Description
               </label>
               <Textarea
+                id="reading-description"
                 value={addDescription}
                 onChange={e => setAddDescription(e.target.value)}
                 placeholder="Why you want to read this..."
@@ -552,10 +564,14 @@ export default function ReadLaterPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              <label
+                htmlFor="reading-tags"
+                className="text-xs font-medium text-muted-foreground mb-1 block"
+              >
                 Tags (comma-separated)
               </label>
               <Input
+                id="reading-tags"
                 value={addTags}
                 onChange={e => setAddTags(e.target.value)}
                 placeholder="ai, productivity, engineering"
@@ -597,11 +613,13 @@ export default function ReadLaterPage() {
             )}
           </DialogHeader>
           <Textarea
+            id="reading-notes"
             value={notesText}
             onChange={e => setNotesText(e.target.value)}
             placeholder="Your notes, highlights, key takeaways..."
             className="bg-background resize-none min-h-[200px]"
             autoFocus
+            aria-label="Reading notes"
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setNotesItem(null)}>

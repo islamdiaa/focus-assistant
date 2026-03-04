@@ -456,14 +456,19 @@ export default function TimerPage() {
             <div className="space-y-4 mt-2">
               {/* Task/Subtask picker */}
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
+                <label
+                  id="link-tasks-label"
+                  className="text-sm font-medium text-foreground mb-1.5 block"
+                >
                   Link Tasks (optional)
                 </label>
-                <TaskPicker
-                  tasks={state.tasks}
-                  selectedLinks={selectedLinks}
-                  onToggle={handleToggleLink}
-                />
+                <div aria-labelledby="link-tasks-label">
+                  <TaskPicker
+                    tasks={state.tasks}
+                    selectedLinks={selectedLinks}
+                    onToggle={handleToggleLink}
+                  />
+                </div>
                 {selectedLinks.length > 0 && (
                   <p className="text-xs text-warm-sage mt-1.5">
                     {selectedLinks.length} item
@@ -472,18 +477,31 @@ export default function TimerPage() {
                 )}
               </div>
 
-              <Input
-                placeholder={autoTitle || "What will you focus on?"}
-                value={newTitle}
-                onChange={e => setNewTitle(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleAdd()}
-                className="bg-background"
-              />
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">
+                <label
+                  htmlFor="new-pomodoro-title"
+                  className="text-sm font-medium text-foreground mb-1.5 block"
+                >
+                  Title
+                </label>
+                <Input
+                  id="new-pomodoro-title"
+                  placeholder={autoTitle || "What will you focus on?"}
+                  value={newTitle}
+                  onChange={e => setNewTitle(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleAdd()}
+                  className="bg-background"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="new-pomodoro-duration"
+                  className="text-sm text-muted-foreground mb-1 block"
+                >
                   Duration (minutes)
                 </label>
                 <Input
+                  id="new-pomodoro-duration"
                   type="number"
                   min={1}
                   max={120}
@@ -564,7 +582,7 @@ export default function TimerPage() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm text-foreground truncate flex items-center gap-1.5">
+                    <h3 className="font-medium text-sm text-foreground truncate flex items-center gap-1.5">
                       {isRunning && (
                         <span
                           className="w-2 h-2 rounded-full bg-warm-sage shrink-0 motion-safe:animate-pulse"
@@ -573,7 +591,7 @@ export default function TimerPage() {
                         />
                       )}
                       {pom.title}
-                    </h4>
+                    </h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {pom.duration} min
                     </p>
@@ -589,6 +607,7 @@ export default function TimerPage() {
                       dispatch({ type: "DELETE_POMODORO", payload: pom.id })
                     }
                     className="text-muted-foreground hover:text-warm-terracotta p-1 transition-colors motion-safe:active:scale-[0.97]"
+                    aria-label={`Delete "${pom.title}" pomodoro`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -636,6 +655,7 @@ export default function TimerPage() {
                             ? "bg-warm-amber hover:bg-warm-amber/90 text-white"
                             : "bg-warm-sage hover:bg-warm-sage/90 text-white"
                         }
+                        aria-label={isRunning ? "Pause timer" : "Start timer"}
                       >
                         {isRunning ? (
                           <Pause className="w-4 h-4" />
@@ -647,6 +667,7 @@ export default function TimerPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => resetPomodoro(pom.id)}
+                        aria-label="Reset timer"
                       >
                         <RotateCcw className="w-4 h-4" />
                       </Button>
@@ -670,9 +691,9 @@ export default function TimerPage() {
           <Info className="w-5 h-5 text-warm-terracotta" />
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-foreground mb-1">
+          <h3 className="text-sm font-semibold text-foreground mb-1">
             How it works
-          </h4>
+          </h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
             Create a Pomodoro and link it to one or more tasks (or specific
             subtasks) you want to focus on. Set the duration (default{" "}

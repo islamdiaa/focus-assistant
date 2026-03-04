@@ -396,7 +396,10 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
           {/* Focus Duration */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <label
+                id="setting-focus-duration-label"
+                className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+              >
                 Focus Duration: {settings.focusDuration} min
               </label>
             </div>
@@ -409,6 +412,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
               max={90}
               step={5}
               className="w-full"
+              aria-labelledby="setting-focus-duration-label"
             />
             <div className="flex justify-between text-xs text-muted-foreground/70 mt-1">
               <span>5 min</span>
@@ -419,7 +423,10 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
           {/* Short Break */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <label
+                id="setting-short-break-label"
+                className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+              >
                 Short Break: {settings.shortBreak} min
               </label>
             </div>
@@ -432,6 +439,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
               max={15}
               step={1}
               className="w-full"
+              aria-labelledby="setting-short-break-label"
             />
             <div className="flex justify-between text-xs text-muted-foreground/70 mt-1">
               <span>1 min</span>
@@ -442,7 +450,10 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
           {/* Long Break */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <label
+                id="setting-long-break-label"
+                className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+              >
                 Long Break: {settings.longBreak} min
               </label>
             </div>
@@ -455,6 +466,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
               max={45}
               step={5}
               className="w-full"
+              aria-labelledby="setting-long-break-label"
             />
             <div className="flex justify-between text-xs text-muted-foreground/70 mt-1">
               <span>5 min</span>
@@ -465,7 +477,10 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
           {/* Sessions Before Long Break */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <label
+                id="setting-sessions-label"
+                className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+              >
                 Sessions Before Long Break: {settings.sessionsBeforeLongBreak}
               </label>
             </div>
@@ -478,6 +493,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
               max={8}
               step={1}
               className="w-full"
+              aria-labelledby="setting-sessions-label"
             />
             <div className="flex justify-between text-xs text-muted-foreground/70 mt-1">
               <span>2</span>
@@ -736,10 +752,14 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
             ) : (
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
+                  <label
+                    htmlFor="setting-sheet-id"
+                    className="text-xs text-muted-foreground mb-1 block"
+                  >
                     Google Sheet ID
                   </label>
                   <Input
+                    id="setting-sheet-id"
                     placeholder="e.g., 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
                     value={sheetId}
                     onChange={e => setSheetId(e.target.value)}
@@ -750,10 +770,14 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
+                  <label
+                    htmlFor="setting-api-key"
+                    className="text-xs text-muted-foreground mb-1 block"
+                  >
                     Google API Key
                   </label>
                   <Input
+                    id="setting-api-key"
                     placeholder="Your Google API key"
                     value={apiKey}
                     onChange={e => setApiKey(e.target.value)}
@@ -792,11 +816,15 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
         </p>
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+            <label
+              htmlFor="setting-obsidian-path"
+              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+            >
               Vault Path
             </label>
             <div className="flex gap-2">
               <Input
+                id="setting-obsidian-path"
                 value={obsidianInput}
                 onChange={e => setObsidianInput(e.target.value)}
                 placeholder="/path/to/obsidian/vault"

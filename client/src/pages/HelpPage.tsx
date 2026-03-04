@@ -64,9 +64,9 @@ function Section({
         >
           <Icon className="w-4 h-4" />
         </div>
-        <h3 className="font-semibold text-lg text-foreground flex-1">
+        <h2 className="font-semibold text-lg text-foreground flex-1">
           {title}
-        </h3>
+        </h2>
         {open ? (
           <ChevronDown className="w-4 h-4 text-muted-foreground" />
         ) : (
@@ -100,7 +100,7 @@ function FeatureCard({
     <div className="bg-background rounded-xl border border-white/15 dark:border-white/10 p-4 mb-3 last:mb-0">
       <div className="flex items-center gap-2.5 mb-2">
         <Icon className={`w-4 h-4 ${iconColor}`} />
-        <h4 className="text-sm font-semibold text-foreground">{title}</h4>
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       </div>
       <div className="text-xs text-muted-foreground leading-relaxed space-y-1.5">
         {children}
@@ -186,9 +186,9 @@ export default function HelpPage() {
             satisfying feedback to keep you motivated.
           </p>
           <div className="bg-warm-sage-light/30 rounded-xl border border-warm-sage/20 p-4">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-warm-sage mb-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-warm-sage mb-3">
               Quick Tour of the Sidebar
-            </h4>
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {[
                 {
