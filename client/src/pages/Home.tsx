@@ -391,14 +391,7 @@ export default function Home() {
                 </div>
                 <div
                   role="status"
-                  aria-live="polite"
-                  aria-label={
-                    saveStatus === "saving"
-                      ? "Saving changes"
-                      : saveStatus === "error"
-                        ? "Save failed"
-                        : "All changes saved"
-                  }
+                  aria-atomic="true"
                   title={
                     saveStatus === "saving"
                       ? "Saving..."
@@ -408,23 +401,34 @@ export default function Home() {
                   }
                   className="p-1 text-muted-foreground"
                 >
+                  <span className="sr-only">
+                    {saveStatus === "saving"
+                      ? "Saving changes"
+                      : saveStatus === "error"
+                        ? "Save failed"
+                        : ""}
+                  </span>
                   {saveStatus === "error" ? (
-                    <CloudOff className="w-4 h-4 text-destructive" />
+                    <CloudOff
+                      className="w-4 h-4 text-destructive"
+                      aria-hidden="true"
+                    />
                   ) : (
                     <Cloud
-                      className={`w-4 h-4 ${saveStatus === "saving" ? "animate-pulse" : "text-warm-sage"}`}
+                      className={`w-4 h-4 ${saveStatus === "saving" ? "motion-safe:animate-pulse" : "text-warm-sage"}`}
+                      aria-hidden="true"
                     />
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-sage/15 shadow-sm px-2 md:px-2.5 py-1 rounded-full border border-warm-sage/20">
                   <Smile className="w-3.5 h-3.5 text-warm-sage" />
-                  <span className="text-xs font-medium text-warm-charcoal">
+                  <span className="text-xs font-medium text-foreground">
                     {completedToday}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 backdrop-blur-md bg-warm-blue/15 shadow-sm px-2 md:px-2.5 py-1 rounded-full border border-warm-blue/20">
                   <Clock className="w-3.5 h-3.5 text-warm-blue" />
-                  <span className="text-xs font-medium text-warm-charcoal">
+                  <span className="text-xs font-medium text-foreground">
                     {focusToday}m
                   </span>
                 </div>

@@ -297,6 +297,10 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
       </AnimatePresence>
 
       {/* Phase indicator */}
+      {/* Stable live region — always mounted, announced on phase change */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {timerPhase === "focus" ? "Focus phase" : "Break phase"}
+      </div>
       <motion.div
         key={timerPhase}
         initial={{ opacity: 0, y: -10 }}
@@ -304,7 +308,6 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
         className="mb-6"
       >
         <span
-          aria-live="polite"
           className={`text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full ${
             timerPhase === "focus"
               ? "bg-warm-sage-light text-warm-sage"

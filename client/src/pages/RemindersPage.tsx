@@ -425,10 +425,7 @@ export default function RemindersPage({
 
       {/* Quick stats */}
       {reminders.length > 0 && (
-        <div
-          className="flex items-center gap-2 mb-6 flex-wrap"
-          aria-live="polite"
-        >
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
           {stats.overdue > 0 && (
             <span className="text-xs px-3 py-1 rounded-full bg-red-50 text-red-500 border border-red-200 font-medium flex items-center gap-1">
               <AlertCircle className="w-3 h-3" /> {stats.overdue} overdue
@@ -467,8 +464,11 @@ export default function RemindersPage({
 
       {/* Reminder list */}
       {filteredReminders.length === 0 ? (
-        <div className="glass rounded-2xl p-12 text-center" aria-live="polite">
-          <Bell className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
+        <div className="glass rounded-2xl p-12 text-center">
+          <Bell
+            className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30"
+            aria-hidden="true"
+          />
           <h3 className="font-semibold text-xl text-foreground mb-2">
             {reminders.length === 0
               ? "No reminders yet"

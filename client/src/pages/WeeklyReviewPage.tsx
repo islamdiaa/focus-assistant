@@ -143,10 +143,7 @@ export default function WeeklyReviewPage() {
       </div>
 
       {/* Summary Cards */}
-      <div
-        className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8"
-        aria-live="polite"
-      >
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
         {[
           {
             icon: CheckCircle2,
@@ -246,7 +243,7 @@ export default function WeeklyReviewPage() {
           Completed ({weekStats.completedTasks.length})
         </h3>
         {weekStats.completedTasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground" aria-live="polite">
+          <p className="text-sm text-muted-foreground">
             No tasks completed this week.
           </p>
         ) : (
@@ -284,9 +281,7 @@ export default function WeeklyReviewPage() {
             Carry Over ({weekStats.carryOverTasks.length})
           </h3>
           {weekStats.carryOverTasks.length === 0 ? (
-            <p className="text-sm text-muted-foreground" aria-live="polite">
-              All caught up!
-            </p>
+            <p className="text-sm text-muted-foreground">All caught up!</p>
           ) : (
             <div className="space-y-1.5">
               {weekStats.carryOverTasks.slice(0, 10).map(t => (
@@ -311,9 +306,7 @@ export default function WeeklyReviewPage() {
             Overdue ({weekStats.overdueTasks.length})
           </h3>
           {weekStats.overdueTasks.length === 0 ? (
-            <p className="text-sm text-muted-foreground" aria-live="polite">
-              No overdue tasks!
-            </p>
+            <p className="text-sm text-muted-foreground">No overdue tasks!</p>
           ) : (
             <div className="space-y-1.5">
               {weekStats.overdueTasks.slice(0, 10).map(t => (

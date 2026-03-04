@@ -435,7 +435,7 @@ export default function MatrixPage() {
       </AnimatePresence>
 
       {/* Counts */}
-      <div className="flex gap-3 mb-6" aria-live="polite">
+      <div className="flex gap-3 mb-6">
         <span className="text-xs px-3 py-1 rounded-full bg-warm-sage-light text-warm-sage border border-warm-sage/20 font-medium">
           {assigned.length} assigned
         </span>
@@ -534,6 +534,7 @@ export default function MatrixPage() {
                 <button
                   onClick={() => setShowPanel(false)}
                   className="text-muted-foreground hover:text-foreground"
+                  aria-label="Collapse unassigned panel"
                 >
                   <span className="hidden lg:block">
                     <ChevronRight className="w-4 h-4" />
@@ -590,13 +591,11 @@ export default function MatrixPage() {
 
       {/* Empty state when no tasks at all */}
       {activeTasks.length === 0 && (
-        <div
-          className="mt-8 glass rounded-2xl p-8 lg:p-16 text-center"
-          aria-live="polite"
-        >
+        <div className="mt-8 glass rounded-2xl p-8 lg:p-16 text-center">
           <img
             src={EMPTY_MATRIX_IMG}
-            alt="No tasks"
+            alt=""
+            role="presentation"
             className="w-40 lg:w-48 h-40 lg:h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80"
           />
           <h3 className="font-semibold text-lg lg:text-xl text-foreground mb-2">

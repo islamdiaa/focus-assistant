@@ -1736,7 +1736,7 @@ export default function TasksPage({
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border
-                  ${filter === f ? "bg-warm-sage/15 text-warm-charcoal border-warm-sage/30 backdrop-blur-md shadow-md" : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/15 dark:hover:border-white/10 hover:bg-warm-sand/30"}`}
+                  ${filter === f ? "bg-warm-sage/15 text-foreground border-warm-sage/30 backdrop-blur-md shadow-md" : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/15 dark:hover:border-white/10 hover:bg-warm-sand/30"}`}
               >
                 {labels[f]} ({counts[f]})
               </button>
@@ -1749,7 +1749,7 @@ export default function TasksPage({
               key={s}
               onClick={() => setSort(s)}
               className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 border
-                ${sort === s ? "bg-warm-blue/10 text-warm-charcoal border-warm-blue/25 shadow-sm" : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/15 dark:hover:border-white/10 hover:bg-warm-sand/30"}`}
+                ${sort === s ? "bg-warm-blue/10 text-foreground border-warm-blue/25 shadow-sm" : "text-muted-foreground hover:text-foreground border-transparent hover:border-white/15 dark:hover:border-white/10 hover:bg-warm-sand/30"}`}
             >
               {s === "manual" && <GripVertical className="w-3.5 h-3.5" />}
               {s === "newest" && <ArrowUpDown className="w-3.5 h-3.5" />}
