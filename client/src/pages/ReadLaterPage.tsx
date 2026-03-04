@@ -1,7 +1,7 @@
 /**
  * Read Later Page — Pocket-style link saving with tags, notes, and status tracking
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,281 @@ const STATUS_CONFIG: Record<
   },
 };
 
+/** Inline tag adder component */
+function AddTagInline({
+  onAdd,
+  existingTags,
+}: {
+  onAdd: (tag: string) => void;
+  existingTags: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+
+  function handleSubmit() {
+    if (value.trim()) {
+      onAdd(value.trim());
+      setValue("");
+      setOpen(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-warm-lavender px-2 py-1 rounded-full border border-dashed border-border hover:border-warm-lavender/40 transition-colors motion-safe:active:scale-[0.97]"
+      >
+        <Plus className="w-3 h-3" /> Add tag
+      </button>
+    );
+  }
+
+  return (
+    <div className="inline-flex items-center gap-1">
+      <Input
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === "Enter") handleSubmit();
+          if (e.key === "Escape") setOpen(false);
+        }}
+        placeholder="tag name"
+        className="h-6 text-xs w-24 px-2"
+        autoFocus
+        list="existing-tags"
+      />
+      <datalist id="existing-tags">
+        {existingTags.map(t => (
+          <option key={t} value={t} />
+        ))}
+      </datalist>
+      <button
+        onClick={handleSubmit}
+        className="p-1.5 rounded text-warm-lavender hover:text-warm-lavender/80 hover:bg-warm-lavender/10 transition-colors motion-safe:active:scale-[0.97]"
+      >
+        <Check className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => setOpen(false)}
+        className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors motion-safe:active:scale-[0.97]"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+interface ReadingCardProps {
+  item: ReadingItem;
+  isExpanded: boolean;
+  allTags: string[];
+  onToggleExpand: (id: string) => void;
+  onStatusCycle: (item: ReadingItem) => void;
+  onDelete: (id: string) => void;
+  onOpenNotes: (item: ReadingItem) => void;
+  onRemoveTag: (itemId: string, tag: string) => void;
+  onAddTag: (itemId: string, tag: string) => void;
+}
+
+const ReadingCard = memo(function ReadingCard({
+  item,
+  isExpanded,
+  allTags,
+  onToggleExpand,
+  onStatusCycle,
+  onDelete,
+  onOpenNotes,
+  onRemoveTag,
+  onAddTag,
+}: ReadingCardProps) {
+  const cfg = STATUS_CONFIG[item.status];
+  const StatusIcon = cfg.icon;
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="glass rounded-xl overflow-hidden"
+    >
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          {/* Status button */}
+          <button
+            onClick={() => onStatusCycle(item)}
+            className={`shrink-0 mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center transition-all motion-safe:active:scale-[0.97] ${cfg.bg} hover:opacity-80`}
+            title={`Status: ${cfg.label} (click to cycle)`}
+          >
+            <StatusIcon className={`w-4 h-4 ${cfg.color}`} />
+          </button>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-foreground hover:text-warm-lavender transition-colors line-clamp-1 flex items-center gap-1.5"
+                >
+                  {item.title}
+                  <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground" />
+                </a>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Globe className="w-3 h-3" />
+                    {item.domain || "link"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(item.createdAt).toLocaleDateString()}
+                  </span>
+                  {item.readAt && (
+                    <span className="text-xs text-warm-sage">
+                      Read {new Date(item.readAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Expand toggle */}
+              <button
+                onClick={() => onToggleExpand(item.id)}
+                className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors motion-safe:active:scale-[0.97]"
+              >
+                {isExpanded ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+
+            {/* Description */}
+            {item.description && (
+              <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">
+                {item.description}
+              </p>
+            )}
+
+            {/* Tags */}
+            {item.tags.length > 0 && (
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                {item.tags.map(tag => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="text-xs bg-warm-lavender/10 text-warm-lavender border-warm-lavender/20 gap-1"
+                  >
+                    <Tag className="w-2.5 h-2.5" />
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Notes preview */}
+            {item.notes && !isExpanded && (
+              <p className="text-xs text-muted-foreground/70 mt-1.5 line-clamp-1 italic">
+                <StickyNote className="w-3 h-3 inline mr-1" />
+                {item.notes}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Expanded section */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 pt-4 border-t border-white/15 dark:border-white/10 space-y-3">
+                {/* Notes */}
+                {item.notes && (
+                  <div className="bg-warm-sand/30 rounded-lg p-3">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <StickyNote className="w-3.5 h-3.5 text-warm-lavender" />
+                      <span className="text-xs font-medium text-foreground">
+                        Notes
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {item.notes}
+                    </p>
+                  </div>
+                )}
+
+                {/* Tag management */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {item.tags.map(tag => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 text-xs bg-warm-lavender/10 text-warm-lavender px-2 py-1 rounded-full"
+                    >
+                      {tag}
+                      <button
+                        onClick={() => onRemoveTag(item.id, tag)}
+                        className="p-1 rounded hover:text-red-500 transition-colors motion-safe:active:scale-[0.97]"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                  <AddTagInline
+                    onAdd={tag => onAddTag(item.id, tag)}
+                    existingTags={allTags}
+                  />
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onOpenNotes(item)}
+                    className="gap-1.5 text-xs"
+                  >
+                    <StickyNote className="w-3.5 h-3.5" />
+                    {item.notes ? "Edit Notes" : "Add Notes"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onStatusCycle(item)}
+                    className={`gap-1.5 text-xs ${cfg.color}`}
+                  >
+                    <StatusIcon className="w-3.5 h-3.5" />
+                    Mark as{" "}
+                    {item.status === "unread"
+                      ? "Reading"
+                      : item.status === "reading"
+                        ? "Read"
+                        : "Unread"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onDelete(item.id)}
+                    className="gap-1.5 text-xs text-warm-terracotta hover:text-warm-terracotta hover:bg-warm-terracotta-light dark:hover:bg-warm-terracotta/10 ml-auto"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+});
+
 export default function ReadLaterPage() {
   const { state, dispatch } = useApp();
   const readingList = state.readingList || [];
@@ -114,9 +389,17 @@ export default function ReadLaterPage() {
   }, [readingList, filterStatus, filterTag, searchQuery]);
 
   // Stats
-  const unreadCount = readingList.filter(r => r.status === "unread").length;
-  const readingCount = readingList.filter(r => r.status === "reading").length;
-  const readCount = readingList.filter(r => r.status === "read").length;
+  const { unreadCount, readingCount, readCount } = useMemo(() => {
+    let unread = 0,
+      reading = 0,
+      read = 0;
+    for (const r of readingList) {
+      if (r.status === "unread") unread++;
+      else if (r.status === "reading") reading++;
+      else if (r.status === "read") read++;
+    }
+    return { unreadCount: unread, readingCount: reading, readCount: read };
+  }, [readingList]);
 
   function handleAdd() {
     if (!addUrl.trim()) return;
@@ -149,19 +432,22 @@ export default function ReadLaterPage() {
     setAddOpen(false);
   }
 
-  function handleStatusCycle(item: ReadingItem) {
-    const next: ReadingStatus =
-      item.status === "unread"
-        ? "reading"
-        : item.status === "reading"
-          ? "read"
-          : "unread";
-    dispatch({
-      type: "MARK_READING_STATUS",
-      payload: { id: item.id, status: next },
-    });
-    if (next === "read") toast.success("Marked as read");
-  }
+  const handleStatusCycle = useCallback(
+    (item: ReadingItem) => {
+      const next: ReadingStatus =
+        item.status === "unread"
+          ? "reading"
+          : item.status === "reading"
+            ? "read"
+            : "unread";
+      dispatch({
+        type: "MARK_READING_STATUS",
+        payload: { id: item.id, status: next },
+      });
+      if (next === "read") toast.success("Marked as read");
+    },
+    [dispatch]
+  );
 
   function handleSaveNotes() {
     if (!notesItem) return;
@@ -172,30 +458,48 @@ export default function ReadLaterPage() {
     setNotesItem(null);
   }
 
-  function handleDelete(id: string) {
-    dispatch({ type: "DELETE_READING_ITEM", payload: id });
-    toast("Article removed", {
-      action: { label: "Undo", onClick: () => dispatch({ type: "UNDO" }) },
-    });
-  }
+  const handleDelete = useCallback(
+    (id: string) => {
+      dispatch({ type: "DELETE_READING_ITEM", payload: id });
+      toast("Article removed", {
+        action: { label: "Undo", onClick: () => dispatch({ type: "UNDO" }) },
+      });
+    },
+    [dispatch]
+  );
 
-  function handleRemoveTag(itemId: string, tag: string) {
-    const item = readingList.find(r => r.id === itemId);
-    if (!item) return;
-    dispatch({
-      type: "UPDATE_READING_ITEM",
-      payload: { id: itemId, tags: item.tags.filter(t => t !== tag) },
-    });
-  }
+  const handleOpenNotes = useCallback((item: ReadingItem) => {
+    setNotesItem(item);
+    setNotesText(item.notes || "");
+  }, []);
 
-  function handleAddTag(itemId: string, tag: string) {
-    const item = readingList.find(r => r.id === itemId);
-    if (!item || item.tags.includes(tag)) return;
-    dispatch({
-      type: "UPDATE_READING_ITEM",
-      payload: { id: itemId, tags: [...item.tags, tag] },
-    });
-  }
+  const handleToggleExpand = useCallback((id: string) => {
+    setExpandedId(prev => (prev === id ? null : id));
+  }, []);
+
+  const handleRemoveTag = useCallback(
+    (itemId: string, tag: string) => {
+      const item = readingList.find(r => r.id === itemId);
+      if (!item) return;
+      dispatch({
+        type: "UPDATE_READING_ITEM",
+        payload: { id: itemId, tags: item.tags.filter(t => t !== tag) },
+      });
+    },
+    [dispatch, readingList]
+  );
+
+  const handleAddTag = useCallback(
+    (itemId: string, tag: string) => {
+      const item = readingList.find(r => r.id === itemId);
+      if (!item || item.tags.includes(tag)) return;
+      dispatch({
+        type: "UPDATE_READING_ITEM",
+        payload: { id: itemId, tags: [...item.tags, tag] },
+      });
+    },
+    [dispatch, readingList]
+  );
 
   return (
     <div className="p-4 lg:p-8 max-w-5xl mx-auto">
@@ -308,203 +612,20 @@ export default function ReadLaterPage() {
       ) : (
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
-            {filtered.map(item => {
-              const cfg = STATUS_CONFIG[item.status];
-              const StatusIcon = cfg.icon;
-              const isExpanded = expandedId === item.id;
-
-              return (
-                <motion.div
-                  key={item.id}
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="glass rounded-xl overflow-hidden"
-                >
-                  <div className="p-4">
-                    <div className="flex items-start gap-3">
-                      {/* Status button */}
-                      <button
-                        onClick={() => handleStatusCycle(item)}
-                        className={`shrink-0 mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center transition-all motion-safe:active:scale-[0.97] ${cfg.bg} hover:opacity-80`}
-                        title={`Status: ${cfg.label} (click to cycle)`}
-                      >
-                        <StatusIcon className={`w-4 h-4 ${cfg.color}`} />
-                      </button>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <a
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-medium text-foreground hover:text-warm-lavender transition-colors line-clamp-1 flex items-center gap-1.5"
-                            >
-                              {item.title}
-                              <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground" />
-                            </a>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Globe className="w-3 h-3" />
-                                {item.domain || "link"}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(item.createdAt).toLocaleDateString()}
-                              </span>
-                              {item.readAt && (
-                                <span className="text-xs text-warm-sage">
-                                  Read{" "}
-                                  {new Date(item.readAt).toLocaleDateString()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Expand toggle */}
-                          <button
-                            onClick={() =>
-                              setExpandedId(isExpanded ? null : item.id)
-                            }
-                            className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors motion-safe:active:scale-[0.97]"
-                          >
-                            {isExpanded ? (
-                              <ChevronUp className="w-4 h-4" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Description */}
-                        {item.description && (
-                          <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">
-                            {item.description}
-                          </p>
-                        )}
-
-                        {/* Tags */}
-                        {item.tags.length > 0 && (
-                          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                            {item.tags.map(tag => (
-                              <Badge
-                                key={tag}
-                                variant="secondary"
-                                className="text-xs bg-warm-lavender/10 text-warm-lavender border-warm-lavender/20 gap-1"
-                              >
-                                <Tag className="w-2.5 h-2.5" />
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Notes preview */}
-                        {item.notes && !isExpanded && (
-                          <p className="text-xs text-muted-foreground/70 mt-1.5 line-clamp-1 italic">
-                            <StickyNote className="w-3 h-3 inline mr-1" />
-                            {item.notes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Expanded section */}
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="mt-4 pt-4 border-t border-white/15 dark:border-white/10 space-y-3">
-                            {/* Notes */}
-                            {item.notes && (
-                              <div className="bg-warm-sand/30 rounded-lg p-3">
-                                <div className="flex items-center gap-1.5 mb-1.5">
-                                  <StickyNote className="w-3.5 h-3.5 text-warm-lavender" />
-                                  <span className="text-xs font-medium text-foreground">
-                                    Notes
-                                  </span>
-                                </div>
-                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                                  {item.notes}
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Tag management */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {item.tags.map(tag => (
-                                <span
-                                  key={tag}
-                                  className="inline-flex items-center gap-1 text-xs bg-warm-lavender/10 text-warm-lavender px-2 py-1 rounded-full"
-                                >
-                                  {tag}
-                                  <button
-                                    onClick={() =>
-                                      handleRemoveTag(item.id, tag)
-                                    }
-                                    className="p-1 rounded hover:text-red-500 transition-colors motion-safe:active:scale-[0.97]"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
-                                </span>
-                              ))}
-                              <AddTagInline
-                                onAdd={tag => handleAddTag(item.id, tag)}
-                                existingTags={allTags}
-                              />
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex items-center gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setNotesItem(item);
-                                  setNotesText(item.notes || "");
-                                }}
-                                className="gap-1.5 text-xs"
-                              >
-                                <StickyNote className="w-3.5 h-3.5" />
-                                {item.notes ? "Edit Notes" : "Add Notes"}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleStatusCycle(item)}
-                                className={`gap-1.5 text-xs ${cfg.color}`}
-                              >
-                                <StatusIcon className="w-3.5 h-3.5" />
-                                Mark as{" "}
-                                {item.status === "unread"
-                                  ? "Reading"
-                                  : item.status === "reading"
-                                    ? "Read"
-                                    : "Unread"}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDelete(item.id)}
-                                className="gap-1.5 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 ml-auto"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" /> Delete
-                              </Button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {filtered.map(item => (
+              <ReadingCard
+                key={item.id}
+                item={item}
+                isExpanded={expandedId === item.id}
+                allTags={allTags}
+                onToggleExpand={handleToggleExpand}
+                onStatusCycle={handleStatusCycle}
+                onDelete={handleDelete}
+                onOpenNotes={handleOpenNotes}
+                onRemoveTag={handleRemoveTag}
+                onAddTag={handleAddTag}
+              />
+            ))}
           </AnimatePresence>
         </div>
       )}
@@ -642,71 +763,6 @@ export default function ReadLaterPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-/** Inline tag adder component */
-function AddTagInline({
-  onAdd,
-  existingTags,
-}: {
-  onAdd: (tag: string) => void;
-  existingTags: string[];
-}) {
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
-
-  function handleSubmit() {
-    if (value.trim()) {
-      onAdd(value.trim());
-      setValue("");
-      setOpen(false);
-    }
-  }
-
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-warm-lavender px-2 py-1 rounded-full border border-dashed border-border hover:border-warm-lavender/40 transition-colors motion-safe:active:scale-[0.97]"
-      >
-        <Plus className="w-3 h-3" /> Add tag
-      </button>
-    );
-  }
-
-  return (
-    <div className="inline-flex items-center gap-1">
-      <Input
-        value={value}
-        onChange={e => setValue(e.target.value)}
-        onKeyDown={e => {
-          if (e.key === "Enter") handleSubmit();
-          if (e.key === "Escape") setOpen(false);
-        }}
-        placeholder="tag name"
-        className="h-6 text-xs w-24 px-2"
-        autoFocus
-        list="existing-tags"
-      />
-      <datalist id="existing-tags">
-        {existingTags.map(t => (
-          <option key={t} value={t} />
-        ))}
-      </datalist>
-      <button
-        onClick={handleSubmit}
-        className="p-1.5 rounded text-warm-lavender hover:text-warm-lavender/80 hover:bg-warm-lavender/10 transition-colors motion-safe:active:scale-[0.97]"
-      >
-        <Check className="w-4 h-4" />
-      </button>
-      <button
-        onClick={() => setOpen(false)}
-        className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors motion-safe:active:scale-[0.97]"
-      >
-        <X className="w-4 h-4" />
-      </button>
     </div>
   );
 }

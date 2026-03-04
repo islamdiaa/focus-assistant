@@ -3,7 +3,7 @@
  * Shows completed tasks, carried-over tasks, focus stats
  * Allows planning for next week
  */
-import { useMemo, useState } from "react";
+import { useMemo, useState, memo } from "react";
 import { useApp } from "@/contexts/AppContext";
 import {
   CheckCircle2,
@@ -40,6 +40,72 @@ function formatDate(d: Date) {
 function formatDateRange(start: Date, end: Date) {
   return `${formatDate(start)} — ${formatDate(end)}`;
 }
+
+interface CompletedTaskRowProps {
+  id: string;
+  title: string;
+  completedAt?: string | null;
+}
+
+const CompletedTaskRow = memo(function CompletedTaskRow({
+  title,
+  completedAt,
+}: CompletedTaskRowProps) {
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <CheckCircle2 className="w-3.5 h-3.5 text-warm-sage shrink-0" />
+      <span className="text-foreground line-through opacity-70">{title}</span>
+      {completedAt && (
+        <span className="text-[10px] text-muted-foreground ml-auto">
+          {new Date(completedAt).toLocaleDateString("en-US", {
+            weekday: "short",
+          })}
+        </span>
+      )}
+    </div>
+  );
+});
+
+interface CarryOverTaskRowProps {
+  id: string;
+  title: string;
+}
+
+const CarryOverTaskRow = memo(function CarryOverTaskRow({
+  title,
+}: CarryOverTaskRowProps) {
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <Circle className="w-3.5 h-3.5 text-warm-amber shrink-0" />
+      <span className="text-foreground truncate">{title}</span>
+    </div>
+  );
+});
+
+interface OverdueTaskRowProps {
+  id: string;
+  title: string;
+  dueDate: string;
+}
+
+const OverdueTaskRow = memo(function OverdueTaskRow({
+  title,
+  dueDate,
+}: OverdueTaskRowProps) {
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <Calendar className="w-3.5 h-3.5 text-warm-terracotta shrink-0" />
+      <span className="text-foreground truncate">{title}</span>
+      <span className="text-[10px] text-warm-terracotta ml-auto whitespace-nowrap">
+        Due{" "}
+        {new Date(dueDate).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        })}
+      </span>
+    </div>
+  );
+});
 
 export default function WeeklyReviewPage() {
   const { state } = useApp();
@@ -249,19 +315,12 @@ export default function WeeklyReviewPage() {
         ) : (
           <div className="space-y-1.5">
             {weekStats.completedTasks.slice(0, 20).map(t => (
-              <div key={t.id} className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="w-3.5 h-3.5 text-warm-sage shrink-0" />
-                <span className="text-foreground line-through opacity-70">
-                  {t.title}
-                </span>
-                {t.completedAt && (
-                  <span className="text-[10px] text-muted-foreground ml-auto">
-                    {new Date(t.completedAt).toLocaleDateString("en-US", {
-                      weekday: "short",
-                    })}
-                  </span>
-                )}
-              </div>
+              <CompletedTaskRow
+                key={t.id}
+                id={t.id}
+                title={t.title}
+                completedAt={t.completedAt}
+              />
             ))}
             {weekStats.completedTasks.length > 20 && (
               <p className="text-xs text-muted-foreground">
@@ -285,10 +344,7 @@ export default function WeeklyReviewPage() {
           ) : (
             <div className="space-y-1.5">
               {weekStats.carryOverTasks.slice(0, 10).map(t => (
-                <div key={t.id} className="flex items-center gap-2 text-sm">
-                  <Circle className="w-3.5 h-3.5 text-warm-amber shrink-0" />
-                  <span className="text-foreground truncate">{t.title}</span>
-                </div>
+                <CarryOverTaskRow key={t.id} id={t.id} title={t.title} />
               ))}
               {weekStats.carryOverTasks.length > 10 && (
                 <p className="text-xs text-muted-foreground">
@@ -310,17 +366,12 @@ export default function WeeklyReviewPage() {
           ) : (
             <div className="space-y-1.5">
               {weekStats.overdueTasks.slice(0, 10).map(t => (
-                <div key={t.id} className="flex items-center gap-2 text-sm">
-                  <Calendar className="w-3.5 h-3.5 text-warm-terracotta shrink-0" />
-                  <span className="text-foreground truncate">{t.title}</span>
-                  <span className="text-[10px] text-warm-terracotta ml-auto whitespace-nowrap">
-                    Due{" "}
-                    {new Date(t.dueDate!).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
+                <OverdueTaskRow
+                  key={t.id}
+                  id={t.id}
+                  title={t.title}
+                  dueDate={t.dueDate!}
+                />
               ))}
               {weekStats.overdueTasks.length > 10 && (
                 <p className="text-xs text-muted-foreground">
