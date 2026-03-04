@@ -1200,7 +1200,7 @@ export default function DailyPlannerPage({
   }
 
   return (
-    <div className="p-4 lg:p-8 max-w-4xl">
+    <div className="p-4 lg:p-8 max-w-5xl mx-auto">
       {/* Greeting */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}

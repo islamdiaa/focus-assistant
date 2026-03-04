@@ -127,7 +127,7 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className="p-4 lg:p-8 max-w-4xl">
+    <div className="p-4 lg:p-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-serif text-2xl lg:text-3xl text-foreground">

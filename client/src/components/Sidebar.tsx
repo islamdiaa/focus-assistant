@@ -119,7 +119,7 @@ export default function Sidebar({
       {/* Mobile overlay backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/30 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/30 z-40 md:hidden"
           onClick={onClose}
         />
       )}
@@ -129,7 +129,7 @@ export default function Sidebar({
         className={`
         fixed top-0 left-0 h-screen z-50 w-64 glass-heavy border-r border-white/20 flex flex-col
         transition-transform duration-300 ease-in-out
-        lg:sticky lg:translate-x-0 lg:w-56 lg:z-auto
+        md:sticky md:translate-x-0 md:w-56 md:z-auto
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}
       >
@@ -151,7 +151,7 @@ export default function Sidebar({
           <button
             onClick={onClose}
             aria-label="Close sidebar"
-            className="lg:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-[oklch(0.20_0.015_155)] transition-colors"
+            className="md:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-[oklch(0.20_0.015_155)] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -221,38 +221,35 @@ export default function Sidebar({
               </div>
             );
           })}
-
-          {/* Focus Mode button */}
-          {onFocusMode && (
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 px-3 pt-4 pb-1">
-                Quick Actions
-              </p>
-              <button
-                onClick={() => {
-                  onFocusMode();
-                  onClose();
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-warm-sage hover:bg-warm-sage/10"
-              >
-                <Crosshair className="w-[18px] h-[18px]" />
-                Focus Mode
-              </button>
-              {onScratchPad && (
-                <button
-                  onClick={() => {
-                    onScratchPad();
-                    onClose();
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-warm-amber hover:bg-warm-amber/10"
-                >
-                  <Lightbulb className="w-[18px] h-[18px]" />
-                  Thoughts
-                </button>
-              )}
-            </div>
-          )}
         </nav>
+
+        {/* Focus Mode & Thoughts */}
+        <div className="px-3 pb-2 pt-2 border-t border-white/10">
+          {onFocusMode && (
+            <button
+              onClick={() => {
+                onFocusMode();
+                onClose();
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-warm-sage hover:bg-warm-sage/10 motion-safe:active:scale-[0.97]"
+            >
+              <Crosshair className="w-[18px] h-[18px]" />
+              Focus Mode
+            </button>
+          )}
+          {onScratchPad && (
+            <button
+              onClick={() => {
+                onScratchPad();
+                onClose();
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-warm-amber hover:bg-warm-amber/10 motion-safe:active:scale-[0.97]"
+            >
+              <Lightbulb className="w-[18px] h-[18px]" />
+              Thoughts
+            </button>
+          )}
+        </div>
 
         {/* Daily Tip */}
         <div className="px-3 pb-4">
