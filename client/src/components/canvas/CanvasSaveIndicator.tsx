@@ -30,13 +30,13 @@ export function CanvasSaveIndicator({ status }: CanvasSaveIndicatorProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 text-xs transition-all duration-300 ease-in-out",
+        "flex items-center gap-1.5 text-xs transition-colors duration-300 ease-in-out",
         config.color
       )}
     >
       <Icon
         className={cn(
-          "h-3.5 w-3.5 transition-all duration-300",
+          "h-3.5 w-3.5 transition-colors duration-300",
           status === "saving" && "animate-spin"
         )}
       />

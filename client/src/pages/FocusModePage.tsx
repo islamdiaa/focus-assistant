@@ -432,7 +432,7 @@ export default function FocusModePage({ onExit }: FocusModePageProps) {
                           },
                         })
                       }
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors
                         ${sub.done ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
                       aria-label={
                         sub.done

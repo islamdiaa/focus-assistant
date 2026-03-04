@@ -34,7 +34,7 @@ export function PrioritySelector({
           type="button"
           aria-pressed={value === p}
           onClick={() => onChange(p)}
-          className={`${btnClass} rounded-lg font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
+          className={`${btnClass} rounded-lg font-medium border-2 transition-colors duration-200 motion-safe:active:scale-[0.97]
             ${value === p ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
         >
           {PRIORITY_LABELS[p]}

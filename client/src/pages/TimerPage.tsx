@@ -24,6 +24,8 @@ import {
   Coffee,
   AlertTriangle,
   X,
+  Link2,
+  Minus,
 } from "lucide-react";
 import {
   checkBreakReminder,
@@ -84,7 +86,7 @@ function CircularProgress({
         strokeLinecap="round"
         strokeDasharray={circumference}
         strokeDashoffset={offset}
-        className="text-warm-sage transition-all duration-1000"
+        className="text-warm-sage transition-[stroke-dashoffset] duration-1000"
       />
     </svg>
   );
@@ -282,6 +284,29 @@ export default function TimerPage() {
   const [tick, setTick] = useState(0);
   const completedRef = useRef<Set<string>>(new Set());
 
+  // Auto-chain / session queue state
+  const [sessionQueue, setSessionQueue] = useState<number>(0);
+  const [autoChain, setAutoChain] = useState(false);
+  const [breakCountdown, setBreakCountdown] = useState<number | null>(null);
+  const breakCountdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Track settings from the last completed pomodoro so the next queued session inherits them
+  const lastCompletedSettingsRef = useRef<{
+    title: string;
+    duration: number;
+    linkedTasks?: PomodoroLink[];
+    linkedTaskId?: string;
+  } | null>(null);
+
+  // Clean up breakCountdown interval on unmount
+  useEffect(() => {
+    return () => {
+      if (breakCountdownRef.current) {
+        clearInterval(breakCountdownRef.current);
+        breakCountdownRef.current = null;
+      }
+    };
+  }, []);
+
   // Hyperfocus Guard — break reminder state
   const [dismissedBreaks, setDismissedBreaks] = useState<number[]>([]);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
@@ -294,9 +319,10 @@ export default function TimerPage() {
     [state.pomodoros]
   );
 
-  const activeCount = state.pomodoros.filter(
-    p => p.status === "running"
-  ).length;
+  const activeCount = useMemo(
+    () => state.pomodoros.filter(p => p.status === "running").length,
+    [state.pomodoros]
+  );
 
   // Auto-generate title from selected tasks
   const autoTitle = useMemo(() => {
@@ -316,6 +342,86 @@ export default function TimerPage() {
     return () => clearInterval(interval);
   }, [state.pomodoros]);
 
+  // Start break countdown before auto-starting the next queued session
+  const startBreakCountdown = useCallback(() => {
+    setBreakCountdown(5);
+    if (breakCountdownRef.current) clearInterval(breakCountdownRef.current);
+    breakCountdownRef.current = setInterval(() => {
+      setBreakCountdown(prev => {
+        if (prev === null || prev <= 1) {
+          if (breakCountdownRef.current)
+            clearInterval(breakCountdownRef.current);
+          breakCountdownRef.current = null;
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  // Snapshot sessionQueue when countdown starts so the effect doesn't need it as a dep
+  const sessionQueueSnapshotRef = useRef(0);
+
+  // When breakCountdown reaches null (finished) after having been active,
+  // auto-create and start the next session from the queue
+  const breakCountdownActiveRef = useRef(false);
+  useEffect(() => {
+    if (breakCountdown !== null) {
+      breakCountdownActiveRef.current = true;
+      // Capture queue count at countdown start
+      if (breakCountdown === 5) {
+        sessionQueueSnapshotRef.current = sessionQueue;
+      }
+    } else if (breakCountdownActiveRef.current) {
+      breakCountdownActiveRef.current = false;
+      // Countdown just finished — create and start the next queued session
+      const settings = lastCompletedSettingsRef.current;
+      if (!settings || sessionQueueSnapshotRef.current <= 0) return;
+      dispatch({
+        type: "ADD_POMODORO",
+        payload: {
+          title: settings.title,
+          duration: settings.duration,
+          linkedTasks: settings.linkedTasks,
+          linkedTaskId: settings.linkedTaskId,
+        },
+      });
+      setSessionQueue(q => Math.max(0, q - 1));
+      pendingAutoStartRef.current = {
+        title: settings.title,
+        duration: settings.duration,
+      };
+    }
+  }, [breakCountdown, sessionQueue, dispatch]);
+
+  // One-shot ref: if set, we auto-start the first matching idle pomodoro with that title/duration
+  const pendingAutoStartRef = useRef<{
+    title: string;
+    duration: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!pendingAutoStartRef.current) return;
+    const { title, duration } = pendingAutoStartRef.current;
+    // Find the most recently added idle pom matching title+duration
+    const match = [...state.pomodoros]
+      .reverse()
+      .find(
+        p => p.status === "idle" && p.title === title && p.duration === duration
+      );
+    if (!match) return;
+    pendingAutoStartRef.current = null;
+    dispatch({
+      type: "UPDATE_POMODORO",
+      payload: {
+        id: match.id,
+        status: "running",
+        startedAt: new Date().toISOString(),
+        accumulatedSeconds: 0,
+      },
+    });
+  }, [state.pomodoros, dispatch]);
+
   // Check for completed pomodoros on each tick
   useEffect(() => {
     state.pomodoros.forEach(pom => {
@@ -334,10 +440,27 @@ export default function TimerPage() {
               body: `"${pom.title}" is done. Great work!`,
             });
           }
+          // Auto-chain: if enabled and queue has sessions, save settings and start break countdown
+          if (autoChain && sessionQueue > 0) {
+            lastCompletedSettingsRef.current = {
+              title: pom.title,
+              duration: pom.duration,
+              linkedTasks: pom.linkedTasks ?? undefined,
+              linkedTaskId: pom.linkedTaskId ?? undefined,
+            };
+            startBreakCountdown();
+          }
         }
       }
     });
-  }, [tick, state.pomodoros, dispatch]);
+  }, [
+    tick,
+    state.pomodoros,
+    dispatch,
+    autoChain,
+    sessionQueue,
+    startBreakCountdown,
+  ]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -512,9 +635,7 @@ export default function TimerPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="font-serif text-2xl lg:text-3xl text-foreground">
-            Focus Timer
-          </h2>
+          <h2 className="font-serif text-3xl text-foreground">Focus Timer</h2>
           <p className="text-sm text-muted-foreground mt-1">
             Link tasks to pomodoros · Track focus time per task
           </p>
@@ -690,6 +811,7 @@ export default function TimerPage() {
           <img
             src={EMPTY_TIMER_IMG}
             alt="No pomodoros"
+            loading="lazy"
             className="w-48 h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80 dark:opacity-70 dark:brightness-90"
           />
           <h3 className="font-semibold text-xl text-foreground mb-2">
@@ -727,7 +849,7 @@ export default function TimerPage() {
             return (
               <div
                 key={pom.id}
-                className={`glass rounded-2xl p-6 transition-all duration-200 hover:shadow-md
+                className={`glass rounded-2xl p-6 transition-colors duration-200 hover:shadow-md
                   ${isCompleted ? "opacity-60" : ""} ${isRunning ? "ring-2 ring-warm-sage/40 bg-warm-sage/5 dark:bg-warm-sage/10" : ""}`}
               >
                 <div className="flex items-start justify-between mb-4">
@@ -834,6 +956,167 @@ export default function TimerPage() {
           })}
         </div>
       )}
+
+      {/* Break countdown overlay — shown between auto-chained sessions */}
+      <AnimatePresence>
+        {breakCountdown !== null && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="mt-6 glass rounded-2xl p-6 flex flex-col items-center gap-3 border border-warm-sage/30 bg-warm-sage/5 dark:bg-warm-sage/10"
+            role="status"
+            aria-label="Break time before next session"
+          >
+            <Coffee className="w-6 h-6 text-warm-sage" aria-hidden="true" />
+            <p className="text-sm font-medium text-foreground">
+              Break time! Next session starting in…
+            </p>
+            <span className="font-serif text-5xl text-warm-sage tabular-nums leading-none">
+              {breakCountdown}
+            </span>
+            <button
+              onClick={() => {
+                if (breakCountdownRef.current)
+                  clearInterval(breakCountdownRef.current);
+                breakCountdownRef.current = null;
+                breakCountdownActiveRef.current = false;
+                pendingAutoStartRef.current = null;
+                setBreakCountdown(null);
+              }}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors mt-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Cancel auto-start"
+            >
+              Cancel
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Session Queue */}
+      <div className="mt-6 glass-subtle rounded-2xl p-5">
+        {/* Header row: toggle + label */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Link2
+              className="w-4 h-4 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <span className="text-sm font-medium text-foreground">
+              Auto-Chain Sessions
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setAutoChain(v => !v);
+              // If turning off, clear any active countdown
+              if (autoChain) {
+                if (breakCountdownRef.current)
+                  clearInterval(breakCountdownRef.current);
+                breakCountdownRef.current = null;
+                breakCountdownActiveRef.current = false;
+                pendingAutoStartRef.current = null;
+                setBreakCountdown(null);
+              }
+            }}
+            role="switch"
+            aria-checked={autoChain}
+            aria-label="Toggle auto-chain sessions"
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-safe:active:scale-[0.97]
+              ${autoChain ? "bg-warm-sage" : "bg-muted"}`}
+          >
+            <span
+              className={`inline-block h-4 w-4 rounded-full bg-background shadow-sm transition-transform
+                ${autoChain ? "translate-x-6" : "translate-x-1"}`}
+            />
+          </button>
+        </div>
+
+        <p className="text-xs text-muted-foreground mt-1.5 mb-4">
+          When enabled, the next queued session starts automatically after a
+          5-second break.
+        </p>
+
+        {/* Queue controls — only shown when auto-chain is on */}
+        <AnimatePresence>
+          {autoChain && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              style={{ overflow: "hidden" }}
+            >
+              <div className="flex items-center justify-between pt-3 border-t border-border">
+                <div>
+                  <p className="text-xs font-medium text-foreground">
+                    Sessions in queue
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Will repeat with the same settings as the completed session
+                  </p>
+                </div>
+
+                {/* Counter +/- */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSessionQueue(q => Math.max(0, q - 1))}
+                    disabled={sessionQueue === 0}
+                    aria-label="Remove one session from queue"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors disabled:opacity-40 disabled:pointer-events-none motion-safe:active:scale-[0.97]"
+                  >
+                    <Minus
+                      className="w-3.5 h-3.5 text-foreground"
+                      aria-hidden="true"
+                    />
+                  </button>
+
+                  <span
+                    className="w-8 text-center text-sm font-semibold text-foreground tabular-nums"
+                    aria-label={`${sessionQueue} sessions queued`}
+                  >
+                    {sessionQueue}
+                  </span>
+
+                  <button
+                    onClick={() => setSessionQueue(q => Math.min(10, q + 1))}
+                    disabled={sessionQueue >= 10}
+                    aria-label="Add one session to queue"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors disabled:opacity-40 disabled:pointer-events-none motion-safe:active:scale-[0.97]"
+                  >
+                    <Plus
+                      className="w-3.5 h-3.5 text-foreground"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {/* Queue badges */}
+              <AnimatePresence>
+                {sessionQueue > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-wrap gap-2 mt-3"
+                    aria-label="Queued sessions"
+                  >
+                    {Array.from({ length: sessionQueue }, (_, i) => (
+                      <span
+                        key={i}
+                        className="bg-muted/30 rounded-lg px-3 py-1.5 text-xs text-muted-foreground font-medium"
+                      >
+                        Session {i + 1}
+                      </span>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* How it works */}
       <div className="mt-8 bg-warm-peach-light dark:bg-warm-terracotta/10 rounded-2xl border border-warm-peach/30 dark:border-warm-terracotta/20 p-5 flex gap-4">

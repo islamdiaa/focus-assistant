@@ -402,7 +402,7 @@ function TodayTaskCard({
             dispatch({ type: "TOGGLE_TASK", payload: task.id });
             if (task.status !== "done") toast.success("Task completed");
           }}
-          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
+          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors
             ${task.status === "done" ? "bg-warm-sage border-warm-sage" : "border-border hover:border-warm-sage"}`}
         >
           <AnimatePresence>
@@ -1539,7 +1539,7 @@ export default function DailyPlannerPage({
                     if (t.status !== "done") toast.success("Task completed");
                   }}
                   className={cn(
-                    "w-4 h-4 rounded-md border-2 flex items-center justify-center shrink-0 transition-all motion-safe:active:scale-[0.97]",
+                    "w-4 h-4 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors motion-safe:active:scale-[0.97]",
                     t.status === "done"
                       ? "bg-warm-sage border-warm-sage"
                       : "border-border hover:border-warm-sage"
@@ -2114,7 +2114,7 @@ export default function DailyPlannerPage({
                     role="radio"
                     aria-checked={newPriority === p}
                     onClick={() => setNewPriority(p)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-[color,background-color,border-color,box-shadow,transform] duration-200 motion-safe:active:scale-[0.97]
                     ${newPriority === p ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                   >
                     {PRIORITY_LABELS[p]}
@@ -2140,7 +2140,7 @@ export default function DailyPlannerPage({
                     type="button"
                     aria-pressed={newCategory === c}
                     onClick={() => setNewCategory(newCategory === c ? "" : c)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-[color,background-color,border-color,box-shadow,transform] duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
                     ${newCategory === c ? "bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                   >
                     <span>{CATEGORY_CONFIG[c].emoji}</span>
@@ -2167,7 +2167,7 @@ export default function DailyPlannerPage({
                     type="button"
                     aria-pressed={newEnergy === e}
                     onClick={() => setNewEnergy(newEnergy === e ? "" : e)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-[color,background-color,border-color,box-shadow,transform] duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
                     ${newEnergy === e ? "bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                   >
                     <span>{ENERGY_CONFIG[e].emoji}</span>
@@ -2196,7 +2196,7 @@ export default function DailyPlannerPage({
                       role="radio"
                       aria-checked={newRecurrence === r}
                       onClick={() => setNewRecurrence(r)}
-                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
+                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-[color,background-color,border-color,box-shadow,transform] duration-200 motion-safe:active:scale-[0.97]
                     ${newRecurrence === r ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                     >
                       {RECURRENCE_CONFIG[r].label}
@@ -2298,7 +2298,7 @@ export default function DailyPlannerPage({
                       )
                     }
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]",
+                      "px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-[color,background-color,border-color,box-shadow,transform] duration-200 motion-safe:active:scale-[0.97]",
                       newEstimatedMinutes === opt.value
                         ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]"
                         : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"
@@ -2490,7 +2490,7 @@ export default function DailyPlannerPage({
                       role="radio"
                       aria-checked={remCategory === c}
                       onClick={() => setRemCategory(c)}
-                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 flex flex-col items-center gap-1 motion-safe:active:scale-[0.97]
+                      className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-[color,background-color,border-color,box-shadow,transform] duration-200 flex flex-col items-center gap-1 motion-safe:active:scale-[0.97]
                         ${remCategory === c ? `${cfg.bg} ${cfg.color} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                     >
                       <cfg.icon className="w-4 h-4" />
@@ -2519,7 +2519,7 @@ export default function DailyPlannerPage({
                     role="radio"
                     aria-checked={remRecurrence === opt.value}
                     onClick={() => setRemRecurrence(opt.value)}
-                    className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
+                    className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-[color,background-color,border-color,box-shadow,transform] duration-200 motion-safe:active:scale-[0.97]
                       ${remRecurrence === opt.value ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                   >
                     {opt.label}

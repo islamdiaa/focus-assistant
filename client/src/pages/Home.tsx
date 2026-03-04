@@ -40,6 +40,7 @@ const CanvasPage = lazy(() => import("./CanvasPage"));
 const HelpPage = lazy(() => import("./HelpPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
 const DailyRitual = lazy(() => import("@/components/DailyRitual"));
+import KeyboardShortcutsOverlay from "@/components/KeyboardShortcutsOverlay";
 
 import PageSkeleton from "@/components/PageSkeleton";
 import { useApp } from "@/contexts/AppContext";
@@ -114,6 +115,7 @@ export default function Home() {
     null
   );
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [thoughtReminderOpen, setThoughtReminderOpen] = useState(false);
   const [thoughtReminderText, setThoughtReminderText] = useState("");
   const [thoughtReminderDate, setThoughtReminderDate] = useState("");
@@ -248,6 +250,13 @@ export default function Home() {
         return;
       }
 
+      // ?: Open keyboard shortcuts overlay
+      if (e.key === "?") {
+        e.preventDefault();
+        setShortcutsOpen(true);
+        return;
+      }
+
       // /: Focus search (only on tasks page)
       if (e.key === "/") {
         if (activePage === "tasks" || activePage === "planner") {
@@ -257,7 +266,7 @@ export default function Home() {
         return;
       }
     },
-    [activePage, undo, redo, focusMode, setReminderTrigger]
+    [activePage, undo, redo, focusMode]
   );
 
   useEffect(() => {
@@ -603,6 +612,13 @@ export default function Home() {
             setActivePage(page as Page);
             setCommandPaletteOpen(false);
           }}
+          onShowShortcuts={() => setShortcutsOpen(true)}
+        />
+
+        {/* Keyboard Shortcuts Overlay (?) */}
+        <KeyboardShortcutsOverlay
+          open={shortcutsOpen}
+          onClose={() => setShortcutsOpen(false)}
         />
       </>
     </MotionConfig>

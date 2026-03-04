@@ -167,10 +167,10 @@ const ReadingCard = memo(function ReadingCard({
           {/* Status button */}
           <button
             onClick={() => onStatusCycle(item)}
-            className={`shrink-0 mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center transition-all motion-safe:active:scale-[0.97] ${cfg.bg} hover:opacity-80`}
-            title={`Status: ${cfg.label} (click to cycle)`}
+            className={`shrink-0 mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center transition-opacity motion-safe:active:scale-[0.97] ${cfg.bg} hover:opacity-80`}
+            aria-label={`Status: ${cfg.label} (click to cycle)`}
           >
-            <StatusIcon className={`w-4 h-4 ${cfg.color}`} />
+            <StatusIcon className={`w-4 h-4 ${cfg.color}`} aria-hidden="true" />
           </button>
 
           {/* Content */}
@@ -525,7 +525,7 @@ export default function ReadLaterPage() {
           onClick={() =>
             setFilterStatus(filterStatus === "unread" ? "all" : "unread")
           }
-          className={`rounded-xl p-3 text-center border transition-all motion-safe:active:scale-[0.97] ${filterStatus === "unread" ? "border-warm-terracotta/40 bg-warm-terracotta/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-terracotta/5"}`}
+          className={`rounded-xl p-3 text-center border transition-colors motion-safe:active:scale-[0.97] ${filterStatus === "unread" ? "border-warm-terracotta/40 bg-warm-terracotta/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-terracotta/5"}`}
         >
           <Clock className="w-4 h-4 mx-auto mb-1 text-warm-terracotta" />
           <div className="text-xl font-bold text-foreground">{unreadCount}</div>
@@ -535,7 +535,7 @@ export default function ReadLaterPage() {
           onClick={() =>
             setFilterStatus(filterStatus === "reading" ? "all" : "reading")
           }
-          className={`rounded-xl p-3 text-center border transition-all motion-safe:active:scale-[0.97] ${filterStatus === "reading" ? "border-warm-blue/40 bg-warm-blue/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-blue/5"}`}
+          className={`rounded-xl p-3 text-center border transition-colors motion-safe:active:scale-[0.97] ${filterStatus === "reading" ? "border-warm-blue/40 bg-warm-blue/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-blue/5"}`}
         >
           <BookOpen className="w-4 h-4 mx-auto mb-1 text-warm-blue" />
           <div className="text-xl font-bold text-foreground">
@@ -547,7 +547,7 @@ export default function ReadLaterPage() {
           onClick={() =>
             setFilterStatus(filterStatus === "read" ? "all" : "read")
           }
-          className={`rounded-xl p-3 text-center border transition-all motion-safe:active:scale-[0.97] ${filterStatus === "read" ? "border-warm-sage/40 bg-warm-sage/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-sage/5"}`}
+          className={`rounded-xl p-3 text-center border transition-colors motion-safe:active:scale-[0.97] ${filterStatus === "read" ? "border-warm-sage/40 bg-warm-sage/10" : "border-white/15 dark:border-white/10 glass hover:bg-warm-sage/5"}`}
         >
           <CheckCircle2 className="w-4 h-4 mx-auto mb-1 text-warm-sage" />
           <div className="text-xl font-bold text-foreground">{readCount}</div>
@@ -573,7 +573,7 @@ export default function ReadLaterPage() {
               <button
                 key={tag}
                 onClick={() => setFilterTag(filterTag === tag ? null : tag)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-all motion-safe:active:scale-[0.97] ${
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors motion-safe:active:scale-[0.97] ${
                   filterTag === tag
                     ? "bg-warm-lavender text-white border-warm-lavender"
                     : "bg-card text-muted-foreground border-white/15 dark:border-white/10 hover:border-warm-lavender/40"

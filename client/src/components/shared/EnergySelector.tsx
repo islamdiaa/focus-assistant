@@ -35,7 +35,7 @@ export function EnergySelector({
           type="button"
           aria-pressed={value === e}
           onClick={() => onChange(value === e ? null : e)}
-          className={`${btnClass} rounded-lg font-medium border-2 transition-all duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
+          className={`${btnClass} rounded-lg font-medium border-2 transition-colors duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
             ${value === e ? "bg-warm-amber-light text-warm-amber border-warm-amber/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
         >
           <span aria-hidden="true">{ENERGY_CONFIG[e].emoji}</span>

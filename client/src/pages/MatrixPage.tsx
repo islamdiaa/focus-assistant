@@ -19,6 +19,10 @@ import {
   Pencil,
   X,
   Check,
+  Flame,
+  CalendarClock,
+  Users,
+  Feather,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -184,7 +188,7 @@ function InlineEditForm({
             key={opt.value}
             type="button"
             onClick={() => setPriority(opt.value)}
-            className={`text-[10px] px-2 py-1 rounded-md border font-medium transition-all motion-safe:active:scale-[0.97]
+            className={`text-[10px] px-2 py-1 rounded-md border font-medium transition-[color,background-color,border-color,box-shadow,transform] motion-safe:active:scale-[0.97]
               ${priority === opt.value ? `${opt.color} scale-105 shadow-sm` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
           >
             {opt.label}
@@ -472,22 +476,22 @@ export default function MatrixPage() {
                   onDragOver={e => handleDragOver(e, q.id)}
                   onDragLeave={handleDragLeave}
                   onDrop={() => handleDrop(q.id)}
-                  className={`${q.bgClass} rounded-xl border ${q.borderClass} p-3 lg:p-4 min-h-[120px] lg:min-h-[180px] transition-all duration-200
+                  className={`${q.bgClass} rounded-xl border ${q.borderClass} p-3 lg:p-4 min-h-[120px] lg:min-h-[180px] transition-[box-shadow,transform] duration-200
                     ${isOver ? "ring-2 ring-warm-sage/40 scale-[1.01]" : ""}`}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <div
                       className={`w-6 h-6 rounded-lg ${q.iconBg} flex items-center justify-center`}
                     >
-                      <span className="text-xs">
-                        {q.id === "do-first"
-                          ? "🔥"
-                          : q.id === "schedule"
-                            ? "📅"
-                            : q.id === "delegate"
-                              ? "🤝"
-                              : "🪶"}
-                      </span>
+                      {q.id === "do-first" ? (
+                        <Flame className="w-3 h-3" />
+                      ) : q.id === "schedule" ? (
+                        <CalendarClock className="w-3 h-3" />
+                      ) : q.id === "delegate" ? (
+                        <Users className="w-3 h-3" />
+                      ) : (
+                        <Feather className="w-3 h-3" />
+                      )}
                     </div>
                     <h3 className="text-sm font-semibold text-foreground">
                       {q.title}
@@ -601,6 +605,7 @@ export default function MatrixPage() {
             src={EMPTY_MATRIX_IMG}
             alt=""
             role="presentation"
+            loading="lazy"
             className="w-40 lg:w-48 h-40 lg:h-48 mx-auto mb-6 rounded-2xl object-cover opacity-80"
           />
           <h3 className="font-semibold text-lg lg:text-xl text-foreground mb-2">
