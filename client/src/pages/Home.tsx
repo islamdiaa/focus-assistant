@@ -257,7 +257,7 @@ export default function Home() {
         return;
       }
     },
-    [activePage, undo, redo, focusMode, commandPaletteOpen, setReminderTrigger]
+    [activePage, undo, redo, focusMode, setReminderTrigger]
   );
 
   useEffect(() => {

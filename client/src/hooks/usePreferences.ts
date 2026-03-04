@@ -12,19 +12,11 @@
  *   updatePreferences({ notificationSound: "bell" });
  */
 
+import { useCallback, useMemo } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { DEFAULT_PREFERENCES } from "@/lib/types";
 import type { AppPreferences } from "@/lib/types";
 
-/**
- * Returns the current app preferences and a stable function to update
- * them. Partial updates are merged with the existing preferences; only
- * the fields you pass are changed.
- *
- * `preferences` is always a fully resolved object — it falls back to
- * DEFAULT_PREFERENCES when the stored value is null or undefined, so
- * callers never need to handle undefined preference fields.
- */
 export function usePreferences(): {
   preferences: AppPreferences;
   updatePreferences: (prefs: Partial<AppPreferences>) => void;
@@ -33,8 +25,14 @@ export function usePreferences(): {
 
   const preferences: AppPreferences = state.preferences ?? DEFAULT_PREFERENCES;
 
-  const updatePreferences = (prefs: Partial<AppPreferences>) =>
-    dispatch({ type: "UPDATE_PREFERENCES", payload: prefs });
+  const updatePreferences = useCallback(
+    (prefs: Partial<AppPreferences>) =>
+      dispatch({ type: "UPDATE_PREFERENCES", payload: prefs }),
+    [dispatch]
+  );
 
-  return { preferences, updatePreferences };
+  return useMemo(
+    () => ({ preferences, updatePreferences }),
+    [preferences, updatePreferences]
+  );
 }

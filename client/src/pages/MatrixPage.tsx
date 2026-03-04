@@ -95,7 +95,8 @@ const PRIORITY_OPTIONS: { value: Priority; label: string; color: string }[] = [
   {
     value: "urgent",
     label: "Urgent",
-    color: "bg-red-50 text-red-500 border-red-200",
+    color:
+      "bg-warm-terracotta-light dark:bg-warm-terracotta/15 text-warm-terracotta border-warm-terracotta/30",
   },
 ];
 
@@ -245,8 +246,12 @@ export default function MatrixPage() {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   const activeContext = state.preferences?.activeContext || "all";
-  const activeTasks = filterTasksByContext(state.tasks, activeContext).filter(
-    t => t.status === "active"
+  const activeTasks = useMemo(
+    () =>
+      filterTasksByContext(state.tasks, activeContext).filter(
+        t => t.status === "active"
+      ),
+    [state.tasks, activeContext]
   );
   const unassigned = useMemo(
     () => activeTasks.filter(t => t.quadrant === "unassigned"),

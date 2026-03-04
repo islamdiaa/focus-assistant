@@ -5,7 +5,7 @@
  * Glass styling with warm-amber accent.
  * Auto-dismisses after 5 seconds.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
@@ -59,10 +59,13 @@ function AchievementToastCard({
   achievement,
   onDismiss,
 }: AchievementToastCardProps) {
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
   useEffect(() => {
-    const timer = setTimeout(onDismiss, 5000);
+    const timer = setTimeout(() => onDismissRef.current(), 5000);
     return () => clearTimeout(timer);
-  }, [onDismiss]);
+  }, []);
 
   return (
     <motion.div
@@ -70,12 +73,7 @@ function AchievementToastCard({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -16, scale: 0.92 }}
       transition={{ type: "spring", stiffness: 380, damping: 28 }}
-      role="status"
-      aria-live="polite"
-      className="relative flex items-start gap-3 w-72 rounded-xl border border-warm-amber/30 bg-card/90 backdrop-blur-[20px] shadow-lg p-3.5"
-      style={{
-        background: "oklch(var(--card) / 0.92)",
-      }}
+      className="relative flex items-start gap-3 w-72 max-w-[calc(100vw-48px)] rounded-xl border border-warm-amber/30 bg-card/90 backdrop-blur-[20px] shadow-lg p-3.5"
     >
       {/* Amber accent bar */}
       <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-warm-amber" />
@@ -90,7 +88,7 @@ function AchievementToastCard({
 
       {/* Text */}
       <div className="flex-1 min-w-0 pt-0.5">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-warm-amber mb-0.5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-warm-amber mb-0.5">
           Achievement Unlocked
         </p>
         <p className="text-sm font-semibold text-foreground leading-snug">
@@ -123,17 +121,21 @@ export default function AchievementToast({
   achievements,
   onDismiss,
 }: AchievementToastProps) {
+  const handleDismiss = useCallback((id: string) => onDismiss(id), [onDismiss]);
+
   return (
     <div
+      role="status"
+      aria-live="polite"
       aria-label="Achievement notifications"
-      className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 items-end"
+      className="fixed bottom-6 right-4 sm:right-6 z-50 flex flex-col gap-2 items-end"
     >
       <AnimatePresence mode="popLayout">
         {achievements.map(a => (
           <AchievementToastCard
             key={a.id}
             achievement={a}
-            onDismiss={() => onDismiss(a.id)}
+            onDismiss={() => handleDismiss(a.id)}
           />
         ))}
       </AnimatePresence>
@@ -145,18 +147,18 @@ export default function AchievementToast({
 export function useAchievementToast() {
   const [queue, setQueue] = useState<Achievement[]>([]);
 
-  function enqueue(achievements: Achievement[]) {
+  const enqueue = useCallback((achievements: Achievement[]) => {
     if (achievements.length === 0) return;
     setQueue(prev => {
       const existingIds = new Set(prev.map(a => a.id));
       const fresh = achievements.filter(a => !existingIds.has(a.id));
-      return [...prev, ...fresh];
+      return fresh.length > 0 ? [...prev, ...fresh] : prev;
     });
-  }
+  }, []);
 
-  function dismiss(id: string) {
+  const dismiss = useCallback((id: string) => {
     setQueue(prev => prev.filter(a => a.id !== id));
-  }
+  }, []);
 
   return { queue, enqueue, dismiss };
 }

@@ -259,20 +259,27 @@ describe("getNewlyUnlocked", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildAchievementStats", () => {
-  it("computes totalTasksCompleted as count of done tasks", () => {
-    const tasks = [
-      { status: "done" },
-      { status: "active" },
-      { status: "done" },
-      { status: "monitored" },
-    ];
+  it("computes totalTasksCompleted as sum from dailyStats", () => {
     const stats = buildAchievementStats({
-      tasks,
-      dailyStats: [],
+      tasks: [],
+      dailyStats: [
+        {
+          date: "2026-03-01",
+          tasksCompleted: 3,
+          pomodorosCompleted: 0,
+          focusMinutes: 0,
+        },
+        {
+          date: "2026-03-02",
+          tasksCompleted: 5,
+          pomodorosCompleted: 0,
+          focusMinutes: 0,
+        },
+      ],
       currentStreak: 0,
       today: "2026-03-04",
     });
-    expect(stats.totalTasksCompleted).toBe(2);
+    expect(stats.totalTasksCompleted).toBe(8);
   });
 
   it("computes totalPomodorosCompleted as sum across all dailyStats", () => {

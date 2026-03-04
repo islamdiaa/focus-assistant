@@ -324,7 +324,7 @@ const ReadingCard = memo(function ReadingCard({
                     size="sm"
                     variant="outline"
                     onClick={() => onDelete(item.id)}
-                    className="gap-1.5 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 ml-auto"
+                    className="gap-1.5 text-xs text-warm-terracotta hover:text-warm-terracotta hover:bg-warm-terracotta-light dark:hover:bg-warm-terracotta/10 ml-auto"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Delete
                   </Button>
@@ -389,9 +389,17 @@ export default function ReadLaterPage() {
   }, [readingList, filterStatus, filterTag, searchQuery]);
 
   // Stats
-  const unreadCount = readingList.filter(r => r.status === "unread").length;
-  const readingCount = readingList.filter(r => r.status === "reading").length;
-  const readCount = readingList.filter(r => r.status === "read").length;
+  const { unreadCount, readingCount, readCount } = useMemo(() => {
+    let unread = 0,
+      reading = 0,
+      read = 0;
+    for (const r of readingList) {
+      if (r.status === "unread") unread++;
+      else if (r.status === "reading") reading++;
+      else if (r.status === "read") read++;
+    }
+    return { unreadCount: unread, readingCount: reading, readCount: read };
+  }, [readingList]);
 
   function handleAdd() {
     if (!addUrl.trim()) return;

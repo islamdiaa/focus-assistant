@@ -106,17 +106,23 @@ export default function StatsPage() {
     [state.dailyStats]
   );
 
-  const chartTickStyle = {
-    fontSize: 12,
-    fill: theme === "dark" ? "#A09A94" : "#8B8680",
-  };
+  const chartTickStyle = useMemo(
+    () => ({
+      fontSize: 12,
+      fill: theme === "dark" ? "#A09A94" : "#8B8680",
+    }),
+    [theme]
+  );
 
-  const chartTooltipStyle: React.CSSProperties = {
-    background: theme === "dark" ? "#2A2723" : "#FAF7F2",
-    border: `1px solid ${theme === "dark" ? "#3D3A36" : "#E8E2DA"}`,
-    borderRadius: "8px",
-    fontSize: "12px",
-  };
+  const chartTooltipStyle: React.CSSProperties = useMemo(
+    () => ({
+      background: theme === "dark" ? "#2A2723" : "#FAF7F2",
+      border: `1px solid ${theme === "dark" ? "#3D3A36" : "#E8E2DA"}`,
+      borderRadius: "8px",
+      fontSize: "12px",
+    }),
+    [theme]
+  );
 
   return (
     <div className="p-4 lg:p-8 max-w-5xl mx-auto">

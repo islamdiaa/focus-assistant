@@ -25,15 +25,14 @@ export function PrioritySelector({
   return (
     <div
       className="grid grid-cols-4 gap-2"
-      role="radiogroup"
+      role="group"
       aria-labelledby={labelId}
     >
       {PRIORITIES.map(p => (
         <button
           key={p}
           type="button"
-          role="radio"
-          aria-checked={value === p}
+          aria-pressed={value === p}
           onClick={() => onChange(p)}
           className={`${btnClass} rounded-lg font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
             ${value === p ? `${PRIORITY_COLORS[p]} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}

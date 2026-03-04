@@ -187,7 +187,10 @@ export function buildAchievementStats(params: {
 }): AchievementStats {
   const { tasks, dailyStats, currentStreak, today } = params;
 
-  const totalTasksCompleted = tasks.filter(t => t.status === "done").length;
+  const totalTasksCompleted = dailyStats.reduce(
+    (sum, d) => sum + (d.tasksCompleted ?? 0),
+    0
+  );
 
   const totalPomodorosCompleted = dailyStats.reduce(
     (sum, d) => sum + (d.pomodorosCompleted ?? 0),

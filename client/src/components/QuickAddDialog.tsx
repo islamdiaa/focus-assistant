@@ -20,28 +20,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/contexts/AppContext";
-import type { Priority, Category } from "@shared/appTypes";
+import { PrioritySelector } from "@/components/shared/PrioritySelector";
+import { CategorySelector } from "@/components/shared/CategorySelector";
+import type { Priority, Category } from "@/lib/types";
 
 interface QuickAddDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "urgent", label: "Urgent" },
-];
-
-const CATEGORY_OPTIONS: { value: Category; label: string }[] = [
-  { value: "work", label: "Work" },
-  { value: "personal", label: "Personal" },
-  { value: "health", label: "Health" },
-  { value: "learning", label: "Learning" },
-  { value: "errands", label: "Errands" },
-  { value: "other", label: "Other" },
-];
 
 export default function QuickAddDialog({
   open,
@@ -52,7 +38,7 @@ export default function QuickAddDialog({
 
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
-  const [category, setCategory] = useState<Category | "">("");
+  const [category, setCategory] = useState<Category | null>(null);
   const [dueDate, setDueDate] = useState("");
 
   // Reset form and auto-focus title when dialog opens
@@ -60,9 +46,8 @@ export default function QuickAddDialog({
     if (open) {
       setTitle("");
       setPriority("medium");
-      setCategory("");
+      setCategory(null);
       setDueDate("");
-      // Use requestAnimationFrame to ensure the dialog is mounted before focusing
       requestAnimationFrame(() => {
         titleRef.current?.focus();
       });
@@ -121,52 +106,36 @@ export default function QuickAddDialog({
             />
           </div>
 
-          {/* Priority + Category row */}
-          <div className="grid grid-cols-2 gap-3">
-            {/* Priority */}
-            <div>
-              <label
-                htmlFor="quick-add-priority"
-                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
-              >
-                Priority
-              </label>
-              <select
-                id="quick-add-priority"
-                value={priority}
-                onChange={e => setPriority(e.target.value as Priority)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors"
-              >
-                {PRIORITY_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Priority */}
+          <div>
+            <span
+              id="quick-add-priority-label"
+              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+            >
+              Priority
+            </span>
+            <PrioritySelector
+              value={priority}
+              onChange={setPriority}
+              labelId="quick-add-priority-label"
+              size="sm"
+            />
+          </div>
 
-            {/* Category */}
-            <div>
-              <label
-                htmlFor="quick-add-category"
-                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
-              >
-                Category
-              </label>
-              <select
-                id="quick-add-category"
-                value={category}
-                onChange={e => setCategory(e.target.value as Category | "")}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors"
-              >
-                <option value="">None</option>
-                {CATEGORY_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Category */}
+          <div>
+            <span
+              id="quick-add-category-label"
+              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block"
+            >
+              Category
+            </span>
+            <CategorySelector
+              value={category}
+              onChange={setCategory}
+              labelId="quick-add-category-label"
+              size="sm"
+            />
           </div>
 
           {/* Due date */}
