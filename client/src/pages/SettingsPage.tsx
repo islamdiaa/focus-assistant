@@ -34,6 +34,8 @@ import {
   Clock,
   HelpCircle,
   ArrowRight,
+  Check,
+  AlertTriangle,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -370,7 +372,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
             <button
               key={preset.name}
               onClick={() => applyPreset(preset)}
-              className="text-left bg-background rounded-xl border border-white/15 dark:border-white/10 p-4 hover:border-warm-sage/40 hover:bg-warm-sage-light/30 transition-all duration-200 motion-safe:active:scale-[0.97]"
+              className="text-left bg-background rounded-xl border border-white/15 dark:border-white/10 p-4 hover:border-warm-sage/40 hover:bg-warm-sage-light/30 transition-colors duration-200 motion-safe:active:scale-[0.97]"
             >
               <p className="text-sm font-medium text-foreground">
                 {preset.name}
@@ -602,7 +604,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
             <button
               key={sound.id}
               onClick={() => handleSoundChange(sound.id)}
-              className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
+              className={`text-left px-3 py-2.5 rounded-xl border-2 transition-colors duration-200 motion-safe:active:scale-[0.97]
                 ${
                   currentSound === sound.id
                     ? "bg-warm-amber-light border-warm-amber/40 shadow-sm"
@@ -664,7 +666,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
 
         {/* ---- Local Markdown File Section ---- */}
         <div
-          className={`rounded-xl border p-4 mb-4 transition-all ${
+          className={`rounded-xl border p-4 mb-4 transition-colors ${
             mode === "file" || mode === "local"
               ? "border-warm-sage/40 bg-warm-sage-light/20"
               : "border-border bg-background"
@@ -700,7 +702,7 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
 
         {/* ---- Google Sheets Section ---- */}
         <div
-          className={`rounded-xl border p-4 transition-all ${
+          className={`rounded-xl border p-4 transition-colors ${
             mode === "sheets"
               ? "border-warm-blue/40 bg-warm-blue-light/20"
               : "border-border bg-background"
@@ -934,9 +936,16 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
             <p
               className={`text-sm font-medium ${integrityResult.ok ? "text-warm-sage" : "text-warm-terracotta"}`}
             >
-              {integrityResult.ok
-                ? "✓ All checks passed"
-                : `⚠ Found ${integrityResult.issues.length} issue(s)`}
+              {integrityResult.ok ? (
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4" /> All checks passed
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4" /> Found{" "}
+                  {integrityResult.issues.length} issue(s)
+                </span>
+              )}
             </p>
             {integrityResult.issues.length > 0 && (
               <ul className="mt-2 space-y-1">
@@ -954,8 +963,11 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
                 </p>
                 <ul className="mt-1 space-y-0.5">
                   {integrityResult.fixed.map((fix, i) => (
-                    <li key={i} className="text-xs text-muted-foreground">
-                      ✓ {fix}
+                    <li
+                      key={i}
+                      className="text-xs text-muted-foreground flex items-center gap-1"
+                    >
+                      <Check className="w-4 h-4 shrink-0" /> {fix}
                     </li>
                   ))}
                 </ul>

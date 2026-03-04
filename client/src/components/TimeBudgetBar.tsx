@@ -94,7 +94,7 @@ export default function TimeBudgetBar({
         aria-label={`Time budget: ${formatDuration(totalMinutes)} of ${availableHours} hours used${isOverBudget ? ", over budget" : ""}`}
       >
         <div
-          className={`h-full rounded-full transition-all duration-500 ${
+          className={`h-full rounded-full transition-[width] duration-500 ${
             isOverBudget
               ? "bg-warm-terracotta"
               : fillPercent > 80

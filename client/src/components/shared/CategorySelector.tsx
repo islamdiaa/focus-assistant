@@ -35,7 +35,7 @@ export function CategorySelector({
           type="button"
           aria-pressed={value === c}
           onClick={() => onChange(value === c ? null : c)}
-          className={`${btnClass} rounded-lg font-medium border-2 transition-all duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
+          className={`${btnClass} rounded-lg font-medium border-2 transition-colors duration-200 flex items-center gap-1.5 motion-safe:active:scale-[0.97]
             ${value === c ? "bg-warm-sage-light text-warm-sage border-warm-sage/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
         >
           <span aria-hidden="true">{CATEGORY_CONFIG[c].emoji}</span>

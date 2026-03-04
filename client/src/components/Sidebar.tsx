@@ -167,7 +167,7 @@ export default function Sidebar({
                 <button
                   key={opt.id}
                   onClick={() => onContextChange(opt.id)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-colors duration-200
                     ${
                       isActive
                         ? "bg-white/70 dark:bg-surface-active text-foreground shadow-md backdrop-blur-sm"
@@ -203,7 +203,7 @@ export default function Sidebar({
                 <button
                   onClick={() => handleNav(item.id)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200
                     ${
                       isActive
                         ? "bg-warm-sage/15 text-foreground backdrop-blur-md shadow-sm ring-1 ring-warm-sage/10"
@@ -231,7 +231,7 @@ export default function Sidebar({
                 onFocusMode();
                 onClose();
               }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-warm-sage hover:bg-warm-sage/10 motion-safe:active:scale-[0.97]"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 text-warm-sage hover:bg-warm-sage/10 motion-safe:active:scale-[0.97]"
             >
               <Crosshair className="w-[18px] h-[18px]" />
               Focus Mode
@@ -243,7 +243,7 @@ export default function Sidebar({
                 onScratchPad();
                 onClose();
               }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-warm-amber hover:bg-warm-amber/10 motion-safe:active:scale-[0.97]"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 text-warm-amber hover:bg-warm-amber/10 motion-safe:active:scale-[0.97]"
             >
               <Lightbulb className="w-[18px] h-[18px]" />
               Thoughts

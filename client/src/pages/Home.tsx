@@ -40,6 +40,9 @@ const CanvasPage = lazy(() => import("./CanvasPage"));
 const HelpPage = lazy(() => import("./HelpPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
 const DailyRitual = lazy(() => import("@/components/DailyRitual"));
+const KeyboardShortcutsOverlay = lazy(
+  () => import("@/components/KeyboardShortcutsOverlay")
+);
 
 import PageSkeleton from "@/components/PageSkeleton";
 import { useApp } from "@/contexts/AppContext";
@@ -114,6 +117,7 @@ export default function Home() {
     null
   );
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [thoughtReminderOpen, setThoughtReminderOpen] = useState(false);
   const [thoughtReminderText, setThoughtReminderText] = useState("");
   const [thoughtReminderDate, setThoughtReminderDate] = useState("");
@@ -245,6 +249,13 @@ export default function Home() {
       if ((e.key === "h" || e.key === "H") && !isMod) {
         e.preventDefault();
         setActivePage("help");
+        return;
+      }
+
+      // ?: Open keyboard shortcuts overlay
+      if (e.key === "?") {
+        e.preventDefault();
+        setShortcutsOpen(true);
         return;
       }
 
@@ -603,7 +614,16 @@ export default function Home() {
             setActivePage(page as Page);
             setCommandPaletteOpen(false);
           }}
+          onShowShortcuts={() => setShortcutsOpen(true)}
         />
+
+        {/* Keyboard Shortcuts Overlay (?) */}
+        <Suspense fallback={null}>
+          <KeyboardShortcutsOverlay
+            open={shortcutsOpen}
+            onClose={() => setShortcutsOpen(false)}
+          />
+        </Suspense>
       </>
     </MotionConfig>
   );

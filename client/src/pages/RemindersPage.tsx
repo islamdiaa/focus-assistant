@@ -374,7 +374,7 @@ export default function RemindersPage({
                         role="radio"
                         aria-checked={category === c}
                         onClick={() => setCategory(c)}
-                        className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97] flex flex-col items-center gap-1
+                        className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-[color,background-color,border-color,box-shadow,transform] duration-200 motion-safe:active:scale-[0.97] flex flex-col items-center gap-1
                         ${category === c ? `${cfg.bg} ${cfg.color} border-current shadow-sm scale-[1.02]` : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                       >
                         <cfg.icon className="w-4 h-4" />
@@ -404,7 +404,7 @@ export default function RemindersPage({
                     role="radio"
                     aria-checked={recurrence === opt.value}
                     onClick={() => setRecurrence(opt.value)}
-                    className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-all duration-200 motion-safe:active:scale-[0.97]
+                    className={`px-2 py-2 rounded-lg text-xs font-medium border-2 transition-[color,background-color,border-color,box-shadow,transform] duration-200 motion-safe:active:scale-[0.97]
                       ${recurrence === opt.value ? "bg-warm-blue-light text-warm-blue border-warm-blue/40 shadow-sm scale-[1.02]" : "bg-background border-border text-muted-foreground hover:border-muted-foreground/40"}`}
                   >
                     {opt.label}
@@ -454,7 +454,7 @@ export default function RemindersPage({
           <button
             key={tab.id}
             onClick={() => setFilter(tab.id)}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all motion-safe:active:scale-[0.97]
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-[color,background-color,box-shadow,transform] motion-safe:active:scale-[0.97]
               ${filter === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             {tab.label}
@@ -506,7 +506,7 @@ export default function RemindersPage({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className={`glass rounded-xl p-4 transition-all
+                  className={`glass rounded-xl p-4 transition-[color,background-color,border-color,opacity]
                     ${isOverdue ? "border-red-200 bg-red-50/30" : isToday ? "border-warm-amber/30 bg-warm-amber-light/20" : "border-white/15 dark:border-white/10"}
                     ${reminder.acknowledged ? "opacity-50" : ""}`}
                 >

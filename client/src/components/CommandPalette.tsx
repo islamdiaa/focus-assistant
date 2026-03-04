@@ -31,28 +31,32 @@ import {
   Search,
   PenLine,
   HelpCircle,
+  Keyboard,
 } from "lucide-react";
 
 interface CommandPaletteProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onNavigate: (page: string) => void;
+  onShowShortcuts?: () => void;
 }
 
-const PAGES: { id: Page; label: string; icon: typeof Sun }[] = [
-  { id: "planner", label: "Today", icon: Sun },
-  { id: "tasks", label: "Tasks", icon: CheckSquare },
-  { id: "timer", label: "Focus Timer", icon: Timer },
-  { id: "matrix", label: "Matrix", icon: LayoutGrid },
-  { id: "stats", label: "Stats", icon: BarChart3 },
-  { id: "canvas", label: "Canvas", icon: PenLine },
-  { id: "reading", label: "Read Later", icon: BookOpen },
-  { id: "reminders", label: "Reminders", icon: Bell },
-  { id: "templates", label: "Templates", icon: FileText },
-  { id: "review", label: "Weekly Review", icon: CalendarCheck },
-  { id: "settings", label: "Settings", icon: Settings },
-  { id: "help", label: "Help", icon: HelpCircle },
-];
+const PAGES: { id: Page | "__shortcuts__"; label: string; icon: typeof Sun }[] =
+  [
+    { id: "planner", label: "Today", icon: Sun },
+    { id: "tasks", label: "Tasks", icon: CheckSquare },
+    { id: "timer", label: "Focus Timer", icon: Timer },
+    { id: "matrix", label: "Matrix", icon: LayoutGrid },
+    { id: "stats", label: "Stats", icon: BarChart3 },
+    { id: "canvas", label: "Canvas", icon: PenLine },
+    { id: "reading", label: "Read Later", icon: BookOpen },
+    { id: "reminders", label: "Reminders", icon: Bell },
+    { id: "templates", label: "Templates", icon: FileText },
+    { id: "review", label: "Weekly Review", icon: CalendarCheck },
+    { id: "settings", label: "Settings", icon: Settings },
+    { id: "help", label: "Help", icon: HelpCircle },
+    { id: "__shortcuts__", label: "Keyboard Shortcuts", icon: Keyboard },
+  ];
 
 const PRIORITY_COLORS: Record<string, string> = {
   urgent: "bg-red-100 text-red-700 border-red-200",
@@ -71,6 +75,7 @@ export default function CommandPalette({
   open,
   onOpenChange,
   onNavigate,
+  onShowShortcuts,
 }: CommandPaletteProps) {
   const { state } = useApp();
   const [query, setQuery] = useState("");
@@ -141,12 +146,17 @@ export default function CommandPalette({
       const result = results[index];
       if (!result) return;
       if (result.type === "page") {
-        onNavigate(result.id);
+        if (result.id === "__shortcuts__") {
+          onOpenChange(false);
+          onShowShortcuts?.();
+        } else {
+          onNavigate(result.id);
+        }
       } else {
         onNavigate("tasks");
       }
     },
-    [results, onNavigate]
+    [results, onNavigate, onOpenChange, onShowShortcuts]
   );
 
   const handleKeyDown = useCallback(
