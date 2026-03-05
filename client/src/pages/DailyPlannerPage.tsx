@@ -334,6 +334,7 @@ interface TodayTaskCardProps {
   task: Task;
   dispatch: ReturnType<typeof useApp>["dispatch"];
   showUnpin?: boolean;
+  showPin?: boolean;
   index?: number;
 }
 
@@ -341,6 +342,7 @@ function TodayTaskCard({
   task,
   dispatch,
   showUnpin,
+  showPin,
   index,
 }: TodayTaskCardProps) {
   const { ref, isDragSource } = useSortable({
@@ -533,6 +535,19 @@ function TodayTaskCard({
           >
             <Pencil className="w-3.5 h-3.5" />
           </button>
+          {/* Pin to My Today (for due-today / suggestion tasks) */}
+          {showPin && task.status === "active" && (
+            <button
+              onClick={() => {
+                dispatch({ type: "PIN_TO_TODAY", payload: task.id });
+                toast.success("Pinned to My Today");
+              }}
+              title="Add to My Today"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light transition-colors motion-safe:active:scale-[0.97]"
+            >
+              <Pin className="w-3.5 h-3.5" />
+            </button>
+          )}
           {/* Unpin (only for pinned tasks) */}
           {showUnpin && (
             <button
@@ -895,12 +910,7 @@ export default function DailyPlannerPage({
 
   const pickableTasks = useMemo(() => {
     return contextTasks
-      .filter(
-        t =>
-          t.status === "active" &&
-          t.pinnedToday !== today &&
-          !(t.dueDate && t.dueDate <= today)
-      )
+      .filter(t => t.status === "active" && t.pinnedToday !== today)
       .filter(t => {
         if (!pickerSearch.trim()) return true;
         const q = pickerSearch.toLowerCase();
@@ -1650,7 +1660,7 @@ export default function DailyPlannerPage({
               <p className="text-sm text-muted-foreground text-center py-8">
                 {pickerSearch
                   ? "No matching tasks found."
-                  : "All active tasks are already in Today or due today."}
+                  : "All active tasks are already in My Today."}
               </p>
             ) : (
               pickableTasks.map(t => {
@@ -1711,7 +1721,7 @@ export default function DailyPlannerPage({
         ) : (
           <div className="space-y-2">
             {dueTasks.map(t => (
-              <TodayTaskCard key={t.id} task={t} dispatch={dispatch} />
+              <TodayTaskCard key={t.id} task={t} dispatch={dispatch} showPin />
             ))}
           </div>
         )}
