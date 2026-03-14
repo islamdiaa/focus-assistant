@@ -156,6 +156,27 @@ try {
   fail(`Tests failed${failMatch ? `: ${failMatch[1]} failures` : ""}`);
 }
 
+// ─── 3b. Production Build ─────────────────────────────────────────────
+
+header("Production Build");
+
+try {
+  execSync("pnpm build 2>&1", {
+    cwd: ROOT,
+    encoding: "utf8",
+    timeout: 120000,
+  });
+  pass("Production build succeeded");
+} catch (e) {
+  const output = e.stdout || e.stderr || "";
+  fail("Production build failed");
+  const errLines = output
+    .split("\n")
+    .filter(l => l.includes("error"))
+    .slice(0, 5);
+  errLines.forEach(l => console.log(`    ${l.trim()}`));
+}
+
 // ─── 4. Unguarded VITE_ Env Vars in HTML ─────────────────────────────
 
 header("Environment Variable Guards");

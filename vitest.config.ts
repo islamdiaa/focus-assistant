@@ -20,5 +20,16 @@ export default defineConfig({
       "client/src/**/*.test.ts",
       "client/src/**/*.test.tsx",
     ],
+    coverage: {
+      provider: "v8",
+      reporter: ["text-summary"],
+      include: [
+        "server/**/*.ts",
+        "client/src/**/*.ts",
+        "client/src/**/*.tsx",
+        "shared/**/*.ts",
+      ],
+      exclude: ["**/*.test.*", "**/*.spec.*", "client/src/components/ui/**"],
+    },
   },
 });

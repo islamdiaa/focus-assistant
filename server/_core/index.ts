@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { writeLock } from "../mdStorage";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -63,12 +64,14 @@ async function startServer() {
     console.log(`Server running on http://localhost:${port}/`);
   });
 
-  // Graceful shutdown — ensure in-flight requests complete before exit
+  // Graceful shutdown — ensure in-flight requests and writes complete before exit
   const shutdown = (signal: string) => {
     console.log(
       `\n[Shutdown] Received ${signal}. Closing server gracefully...`
     );
-    server.close(() => {
+    server.close(async () => {
+      // Drain any pending write operations
+      await writeLock;
       console.log("[Shutdown] Server closed. Exiting.");
       process.exit(0);
     });

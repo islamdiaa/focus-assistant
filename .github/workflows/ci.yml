@@ -35,6 +35,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm preflight
+      - run: pnpm build
+      - run: pnpm audit --audit-level=high || true
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
