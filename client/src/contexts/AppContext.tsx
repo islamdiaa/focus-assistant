@@ -6,6 +6,7 @@ import {
   useCallback,
   useRef,
   useState,
+  useMemo,
   type ReactNode,
 } from "react";
 import { nanoid } from "nanoid";
@@ -1342,23 +1343,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const undo = useCallback(() => dispatch({ type: "UNDO" }), [dispatch]);
   const redo = useCallback(() => dispatch({ type: "REDO" }), [dispatch]);
 
+  const canUndo = undoState.past.length > 0;
+  const canRedo = undoState.future.length > 0;
+
+  const contextValue = useMemo(
+    () => ({
+      state,
+      dispatch,
+      syncToCloud,
+      reloadState,
+      canUndo,
+      canRedo,
+      undo,
+      redo,
+      saveStatus,
+      saveError,
+    }),
+    [
+      state,
+      dispatch,
+      syncToCloud,
+      reloadState,
+      canUndo,
+      canRedo,
+      undo,
+      redo,
+      saveStatus,
+      saveError,
+    ]
+  );
+
   return (
-    <AppContext.Provider
-      value={{
-        state,
-        dispatch,
-        syncToCloud,
-        reloadState,
-        canUndo: undoState.past.length > 0,
-        canRedo: undoState.future.length > 0,
-        undo,
-        redo,
-        saveStatus,
-        saveError,
-      }}
-    >
-      {children}
-    </AppContext.Provider>
+    <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
   );
 }
 
