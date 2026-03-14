@@ -213,11 +213,21 @@ export async function syncToObsidian(
   const vaultPath = prefs.obsidianVaultPath.trim();
   if (!vaultPath) return { synced: false };
 
+  // Path validation: reject traversal and sensitive system paths
+  const resolved = path.resolve(vaultPath);
+  const blockedPrefixes = ["/etc", "/proc", "/sys", "/dev"];
+  if (
+    vaultPath.includes("..") ||
+    blockedPrefixes.some(p => resolved.startsWith(p))
+  ) {
+    return { synced: false, error: "Invalid vault path" };
+  }
+
   try {
     // Ensure vault directory exists
-    await fs.mkdir(vaultPath, { recursive: true });
+    await fs.mkdir(resolved, { recursive: true });
 
-    const filePath = path.join(vaultPath, "FocusAssist.md");
+    const filePath = path.join(resolved, "FocusAssist.md");
     const content = generateObsidianMarkdown(state);
     await fs.writeFile(filePath, content, "utf-8");
 

@@ -79,10 +79,19 @@ ENV NODE_ENV=production
 ENV PORT=1992
 ENV DATA_DIR=/app/data
 ENV SKIP_AUTH=true
-ENV JWT_SECRET=focus-assistant-local-secret
+ENV JWT_SECRET=
+
+# Create non-root user
+RUN addgroup -S app && adduser -S app -G app && chown -R app:app /app/data
 
 # Volume for persistent data
 VOLUME ["/app/data"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s CMD wget -q --spider http://localhost:1992/health || exit 1
+
+# Run as non-root user
+USER app
 
 # Ensure Docker sends SIGTERM for graceful shutdown
 STOPSIGNAL SIGTERM

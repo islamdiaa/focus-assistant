@@ -220,6 +220,24 @@ export function stateToMarkdown(state: AppState): string {
     lines.push("");
   }
 
+  // Daily Rituals
+  if (state.dailyRituals && state.dailyRituals.length > 0) {
+    lines.push("## Daily Rituals");
+    lines.push("");
+    lines.push("| Date | Morning | Evening | Intention | CarryForward |");
+    lines.push("|----|---------|---------|-----------|--------------|");
+    for (const r of state.dailyRituals) {
+      const carryJson =
+        r.carryForward && r.carryForward.length > 0
+          ? escapeField(JSON.stringify(r.carryForward))
+          : "";
+      lines.push(
+        `| ${r.date} | ${r.morningCompleted ? "true" : ""} | ${r.eveningCompleted ? "true" : ""} | ${escapeField(r.focusIntention || "")} | ${carryJson} |`
+      );
+    }
+    lines.push("");
+  }
+
   // Templates
   if (state.templates && state.templates.length > 0) {
     lines.push("## Templates");
@@ -278,6 +296,7 @@ export function markdownToState(md: string): AppState {
     reminders: [],
     scratchPad: [],
     canvas: [],
+    dailyRituals: [],
   };
 
   const sections = md.split(/^## /m);
@@ -515,6 +534,32 @@ export function markdownToState(md: string): AppState {
       }
     }
 
+    if (title === "daily rituals") {
+      state.dailyRituals = [];
+      const rows = parseMarkdownTable(sectionLines);
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r[0]) continue;
+        const col = (idx: number) => (idx < r.length ? r[idx] : "") || "";
+        let carryForward: string[] | undefined = undefined;
+        const carryRaw = col(4);
+        if (carryRaw) {
+          try {
+            carryForward = JSON.parse(carryRaw);
+          } catch {
+            /* ignore */
+          }
+        }
+        state.dailyRituals.push({
+          date: r[0],
+          morningCompleted: col(1) === "true" ? true : undefined,
+          eveningCompleted: col(2) === "true" ? true : undefined,
+          focusIntention: col(3) || undefined,
+          carryForward,
+        });
+      }
+    }
+
     if (title === "templates") {
       const rows = parseMarkdownTable(sectionLines);
       for (let i = 1; i < rows.length; i++) {
@@ -560,6 +605,7 @@ export async function loadFromMdFile(): Promise<AppState | null> {
 }
 
 const MAX_BACKUPS = 5;
+let lastBackupTime = 0;
 
 async function rotateBackups(): Promise<void> {
   try {
@@ -616,7 +662,7 @@ export async function createDailySnapshot(): Promise<void> {
 }
 
 // C4 fix: simple promise-based write mutex to serialize concurrent saves
-let writeLock: Promise<void> = Promise.resolve();
+export let writeLock: Promise<void> = Promise.resolve();
 
 export async function saveToMdFile(state: AppState): Promise<boolean> {
   // Queue this write behind any in-progress write
@@ -624,7 +670,11 @@ export async function saveToMdFile(state: AppState): Promise<boolean> {
     writeLock = writeLock.then(async () => {
       try {
         await ensureDataDir();
-        await rotateBackups();
+        const now = Date.now();
+        if (now - lastBackupTime > 60_000) {
+          await rotateBackups();
+          lastBackupTime = now;
+        }
         await createDailySnapshot();
         // C4 fix: atomic write — write to temp file then rename (atomic on POSIX)
         const tmpFile = DATA_FILE + ".tmp";

@@ -8,7 +8,12 @@
  * Do NOT define inline schemas here — that's how the V1.8.0 persistence bug happened.
  */
 import { z } from "zod";
-import { publicProcedure, router } from "./_core/trpc";
+import {
+  publicProcedure,
+  protectedProcedure,
+  adminProcedure,
+  router,
+} from "./_core/trpc";
 import {
   loadFromMdFile,
   saveToMdFile,
@@ -37,10 +42,12 @@ const emptyState: AppState = {
   readingList: [],
   reminders: [],
   canvas: [],
+  scratchPad: [],
+  dailyRituals: [],
 };
 
 export const dataRouter = router({
-  load: publicProcedure.query(async () => {
+  load: protectedProcedure.query(async () => {
     const config = await loadConfig();
     if (config.mode === "sheets" && config.sheetsId && config.sheetsApiKey) {
       const state = await loadFromSheets(config.sheetsId, config.sheetsApiKey);
@@ -52,7 +59,7 @@ export const dataRouter = router({
     return state || emptyState;
   }),
 
-  save: publicProcedure.input(appStateSchema).mutation(async ({ input }) => {
+  save: protectedProcedure.input(appStateSchema).mutation(async ({ input }) => {
     const config = await loadConfig();
     if (config.mode === "sheets" && config.sheetsId && config.sheetsApiKey) {
       const ok = await saveToSheets(
@@ -66,23 +73,23 @@ export const dataRouter = router({
     return { success: ok, backend: "file" as const };
   }),
 
-  getConfig: publicProcedure.query(async () => {
+  getConfig: protectedProcedure.query(async () => {
     return await loadConfig();
   }),
 
-  setConfig: publicProcedure
+  setConfig: adminProcedure
     .input(storageConfigSchema)
     .mutation(async ({ input }) => {
       const ok = await saveConfig(input as StorageConfig);
       return { success: ok };
     }),
 
-  poll: publicProcedure.query(async () => {
+  poll: protectedProcedure.query(async () => {
     const timestamp = await getMdFileTimestamp();
     return { timestamp };
   }),
 
-  exportMarkdown: publicProcedure.query(async () => {
+  exportMarkdown: protectedProcedure.query(async () => {
     const config = await loadConfig();
     let state: AppState;
     if (config.mode === "sheets" && config.sheetsId && config.sheetsApiKey) {
@@ -95,7 +102,7 @@ export const dataRouter = router({
     return { markdown: stateToMarkdown(state) };
   }),
 
-  exportJson: publicProcedure.query(async () => {
+  exportJson: protectedProcedure.query(async () => {
     const config = await loadConfig();
     let state: AppState;
     if (config.mode === "sheets" && config.sheetsId && config.sheetsApiKey) {
@@ -108,7 +115,7 @@ export const dataRouter = router({
     return { json: JSON.stringify(state, null, 2) };
   }),
 
-  importData: publicProcedure
+  importData: adminProcedure
     .input(
       z.object({
         content: z.string(),
@@ -150,7 +157,7 @@ export const dataRouter = router({
     }),
 
   /** Data integrity check — verify and optionally fix MD file structure */
-  integrityCheck: publicProcedure.query(async () => {
+  integrityCheck: adminProcedure.query(async () => {
     return await checkDataIntegrity();
   }),
 });

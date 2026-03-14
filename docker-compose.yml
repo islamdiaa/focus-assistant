@@ -17,6 +17,11 @@ services:
       - DATA_DIR=/app/data
       # Optional: Set a JWT secret for session cookies (auto-generated if not set)
       # - JWT_SECRET=your-secret-here
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:1992/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   focus-data:

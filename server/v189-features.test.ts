@@ -317,6 +317,91 @@ describe("Backward Compatibility", () => {
   });
 });
 
+// ---- Daily Rituals ----
+
+describe("Daily Rituals Serialization", () => {
+  it("daily rituals round-trip with all fields", () => {
+    const state = makeState({
+      dailyRituals: [
+        {
+          date: "2026-03-01",
+          morningCompleted: true,
+          eveningCompleted: true,
+          focusIntention: "Ship the auth feature",
+          carryForward: ["t1", "t2"],
+        },
+      ],
+    });
+
+    const md = stateToMarkdown(state);
+    expect(md).toContain("## Daily Rituals");
+    const parsed = markdownToState(md);
+
+    expect(parsed.dailyRituals).toHaveLength(1);
+    expect(parsed.dailyRituals![0].date).toBe("2026-03-01");
+    expect(parsed.dailyRituals![0].morningCompleted).toBe(true);
+    expect(parsed.dailyRituals![0].eveningCompleted).toBe(true);
+    expect(parsed.dailyRituals![0].focusIntention).toBe(
+      "Ship the auth feature"
+    );
+    expect(parsed.dailyRituals![0].carryForward).toEqual(["t1", "t2"]);
+  });
+
+  it("daily rituals with partial fields round-trip", () => {
+    const state = makeState({
+      dailyRituals: [
+        {
+          date: "2026-03-02",
+          morningCompleted: true,
+        },
+      ],
+    });
+
+    const md = stateToMarkdown(state);
+    const parsed = markdownToState(md);
+
+    expect(parsed.dailyRituals).toHaveLength(1);
+    expect(parsed.dailyRituals![0].morningCompleted).toBe(true);
+    expect(parsed.dailyRituals![0].eveningCompleted).toBeUndefined();
+    expect(parsed.dailyRituals![0].focusIntention).toBeUndefined();
+    expect(parsed.dailyRituals![0].carryForward).toBeUndefined();
+  });
+
+  it("backward compat: old markdown without Daily Rituals section", () => {
+    const state = makeState({ tasks: [] });
+    const md = stateToMarkdown(state);
+    // Strip dailyRituals section if present (simulate old format)
+    const oldMd = md.replace(/## Daily Rituals[\s\S]*?(?=## |$)/, "");
+    const parsed = markdownToState(oldMd);
+    expect(parsed.dailyRituals).toEqual([]);
+  });
+
+  it("empty dailyRituals array does not produce section", () => {
+    const state = makeState({ dailyRituals: [] });
+    const md = stateToMarkdown(state);
+    expect(md).not.toContain("## Daily Rituals");
+  });
+
+  it("focus intention with pipe characters round-trips", () => {
+    const state = makeState({
+      dailyRituals: [
+        {
+          date: "2026-03-03",
+          morningCompleted: true,
+          focusIntention: "Fix bug | Ship feature",
+        },
+      ],
+    });
+
+    const md = stateToMarkdown(state);
+    const parsed = markdownToState(md);
+
+    expect(parsed.dailyRituals![0].focusIntention).toBe(
+      "Fix bug | Ship feature"
+    );
+  });
+});
+
 // ---- Combined Features ----
 
 describe("Combined features round-trip", () => {
