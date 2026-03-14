@@ -69,11 +69,17 @@ async function startServer() {
     console.log(
       `\n[Shutdown] Received ${signal}. Closing server gracefully...`
     );
-    server.close(async () => {
-      // Drain any pending write operations
-      await writeLock;
-      console.log("[Shutdown] Server closed. Exiting.");
-      process.exit(0);
+    server.close(() => {
+      // Drain any pending write operations (server.close does not await async callbacks)
+      writeLock
+        .then(() => {
+          console.log("[Shutdown] Server closed. Exiting.");
+          process.exit(0);
+        })
+        .catch(e => {
+          console.error("[Shutdown] Write drain failed:", e);
+          process.exit(0);
+        });
     });
     // Force exit after 10 seconds if graceful shutdown stalls
     setTimeout(() => {

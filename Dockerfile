@@ -88,7 +88,7 @@ RUN addgroup -S app && adduser -S app -G app && chown -R app:app /app/data
 VOLUME ["/app/data"]
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=5s CMD wget -q --spider http://localhost:1992/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD wget -q --spider http://localhost:1992/health || exit 1
 
 # Run as non-root user
 USER app

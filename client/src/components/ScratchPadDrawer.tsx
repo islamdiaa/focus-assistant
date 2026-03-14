@@ -26,17 +26,42 @@ export default function ThoughtsDrawer({
   const { state, dispatch } = useApp();
   const [newText, setNewText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const notes = state.scratchPad || [];
 
-  // Focus input when drawer opens + handle Escape key
+  // Focus management: save previous focus, auto-focus input, handle Escape, restore on close
   useEffect(() => {
     if (open) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
       setTimeout(() => inputRef.current?.focus(), 100);
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === "Escape") onClose();
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          onClose();
+          return;
+        }
+        // Focus trap: cycle Tab within drawer
+        if (e.key === "Tab" && drawerRef.current) {
+          const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusable.length === 0) return;
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       };
-      window.addEventListener("keydown", handleEscape);
-      return () => window.removeEventListener("keydown", handleEscape);
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        window.removeEventListener("keydown", handleKeyDown);
+        previousFocusRef.current?.focus();
+      };
     }
   }, [open, onClose]);
 
@@ -90,10 +115,12 @@ export default function ThoughtsDrawer({
             transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black/20 z-40"
             onClick={onClose}
+            aria-hidden="true"
           />
 
           {/* Drawer */}
           <motion.div
+            ref={drawerRef}
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}

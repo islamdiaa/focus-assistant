@@ -213,14 +213,20 @@ export async function syncToObsidian(
   const vaultPath = prefs.obsidianVaultPath.trim();
   if (!vaultPath) return { synced: false };
 
-  // Path validation: reject traversal and sensitive system paths
+  // Path validation: allowlist approach — vault must be under DATA_DIR, user home, or /tmp
   const resolved = path.resolve(vaultPath);
-  const blockedPrefixes = ["/etc", "/proc", "/sys", "/dev"];
-  if (
-    vaultPath.includes("..") ||
-    blockedPrefixes.some(p => resolved.startsWith(p))
-  ) {
-    return { synced: false, error: "Invalid vault path" };
+  const dataDir = process.env.DATA_DIR || path.join(process.cwd(), "data");
+  const homeDir = process.env.HOME || process.env.USERPROFILE || "";
+  const allowedPrefixes = [
+    path.resolve(dataDir),
+    ...(homeDir ? [path.resolve(homeDir)] : []),
+    "/tmp",
+  ];
+  if (!allowedPrefixes.some(p => resolved.startsWith(p))) {
+    return {
+      synced: false,
+      error: "Vault path must be under home directory or data directory",
+    };
   }
 
   try {

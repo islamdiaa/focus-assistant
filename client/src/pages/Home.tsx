@@ -45,7 +45,11 @@ import KeyboardShortcutsOverlay from "@/components/KeyboardShortcutsOverlay";
 import AchievementToast, {
   useAchievementToast,
 } from "@/components/AchievementToast";
-import { buildAchievementStats, getNewlyUnlocked } from "@/lib/achievements";
+import {
+  buildAchievementStats,
+  getNewlyUnlocked,
+  getUnlockedAchievements,
+} from "@/lib/achievements";
 import { fireConfetti, getMilestoneMessage } from "@/components/Confetti";
 import QuickAddDialog from "@/components/QuickAddDialog";
 
@@ -160,7 +164,8 @@ export default function Home() {
   const completedToday = todayStats?.tasksCompleted || 0;
   const focusToday = todayStats?.focusMinutes || 0;
 
-  // Achievement tracking
+  // Achievement tracking — seed on first run to avoid re-toasting existing achievements
+  const achievementInitRef = useRef(false);
   useEffect(() => {
     const stats = buildAchievementStats({
       tasks: state.tasks,
@@ -168,6 +173,12 @@ export default function Home() {
       currentStreak: state.currentStreak,
       today: todayStr,
     });
+    if (!achievementInitRef.current) {
+      // First run: seed with already-unlocked, don't show toasts
+      prevUnlockedRef.current = getUnlockedAchievements(stats).map(a => a.id);
+      achievementInitRef.current = true;
+      return;
+    }
     const newlyUnlocked = getNewlyUnlocked(stats, prevUnlockedRef.current);
     if (newlyUnlocked.length > 0) {
       enqueue(newlyUnlocked);
@@ -178,10 +189,13 @@ export default function Home() {
     }
   }, [state.tasks, state.dailyStats, state.currentStreak, todayStr, enqueue]);
 
-  // Confetti on task milestones
-  const prevCompletedRef = useRef(completedToday);
+  // Confetti on task milestones — skip initial LOAD_STATE
+  const prevCompletedRef = useRef<number | null>(null);
   useEffect(() => {
-    if (completedToday > prevCompletedRef.current) {
+    if (
+      prevCompletedRef.current !== null &&
+      completedToday > prevCompletedRef.current
+    ) {
       const msg = getMilestoneMessage(completedToday);
       if (msg) {
         fireConfetti();
@@ -323,7 +337,13 @@ export default function Home() {
   }, [activePage]);
 
   // Auto-show daily ritual (morning before noon, evening after 5pm)
+  // Waits for data to load (tasks array populated) before checking
+  const ritualCheckedRef = useRef(false);
   useEffect(() => {
+    if (ritualCheckedRef.current) return;
+    // Don't check until data has loaded (tasks array will be non-empty or at least loaded)
+    if (state.tasks.length === 0 && state.dailyStats.length === 0) return;
+    ritualCheckedRef.current = true;
     if (state.preferences?.disableDailyRitual === true) return;
     const today = new Date().toISOString().split("T")[0];
     const ritual = state.dailyRituals?.find(
@@ -339,7 +359,7 @@ export default function Home() {
     ) {
       setShowRitual("evening");
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state.tasks, state.dailyStats, state.dailyRituals, state.preferences]);
 
   return (
     <MotionConfig reducedMotion="user">

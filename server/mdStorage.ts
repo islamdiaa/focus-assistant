@@ -87,6 +87,9 @@ export function stateToMarkdown(state: AppState): string {
     lines.push(
       `- **Available Hours Per Day:** ${state.preferences.availableHoursPerDay ?? 8}`
     );
+    lines.push(
+      `- **Disable Daily Ritual:** ${state.preferences.disableDailyRitual ? "true" : "false"}`
+    );
     lines.push("");
   }
 
@@ -358,6 +361,8 @@ export function markdownToState(md: string): AppState {
           const parsed = parseFloat(val);
           state.preferences!.availableHoursPerDay = isNaN(parsed) ? 8 : parsed;
         }
+        if (key === "disable daily ritual")
+          state.preferences!.disableDailyRitual = val === "true";
       }
     }
 

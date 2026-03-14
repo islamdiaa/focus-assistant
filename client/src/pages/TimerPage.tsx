@@ -168,7 +168,10 @@ function playCompletionSound(soundPreference?: string) {
       );
       osc2.stop(ctx.currentTime + config.dur2);
       // Close AudioContext after second tone finishes to prevent leak (H1 fix)
-      setTimeout(() => ctx.close().catch(() => {}), 1200);
+      setTimeout(
+        () => ctx.close().catch(() => {}),
+        Math.ceil(config.dur2 * 1000) + 200
+      );
     }, 300);
   } catch {
     // Audio not available
