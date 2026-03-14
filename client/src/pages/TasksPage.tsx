@@ -61,6 +61,9 @@ import {
   CATEGORY_CONFIG,
   ENERGY_CONFIG,
   RECURRENCE_CONFIG,
+  REMINDER_CATEGORIES,
+  REMINDER_RECURRENCE,
+  formatEstimatedTime,
 } from "@/lib/constants";
 import { filterTasksByContext } from "@/lib/contextFilter";
 import { DragDropProvider } from "@dnd-kit/react";
@@ -450,13 +453,6 @@ function InlineEditForm({
 }
 
 // ---- Format estimated minutes helper ----
-function formatEstimatedTime(mins: number): string {
-  if (mins < 60) return `${mins}m`;
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
-}
-
 // ---- Sortable Task Card ----
 function SortableTaskCard({
   task,
@@ -823,47 +819,6 @@ export default function TasksPage({
   const [remRecurrence, setRemRecurrence] =
     useState<Reminder["recurrence"]>("none");
   const [remCategory, setRemCategory] = useState<Reminder["category"]>("other");
-
-  const REMINDER_CATEGORIES: Record<
-    Reminder["category"],
-    { icon: typeof Bell; label: string; color: string; bg: string }
-  > = {
-    birthday: {
-      icon: Cake,
-      label: "Birthday",
-      color: "text-pink-500",
-      bg: "bg-pink-50",
-    },
-    appointment: {
-      icon: Calendar,
-      label: "Appointment",
-      color: "text-warm-blue",
-      bg: "bg-warm-blue-light",
-    },
-    event: {
-      icon: Star,
-      label: "Event",
-      color: "text-warm-amber",
-      bg: "bg-warm-amber-light",
-    },
-    other: {
-      icon: Bell,
-      label: "Other",
-      color: "text-warm-sage",
-      bg: "bg-warm-sage-light",
-    },
-  };
-
-  const REMINDER_RECURRENCE: {
-    value: Reminder["recurrence"];
-    label: string;
-  }[] = [
-    { value: "none", label: "One-time" },
-    { value: "yearly", label: "Yearly" },
-    { value: "quarterly", label: "Quarterly" },
-    { value: "monthly", label: "Monthly" },
-    { value: "weekly", label: "Weekly" },
-  ];
 
   // Keyboard shortcut: R opens reminder dialog — skip initial mount
   const prevReminderTrigger = useRef(reminderTrigger);

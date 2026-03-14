@@ -224,39 +224,6 @@ export function setStorageMode(mode: StorageMode) {
   localStorage.setItem("focus-assist-storage-mode", mode);
 }
 
-// File system API stubs (no longer needed, server handles files)
-export function isFileSystemSupported(): boolean {
-  return false;
-}
-export function hasFileHandle(): boolean {
-  return false;
-}
-export async function pickFile(): Promise<boolean> {
-  return false;
-}
-export function disconnectFile(): void {}
-export function getFileName(): string | null {
-  return null;
-}
-
-// Google Sheets config (now managed server-side)
-export function setSheetConfig(sheetId: string, apiKey: string) {
-  localStorage.setItem("focus-assist-sheet-id", sheetId);
-  localStorage.setItem("focus-assist-api-key", apiKey);
-}
-
-export function getSheetConfig() {
-  return {
-    sheetId: localStorage.getItem("focus-assist-sheet-id") || "",
-    apiKey: localStorage.getItem("focus-assist-api-key") || "",
-  };
-}
-
-export function isSheetConfigured(): boolean {
-  const { sheetId, apiKey } = getSheetConfig();
-  return !!(sheetId && apiKey);
-}
-
 // ---- Polling for multi-tab sync ----
 
 export async function pollTimestamp(): Promise<number> {

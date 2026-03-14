@@ -1,13 +1,15 @@
 /**
- * Shared lookup constants for task display.
- * Used by TasksPage, DailyPlannerPage, and other components.
+ * Shared lookup constants for task and reminder display.
+ * Used by TasksPage, DailyPlannerPage, RemindersPage, and other components.
  */
 import type {
   Priority,
   Category,
   EnergyLevel,
   RecurrenceFrequency,
+  Reminder,
 } from "@/lib/types";
+import { Bell, Cake, Calendar, Star } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Config shape types                                                */
@@ -83,3 +85,66 @@ export const RECURRENCE_CONFIG: Record<RecurrenceFrequency, RecurrenceConfig> =
     quarterly: { label: "Quarterly", short: "Quarterly" },
     weekdays: { label: "Weekdays", short: "Weekdays" },
   };
+
+/* ------------------------------------------------------------------ */
+/*  Reminder categories & recurrence                                   */
+/* ------------------------------------------------------------------ */
+
+export const REMINDER_CATEGORIES: Record<
+  Reminder["category"],
+  {
+    icon: typeof Bell;
+    label: string;
+    color: string;
+    bg: string;
+  }
+> = {
+  birthday: {
+    icon: Cake,
+    label: "Birthday",
+    color: "text-pink-500",
+    bg: "bg-pink-50",
+  },
+  appointment: {
+    icon: Calendar,
+    label: "Appointment",
+    color: "text-warm-blue",
+    bg: "bg-warm-blue-light",
+  },
+  event: {
+    icon: Star,
+    label: "Event",
+    color: "text-warm-amber",
+    bg: "bg-warm-amber-light",
+  },
+  other: {
+    icon: Bell,
+    label: "Other",
+    color: "text-warm-sage",
+    bg: "bg-warm-sage-light",
+  },
+};
+
+export const REMINDER_RECURRENCE: {
+  value: Reminder["recurrence"];
+  label: string;
+}[] = [
+  { value: "none", label: "One-time" },
+  { value: "yearly", label: "Yearly" },
+  { value: "quarterly", label: "Quarterly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "weekly", label: "Weekly" },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Time estimation                                                    */
+/* ------------------------------------------------------------------ */
+
+export const ESTIMATED_TIME_PRESETS = [15, 30, 60, 120, 240];
+
+export function formatEstimatedTime(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
