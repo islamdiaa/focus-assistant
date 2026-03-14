@@ -504,7 +504,10 @@ export default function Home() {
 
             {/* Save error banner */}
             {saveStatus === "error" && (
-              <div className="bg-red-50 dark:bg-red-950/50 border-b border-red-200 dark:border-red-800 px-4 py-2 flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
+              <div
+                role="alert"
+                className="bg-red-50 dark:bg-red-950/50 border-b border-red-200 dark:border-red-800 px-4 py-2 flex items-center gap-2 text-sm text-red-700 dark:text-red-300"
+              >
                 <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                 <span className="flex-1">
                   {saveError ||

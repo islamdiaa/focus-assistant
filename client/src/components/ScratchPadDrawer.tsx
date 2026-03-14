@@ -28,12 +28,17 @@ export default function ThoughtsDrawer({
   const inputRef = useRef<HTMLInputElement>(null);
   const notes = state.scratchPad || [];
 
-  // Focus input when drawer opens
+  // Focus input when drawer opens + handle Escape key
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 100);
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === "Escape") onClose();
+      };
+      window.addEventListener("keydown", handleEscape);
+      return () => window.removeEventListener("keydown", handleEscape);
     }
-  }, [open]);
+  }, [open, onClose]);
 
   function handleAdd() {
     if (!newText.trim()) return;
@@ -93,6 +98,9 @@ export default function ThoughtsDrawer({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Thoughts"
             className="fixed top-0 right-0 h-full w-80 lg:w-96 z-40 bg-card border-l border-border shadow-xl flex flex-col"
           >
             {/* Header */}
@@ -110,6 +118,7 @@ export default function ThoughtsDrawer({
               </div>
               <button
                 onClick={onClose}
+                aria-label="Close thoughts drawer"
                 className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-warm-sand/50 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -182,6 +191,7 @@ export default function ThoughtsDrawer({
                               onClick={() => handleMakeTask(note.id)}
                               className="p-1.5 rounded text-muted-foreground/70 hover:text-warm-sage hover:bg-warm-sage-light transition-colors"
                               title="Make task"
+                              aria-label="Convert to task"
                             >
                               <CheckSquare className="w-3.5 h-3.5" />
                             </button>
@@ -189,6 +199,7 @@ export default function ThoughtsDrawer({
                               onClick={() => handleMakeReminder(note.id)}
                               className="p-1.5 rounded text-muted-foreground/70 hover:text-warm-blue hover:bg-warm-blue-light transition-colors"
                               title="Make reminder"
+                              aria-label="Convert to reminder"
                             >
                               <Bell className="w-3.5 h-3.5" />
                             </button>
@@ -196,6 +207,7 @@ export default function ThoughtsDrawer({
                               onClick={() => handleDelete(note.id)}
                               className="p-1.5 rounded text-muted-foreground/70 hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
                               title="Delete"
+                              aria-label="Delete thought"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>

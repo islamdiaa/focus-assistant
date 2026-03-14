@@ -664,6 +664,7 @@ function SortableTaskCard({
                 : "text-muted-foreground/50 hover:text-warm-blue hover:bg-warm-blue-light"
             }`}
             title="Edit task"
+            aria-label="Edit task"
           >
             <Pencil className="w-4 h-4" />
           </button>
@@ -677,6 +678,7 @@ function SortableTaskCard({
                   : "text-muted-foreground hover:text-warm-sage hover:bg-warm-sage-light"
               }`}
               title="Subtasks"
+              aria-label="Toggle subtasks"
             >
               <ListChecks className="w-4 h-4" />
             </button>
@@ -695,6 +697,7 @@ function SortableTaskCard({
                     ? "Reactivate task"
                     : "Monitor task (waiting)"
                 }
+                aria-label="Toggle monitoring"
               >
                 {task.status === "monitored" ? (
                   <EyeOff className="w-4 h-4" />
@@ -715,6 +718,7 @@ function SortableTaskCard({
               }}
               className="p-1.5 rounded-md text-muted-foreground hover:text-warm-terracotta hover:bg-warm-terracotta-light transition-colors"
               title="Delete task"
+              aria-label="Delete task"
             >
               <Trash2 className="w-4 h-4" />
             </button>
