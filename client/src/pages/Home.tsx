@@ -19,6 +19,7 @@ import {
   useMemo,
   useEffect,
   useCallback,
+  useRef,
   lazy,
   Suspense,
 } from "react";
@@ -41,6 +42,12 @@ const HelpPage = lazy(() => import("./HelpPage"));
 const FocusModePage = lazy(() => import("./FocusModePage"));
 const DailyRitual = lazy(() => import("@/components/DailyRitual"));
 import KeyboardShortcutsOverlay from "@/components/KeyboardShortcutsOverlay";
+import AchievementToast, {
+  useAchievementToast,
+} from "@/components/AchievementToast";
+import { buildAchievementStats, getNewlyUnlocked } from "@/lib/achievements";
+import { fireConfetti, getMilestoneMessage } from "@/components/Confetti";
+import QuickAddDialog from "@/components/QuickAddDialog";
 
 import PageSkeleton from "@/components/PageSkeleton";
 import { useApp } from "@/contexts/AppContext";
@@ -67,6 +74,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
+import { toast } from "sonner";
 
 const MOTIVATIONAL = [
   "Your brain is powerful!",
@@ -105,7 +113,7 @@ const PAGE_TITLES: Record<string, string> = {
 };
 
 export default function Home() {
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const { user, loading, error, isAuthenticated, logout } = useAuth();
 
   const [activePage, setActivePage] = useState<Page>("planner");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -122,6 +130,7 @@ export default function Home() {
   const [thoughtReminderNoteId, setThoughtReminderNoteId] = useState<
     string | null
   >(null);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
   const {
     state,
     dispatch,
@@ -133,6 +142,8 @@ export default function Home() {
     saveError,
   } = useApp();
   const activeContext = state.preferences?.activeContext || "all";
+  const { queue, enqueue, dismiss } = useAchievementToast();
+  const prevUnlockedRef = useRef<string[]>([]);
 
   // Expose triggers for keyboard shortcuts in child components
   const [newTaskTrigger, setNewTaskTrigger] = useState(0);
@@ -148,6 +159,37 @@ export default function Home() {
   const todayStats = state.dailyStats.find(s => s.date === todayStr);
   const completedToday = todayStats?.tasksCompleted || 0;
   const focusToday = todayStats?.focusMinutes || 0;
+
+  // Achievement tracking
+  useEffect(() => {
+    const stats = buildAchievementStats({
+      tasks: state.tasks,
+      dailyStats: state.dailyStats,
+      currentStreak: state.currentStreak,
+      today: todayStr,
+    });
+    const newlyUnlocked = getNewlyUnlocked(stats, prevUnlockedRef.current);
+    if (newlyUnlocked.length > 0) {
+      enqueue(newlyUnlocked);
+      prevUnlockedRef.current = [
+        ...prevUnlockedRef.current,
+        ...newlyUnlocked.map(a => a.id),
+      ];
+    }
+  }, [state.tasks, state.dailyStats, state.currentStreak, todayStr, enqueue]);
+
+  // Confetti on task milestones
+  const prevCompletedRef = useRef(completedToday);
+  useEffect(() => {
+    if (completedToday > prevCompletedRef.current) {
+      const msg = getMilestoneMessage(completedToday);
+      if (msg) {
+        fireConfetti();
+        toast.success(msg);
+      }
+    }
+    prevCompletedRef.current = completedToday;
+  }, [completedToday]);
 
   // Global keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -221,11 +263,13 @@ export default function Home() {
         return;
       }
 
-      // N: New task (on tasks or planner page) — skip if Cmd/Ctrl held (new window)
+      // N: New task — on tasks/planner use inline dialog, elsewhere use QuickAdd
       if ((e.key === "n" || e.key === "N") && !isMod) {
+        e.preventDefault();
         if (activePage === "tasks" || activePage === "planner") {
-          e.preventDefault();
           setNewTaskTrigger(t => t + 1);
+        } else {
+          setQuickAddOpen(true);
         }
         return;
       }
@@ -278,14 +322,22 @@ export default function Home() {
     document.title = `${PAGE_TITLES[activePage] || "Focus Assistant"} - Focus Assistant`;
   }, [activePage]);
 
-  // Auto-show morning ritual once per day (before noon, if not completed)
+  // Auto-show daily ritual (morning before noon, evening after 5pm)
   useEffect(() => {
+    if (state.preferences?.disableDailyRitual === true) return;
     const today = new Date().toISOString().split("T")[0];
     const ritual = state.dailyRituals?.find(
       (r: { date: string }) => r.date === today
     );
-    if (!ritual?.morningCompleted && new Date().getHours() < 12) {
+    const hours = new Date().getHours();
+    if (!ritual?.morningCompleted && hours < 12) {
       setShowRitual("morning");
+    } else if (
+      ritual?.morningCompleted &&
+      !ritual?.eveningCompleted &&
+      hours >= 17
+    ) {
+      setShowRitual("evening");
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -318,6 +370,12 @@ export default function Home() {
                     carryForward: data.carryForward,
                   },
                 });
+                // Pin carry-forward tasks to today
+                if (data.carryForward) {
+                  for (const taskId of data.carryForward) {
+                    dispatch({ type: "PIN_TO_TODAY", payload: taskId });
+                  }
+                }
                 setShowRitual(null);
               }}
               onDismiss={() => setShowRitual(null)}
@@ -620,6 +678,12 @@ export default function Home() {
           open={shortcutsOpen}
           onClose={() => setShortcutsOpen(false)}
         />
+
+        {/* Quick Add Dialog (N key from non-task pages) */}
+        <QuickAddDialog open={quickAddOpen} onOpenChange={setQuickAddOpen} />
+
+        {/* Achievement Toast Notifications */}
+        <AchievementToast achievements={queue} onDismiss={dismiss} />
       </>
     </MotionConfig>
   );

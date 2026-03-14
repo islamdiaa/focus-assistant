@@ -92,30 +92,81 @@ function CircularProgress({
   );
 }
 
+// Sound frequency configs per notification sound type
+const SOUND_CONFIGS: Record<
+  string,
+  {
+    type: OscillatorType;
+    freq1: number;
+    freq2: number;
+    dur1: number;
+    dur2: number;
+  }
+> = {
+  "gentle-chime": {
+    type: "sine",
+    freq1: 523.25,
+    freq2: 659.25,
+    dur1: 0.8,
+    dur2: 1.0,
+  },
+  bell: { type: "sine", freq1: 440, freq2: 659.25, dur1: 0.8, dur2: 1.0 },
+  "singing-bowl": {
+    type: "sine",
+    freq1: 392,
+    freq2: 587,
+    dur1: 1.2,
+    dur2: 1.5,
+  },
+  "wood-block": {
+    type: "triangle",
+    freq1: 800,
+    freq2: 600,
+    dur1: 0.15,
+    dur2: 0.12,
+  },
+  "digital-beep": {
+    type: "square",
+    freq1: 800,
+    freq2: 800,
+    dur1: 0.3,
+    dur2: 0.3,
+  },
+};
+
 // Play a completion sound using Web Audio API
-function playCompletionSound() {
+function playCompletionSound(soundPreference?: string) {
+  if (soundPreference === "none") return;
+  const config =
+    SOUND_CONFIGS[soundPreference || "gentle-chime"] ??
+    SOUND_CONFIGS["gentle-chime"];
   try {
     const ctx = new AudioContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
+    osc.type = config.type;
     osc.connect(gain);
     gain.connect(ctx.destination);
-    osc.frequency.value = 523.25; // C5
+    osc.frequency.value = config.freq1;
     gain.gain.value = 0.3;
     osc.start();
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
-    osc.stop(ctx.currentTime + 0.8);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + config.dur1);
+    osc.stop(ctx.currentTime + config.dur1);
     // Second tone
     setTimeout(() => {
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
+      osc2.type = config.type;
       osc2.connect(gain2);
       gain2.connect(ctx.destination);
-      osc2.frequency.value = 659.25; // E5
+      osc2.frequency.value = config.freq2;
       gain2.gain.value = 0.3;
       osc2.start();
-      gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
-      osc2.stop(ctx.currentTime + 1);
+      gain2.gain.exponentialRampToValueAtTime(
+        0.01,
+        ctx.currentTime + config.dur2
+      );
+      osc2.stop(ctx.currentTime + config.dur2);
       // Close AudioContext after second tone finishes to prevent leak (H1 fix)
       setTimeout(() => ctx.close().catch(() => {}), 1200);
     }, 300);
@@ -430,7 +481,9 @@ export default function TimerPage() {
         if (elapsed >= pom.duration * 60) {
           completedRef.current.add(pom.id);
           dispatch({ type: "COMPLETE_POMODORO", payload: pom.id });
-          playCompletionSound();
+          playCompletionSound(
+            state.preferences?.notificationSound || "gentle-chime"
+          );
           // Browser notification
           if (
             "Notification" in window &&

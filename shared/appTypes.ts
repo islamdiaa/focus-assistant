@@ -184,6 +184,7 @@ export const appPreferencesSchema = z.object({
   activeContext: contextFilterSchema.nullable().optional(), // 'all' | 'work' | 'personal' — global filter
   autoCompleteParent: z.boolean().nullable().optional(), // auto-complete task when all subtasks done
   availableHoursPerDay: z.number().nullable().optional(), // daily time budget in hours (default 8)
+  disableDailyRitual: z.boolean().nullable().optional(), // true = skip daily ritual prompts
 });
 
 export const scratchNoteSchema = z.object({
