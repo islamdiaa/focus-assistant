@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
-const EMPTY_TIMER_IMG = "/images/empty-timer.webp";
+const EMPTY_TIMER_IMG = `${import.meta.env.BASE_URL}images/empty-timer.webp`;
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);

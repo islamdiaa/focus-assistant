@@ -85,7 +85,7 @@ const PRIORITY_ORDER: Record<Priority, number> = {
   low: 3,
 };
 
-const EMPTY_TASKS_IMG = "/images/empty-tasks.webp";
+const EMPTY_TASKS_IMG = `${import.meta.env.BASE_URL}images/empty-tasks.webp`;
 
 // ---- Subtask Progress Bar ----
 function SubtaskProgress({ subtasks }: { subtasks: Subtask[] }) {

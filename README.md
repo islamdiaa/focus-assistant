@@ -6,6 +6,8 @@
 
 A warm, ADHD-friendly productivity app with task management, Pomodoro timers, Eisenhower Matrix, reminders, and statistics tracking. Runs as a single Docker container with data stored in a human-readable Markdown file.
 
+**[Try the live demo](https://itayar.com/projects/focus-assistant)**: it runs entirely in your browser, starts with sample data, and keeps your changes in this browser only.
+
 ## Screenshots
 
 |                     Today View                      |                        Tasks                        |
