@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import type { QuadrantType, Priority } from "@/lib/types";
 import { filterTasksByContext } from "@/lib/contextFilter";
 
-const EMPTY_MATRIX_IMG = "/images/empty-matrix.webp";
+const EMPTY_MATRIX_IMG = `${import.meta.env.BASE_URL}images/empty-matrix.webp`;
 
 interface QuadrantConfig {
   id: QuadrantType;

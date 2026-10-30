@@ -4,6 +4,7 @@
  * V1.2: Notification sounds, Obsidian vault sync, data integrity check
  */
 import { useState, useEffect, useCallback } from "react";
+import { IS_DEMO } from "@/lib/demo";
 import pkgJson from "../../../package.json";
 import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
@@ -280,6 +281,10 @@ export default function SettingsPage({ onNavigate }: SettingsPageProps = {}) {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
       try {
+        if (IS_DEMO) {
+          toast.info("Import isn't available in the demo");
+          return;
+        }
         const text = await file.text();
         const res = await fetch("/api/trpc/data.importData", {
           method: "POST",

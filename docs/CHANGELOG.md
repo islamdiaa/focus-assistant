@@ -8,6 +8,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.9.0] - 2026-10-30
 
+### Added
+
+- Browser-only demo build (`pnpm build:demo`, `VITE_DEMO=true`): sample data, changes saved in the visitor's browser, a reset button, no server. Published to GitHub Pages and shown at itayar.com/projects/focus-assistant.
+- Vite `base` path support (`VITE_BASE`) and a base-aware router, so the app can run under a sub-path.
+
 ### Removed
 
 - Unused starter-template code: external OAuth login, MySQL/Drizzle user table, S3 uploads, LLM chat, image generation, maps and voice transcription. The app was already single-user; it now has no login code at all.

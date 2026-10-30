@@ -6,6 +6,8 @@ import { defineConfig } from "vite";
 const plugins = [react(), tailwindcss()];
 
 export default defineConfig({
+  // "/" for the app; the hosted demo is served under a sub-path (see build:demo)
+  base: process.env.VITE_BASE || "/",
   plugins,
   resolve: {
     alias: {

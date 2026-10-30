@@ -13,6 +13,7 @@
 
 import type { AppState, StorageConfig, StorageMode } from "./types";
 import { DEFAULT_SETTINGS, DEFAULT_PREFERENCES } from "./types";
+import { IS_DEMO, demoMarkdown, loadDemoState, saveDemoState } from "./demo";
 
 const STORAGE_KEY = "focus-assist-data";
 
@@ -146,6 +147,7 @@ async function serverSetConfig(config: StorageConfig): Promise<boolean> {
 // ---- Public API (same interface as before) ----
 
 export async function loadState(): Promise<AppState> {
+  if (IS_DEMO) return loadDemoState();
   // Try server first
   const serverState = await serverLoad();
   if (serverState) {
@@ -157,6 +159,10 @@ export async function loadState(): Promise<AppState> {
 }
 
 export async function saveState(state: AppState): Promise<boolean> {
+  if (IS_DEMO) {
+    saveDemoState(state);
+    return true;
+  }
   // Always cache locally first (safety net)
   saveLocal(state);
 
@@ -199,6 +205,7 @@ export async function saveState(state: AppState): Promise<boolean> {
 // ---- Config API ----
 
 export async function getStorageConfig(): Promise<StorageConfig> {
+  if (IS_DEMO) return { mode: "local" };
   const config = await serverGetConfig();
   return config || { mode: "file" };
 }
@@ -206,6 +213,7 @@ export async function getStorageConfig(): Promise<StorageConfig> {
 export async function setStorageConfig(
   config: StorageConfig
 ): Promise<boolean> {
+  if (IS_DEMO) return false;
   return serverSetConfig(config);
 }
 
@@ -260,6 +268,7 @@ export function isSheetConfigured(): boolean {
 // ---- Polling for multi-tab sync ----
 
 export async function pollTimestamp(): Promise<number> {
+  if (IS_DEMO) return 0;
   try {
     const res = await fetch("/api/trpc/data.poll", {
       method: "GET",
@@ -276,6 +285,7 @@ export async function pollTimestamp(): Promise<number> {
 // ---- Export functions ----
 
 export async function exportAsMarkdown(): Promise<string> {
+  if (IS_DEMO) return demoMarkdown(loadDemoState());
   try {
     const res = await fetch("/api/trpc/data.exportMarkdown", {
       method: "GET",
@@ -290,6 +300,7 @@ export async function exportAsMarkdown(): Promise<string> {
 }
 
 export async function exportAsJson(): Promise<string> {
+  if (IS_DEMO) return JSON.stringify(loadDemoState(), null, 2);
   try {
     const res = await fetch("/api/trpc/data.exportJson", {
       method: "GET",
@@ -317,6 +328,7 @@ export async function runIntegrityCheck(): Promise<{
   issues: string[];
   fixed: string[];
 }> {
+  if (IS_DEMO) return { ok: true, issues: [], fixed: [] };
   try {
     const res = await fetch("/api/trpc/data.integrityCheck", {
       method: "GET",
