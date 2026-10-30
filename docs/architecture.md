@@ -61,8 +61,6 @@ FocusAssist is a full-stack productivity web application designed for ADHD-frien
 | Testing          | Vitest (172+ tests)                  | Unit tests, schema integrity, persistence round-trips                                    |
 | Container        | Docker (Alpine-based)                | Single container deployment                                                              |
 | CI/CD            | GitHub Actions                       | Test → Docker build → push to Docker Hub + GHCR                                          |
-| Auth             | OAuth (optional)                     | Session-based authentication                                                             |
-| Database         | MySQL/TiDB via Drizzle ORM           | User table for auth (not used for app data)                                              |
 
 ## Directory Structure
 
@@ -99,24 +97,17 @@ focus-assist/
 │   ├── _core/                 # Framework plumbing (do not edit)
 │   │   ├── index.ts           # Server entry point
 │   │   ├── trpc.ts            # tRPC initialization
-│   │   ├── context.ts         # Request context builder
-│   │   ├── env.ts             # Environment variable access
-│   │   └── oauth.ts           # OAuth handler
+│   │   └── context.ts         # Request context (single local user)
 │   ├── dataRouter.ts          # tRPC router: load, save, getConfig, setConfig (uses shared Zod schemas)
 │   ├── mdStorage.ts           # Markdown file serializer/deserializer
 │   ├── obsidianSync.ts        # Obsidian vault markdown export
 │   ├── sheetsStorage.ts       # Google Sheets API read/write
 │   ├── storageConfig.ts       # Storage mode config (file vs sheets)
 │   ├── routers.ts             # Root tRPC router
-│   ├── db.ts                  # Database helpers (Drizzle ORM)
 │   └── *.test.ts              # Vitest test files (15 files, 172+ tests)
 │
 ├── shared/                    # Shared between client and server
-│   ├── appTypes.ts            # SINGLE SOURCE OF TRUTH: Zod schemas → inferred TS types
-│   └── const.ts               # Shared constants
-│
-├── drizzle/                   # Database schema and migrations
-│   └── schema.ts              # Users table (for auth)
+│   └── appTypes.ts            # SINGLE SOURCE OF TRUTH: Zod schemas → inferred TS types
 │
 ├── data/                      # Persistent data (Docker volume mount)
 │   ├── focus-assist-data.md   # All app data in Markdown format
@@ -278,7 +269,7 @@ Watchtower on Unraid polls Docker Hub hourly and auto-pulls new images.
 
 ## Key Design Decisions
 
-**Single container, no database for app data.** App data lives in a Markdown file, not MySQL. The database (Drizzle/MySQL) is only used for the OAuth user table. This keeps the Docker deployment dead simple — one volume mount and you're done.
+**Single container, no database.** All app data lives in a Markdown file, and there are no user accounts: it is a single-user, self-hosted app. This keeps the Docker deployment dead simple — one volume mount and you're done.
 
 **Zod-first type system.** All data types are defined as Zod schemas in `shared/appTypes.ts`. TypeScript types are inferred via `z.infer<>`. The save endpoint uses `.strict()` to reject unknown fields. This eliminates the class of bugs where types and validation schemas drift apart.
 

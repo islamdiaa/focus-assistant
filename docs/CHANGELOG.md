@@ -6,6 +6,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.9.0] - 2026-10-30
+
+### Removed
+
+- Unused starter-template code: external OAuth login, MySQL/Drizzle user table, S3 uploads, LLM chat, image generation, maps and voice transcription. The app was already single-user; it now has no login code at all.
+- `SKIP_AUTH` and `JWT_SECRET` settings (no longer needed).
+- Committed test data (`data/`), Playwright results and a duplicate `claude.md`.
+
+### Security
+
+- Updated dependencies: `pnpm audit` now reports no known vulnerabilities (previously 102, including 1 critical and 29 high, mostly from the removed template packages).
+- Upgraded Vitest to 4.x.
+- README now documents the no-login model and how to run it safely.
+
+---
+
 ## [1.8.8] - 2026-02-23
 
 ### Added

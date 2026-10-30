@@ -132,14 +132,19 @@ environment:
   - PORT=YOUR_PORT
 ```
 
+## Security
+
+Focus Assistant is a single-user app with **no login**. Anyone who can reach its port can read and change your data, and see the Google Sheets API key if you set one. Run it on your home network, over a VPN such as Tailscale, or behind a reverse proxy with authentication (Authelia, Authentik, Cloudflare Access). Don't expose port 1992 directly to the internet.
+
+To report a security issue, please use [GitHub private vulnerability reporting](https://github.com/islamdiaa/focus-assistant/security/advisories/new) instead of a public issue.
+
 ## Project Structure
 
 ```
 client/src/           # React 19 frontend (Tailwind CSS 4 + shadcn/ui)
 server/               # Express 4 backend (tRPC 11 API)
 shared/               # Shared TypeScript types (Zod-first schemas)
-data/                 # Persistent data (Docker volume mount point)
-drizzle/              # Database schema (auth only)
+data/                 # Persistent data (Docker volume mount point, not committed)
 ```
 
 For detailed architecture documentation, see [architecture.md](./docs/architecture.md).
@@ -151,7 +156,7 @@ For detailed architecture documentation, see [architecture.md](./docs/architectu
 - **Storage:** Local Markdown file or Google Sheets
 - **Validation:** Zod (single source of truth for types + runtime validation)
 - **Build:** Vite 7 (client), esbuild (server)
-- **Tests:** Vitest (324+ tests including schema integrity + persistence round-trips)
+- **Tests:** Vitest (500+ tests including schema integrity + persistence round-trips)
 - **CI/CD:** GitHub Actions → Docker Hub + GHCR
 - **Container:** Docker (Node 22 Alpine, multi-arch amd64/arm64)
 
@@ -163,14 +168,13 @@ pnpm build        # Production build (Vite + esbuild)
 pnpm start        # Start production server
 pnpm test         # Run vitest tests
 pnpm check        # TypeScript type checking
-pnpm db:push      # Database migrations
 ```
 
 ## AI Agent Guides
 
 This repo includes guidance files for AI coding assistants:
 
-- [claude.md](./claude.md) — Guide for Claude (Anthropic)
+- [CLAUDE.md](./CLAUDE.md) — Guide for Claude (Anthropic)
 - [agent.md](./docs/agent.md) — General guide for any AI agent (Cursor, Copilot, etc.)
 
 ## Design
@@ -196,4 +200,4 @@ The UI follows a "Warm Scandinavian" design language with DM Serif Display + DM 
 
 ## License
 
-MIT
+[MIT](./LICENSE)

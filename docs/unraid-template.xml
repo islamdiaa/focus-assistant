@@ -48,16 +48,6 @@
     Required="true"
     Mask="false">/mnt/user/appdata/focus-assistant</Config>
   <Config
-    Name="SKIP_AUTH"
-    Target="SKIP_AUTH"
-    Default="true"
-    Mode=""
-    Description="Set to true to bypass OAuth (required for self-hosted). Set to false only if you have external OAuth configured."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="false">true</Config>
-  <Config
     Name="GOOGLE_SHEETS_ID"
     Target="GOOGLE_SHEETS_ID"
     Default=""

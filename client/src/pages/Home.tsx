@@ -22,7 +22,6 @@ import {
   lazy,
   Suspense,
 } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
 import Sidebar, { type Page } from "@/components/Sidebar";
 // Eagerly loaded — frequently used pages
 import TasksPage from "./TasksPage";
@@ -105,8 +104,6 @@ const PAGE_TITLES: Record<string, string> = {
 };
 
 export default function Home() {
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
-
   const [activePage, setActivePage] = useState<Page>("planner");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);

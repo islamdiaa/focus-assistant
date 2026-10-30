@@ -53,3 +53,6 @@ walkthrough-*.png
 
 # Package manager lock (using pnpm)
 package-lock.json
+
+# Local app data (created at runtime and by tests)
+data/
