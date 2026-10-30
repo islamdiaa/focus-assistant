@@ -42,7 +42,7 @@ FROM node:22-alpine AS production
 LABEL org.opencontainers.image.title="Focus Assistant"
 LABEL org.opencontainers.image.description="ADHD-friendly productivity app with tasks, Pomodoro timer, Eisenhower matrix, and stats"
 LABEL org.opencontainers.image.source="https://github.com/islamdiaa/focus-assistant"
-LABEL org.opencontainers.image.version="1.8.8"
+LABEL org.opencontainers.image.version="1.9.0"
 LABEL net.unraid.docker.icon="https://cdn-icons-png.flaticon.com/512/7246/7246748.png"
 LABEL net.unraid.docker.webui="http://[IP]:[PORT:1992]/"
 LABEL net.unraid.docker.managed="dockerman"
@@ -64,9 +64,8 @@ RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 # dist/index.js = server bundle, dist/public/ = client assets
 COPY --from=builder /app/dist ./dist
 
-# Copy shared and drizzle for runtime
+# Copy shared types for runtime
 COPY --from=builder /app/shared ./shared
-COPY --from=builder /app/drizzle ./drizzle
 
 # Create data directory for MD file persistence
 RUN mkdir -p /app/data
@@ -78,8 +77,6 @@ EXPOSE 1992
 ENV NODE_ENV=production
 ENV PORT=1992
 ENV DATA_DIR=/app/data
-ENV SKIP_AUTH=true
-ENV JWT_SECRET=focus-assistant-local-secret
 
 # Volume for persistent data
 VOLUME ["/app/data"]

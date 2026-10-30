@@ -324,9 +324,8 @@ Your data persists in the volume — it survives container rebuilds and image up
 
 ## Environment Variables Reference
 
-| Variable     | Default        | Description                    |
-| ------------ | -------------- | ------------------------------ |
-| `NODE_ENV`   | `production`   | Set to `production` for Docker |
-| `PORT`       | `1992`         | Server port (inside container) |
-| `DATA_DIR`   | `/app/data`    | Path to data directory         |
-| `JWT_SECRET` | auto-generated | Session cookie secret          |
+| Variable   | Default      | Description                    |
+| ---------- | ------------ | ------------------------------ |
+| `NODE_ENV` | `production` | Set to `production` for Docker |
+| `PORT`     | `1992`       | Server port (inside container) |
+| `DATA_DIR` | `/app/data`  | Path to data directory         |

@@ -16,12 +16,14 @@
 - **Obsidian Vault Path:** 
 - **Obsidian Auto Sync:** false
 - **Active Context:** all
+- **Auto Complete Parent:** false
+- **Available Hours Per Day:** 8
 
 ## Tasks
 
-| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate | Subtasks | RecurrenceDayOfMonth | RecurrenceStartMonth | PinnedToday | StatusChangedAt |
-|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|----------|---------------------|----------------------|-------------|-----------------|
-| t1 | After save task |  | medium | active |  |  |  | do-first | 2026-02-21T07:23:07.718Z |  |  |  |  |  |  |  |  |  |
+| ID | Title | Description | Priority | Status | Due Date | Category | Energy | Quadrant | Created | Completed | Recurrence | RecurrenceParentId | RecurrenceNextDate | Subtasks | RecurrenceDayOfMonth | RecurrenceStartMonth | PinnedToday | StatusChangedAt | IsFocusGoal | EstimatedMinutes |
+|----|-------|-------------|----------|--------|----------|----------|--------|----------|---------|-----------|------------|--------------------|--------------------|----------|---------------------|----------------------|-------------|-----------------|-------------|------------------|
+| t1 | After save task |  | medium | active |  |  |  | do-first | 2026-10-30T17:41:05.402Z |  |  |  |  |  |  |  |  |  |  |  |
 
 ## Pomodoros
 

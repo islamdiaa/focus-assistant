@@ -155,8 +155,7 @@ function SlashMenuPopup({ items, command }: SlashMenuPopupProps) {
     const container = containerRef.current;
     if (!container) return;
     const selectedEl = container.children[selectedIndex] as
-      | HTMLElement
-      | undefined;
+      HTMLElement | undefined;
     selectedEl?.scrollIntoView({ block: "nearest" });
   }, [selectedIndex]);
 

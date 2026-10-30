@@ -2,12 +2,12 @@
 
 ## Project Overview
 
-Focus Assistant is a productivity app for ADHD users. React 19 + TypeScript + Vite frontend, Express + Drizzle backend. Version 1.8.8.
+Focus Assistant is a productivity app for ADHD users. React 19 + TypeScript + Vite frontend, Express backend with Markdown file storage. Version 1.9.0.
 
 ## Tech Stack
 
 - **Frontend**: React 19, TypeScript, Tailwind CSS v4, Vite, framer-motion v12, @dnd-kit/react, Tiptap v3, Radix UI, cmdk
-- **Backend**: Express, Drizzle ORM, PostgreSQL, markdown file storage
+- **Backend**: Express, tRPC, Markdown file storage (single user, no database)
 - **Testing**: Vitest (unit), Playwright (e2e)
 - **Build**: Vite (client), esbuild (server), pnpm
 
