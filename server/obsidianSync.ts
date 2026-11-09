@@ -199,6 +199,36 @@ export function generateObsidianMarkdown(state: AppState): string {
 }
 
 /**
+ * Sensitive system directories the vault must never point into.
+ * Defense-in-depth only: this app is single-user with no login by design,
+ * so the primary protection is running it on a trusted network (see the
+ * Security section of the README).
+ */
+const BLOCKED_PATH_PREFIXES = ["/etc", "/proc", "/sys", "/dev"];
+
+/**
+ * Validate a user-configured Obsidian vault path.
+ * Rejects traversal segments and writes into sensitive system directories.
+ */
+export function validateVaultPath(vaultPath: string): {
+  ok: boolean;
+  error?: string;
+} {
+  if (vaultPath.includes("..")) {
+    return { ok: false, error: "Invalid vault path" };
+  }
+  const resolved = path.resolve(vaultPath);
+  if (
+    BLOCKED_PATH_PREFIXES.some(
+      p => resolved === p || resolved.startsWith(p + "/")
+    )
+  ) {
+    return { ok: false, error: "Invalid vault path" };
+  }
+  return { ok: true };
+}
+
+/**
  * Sync state to Obsidian vault.
  * Returns true if sync succeeded, false if skipped or failed.
  */
@@ -213,11 +243,23 @@ export async function syncToObsidian(
   const vaultPath = prefs.obsidianVaultPath.trim();
   if (!vaultPath) return { synced: false };
 
-  try {
-    // Ensure vault directory exists
-    await fs.mkdir(vaultPath, { recursive: true });
+  const validation = validateVaultPath(vaultPath);
+  if (!validation.ok) {
+    console.warn(
+      "[ObsidianSync] Rejected vault path:",
+      vaultPath,
+      "-",
+      validation.error
+    );
+    return { synced: false, error: validation.error };
+  }
 
-    const filePath = path.join(vaultPath, "FocusAssist.md");
+  try {
+    const resolved = path.resolve(vaultPath);
+    // Ensure vault directory exists
+    await fs.mkdir(resolved, { recursive: true });
+
+    const filePath = path.join(resolved, "FocusAssist.md");
     const content = generateObsidianMarkdown(state);
     await fs.writeFile(filePath, content, "utf-8");
 

@@ -84,5 +84,9 @@ VOLUME ["/app/data"]
 # Ensure Docker sends SIGTERM for graceful shutdown
 STOPSIGNAL SIGTERM
 
+# Container health check (busybox wget ships with alpine)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -q --spider "http://localhost:${PORT:-1992}/health" || exit 1
+
 # Start the server
 CMD ["node", "dist/index.js"]
