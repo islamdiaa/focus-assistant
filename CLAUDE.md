@@ -15,7 +15,7 @@ Focus Assistant is a productivity app for ADHD users. React 19 + TypeScript + Vi
 
 ```bash
 pnpm check          # TypeScript check (tsc --noEmit)
-pnpm test           # Run all 371 unit tests
+pnpm test           # Run all unit tests (500+)
 pnpm test:e2e       # Playwright e2e tests
 pnpm build          # Production build
 pnpm preflight      # Full pre-push validation (types + tests + guards + compat)
@@ -208,6 +208,8 @@ Each reviews the full PR from a different angle:
 
 ## Remaining Design Improvement Tasks
 
+(All design improvement tasks below are complete. This section is kept for reference.)
+
 ### High Priority (All Complete)
 
 - [x] H1-H5: Motion, dark mode, background hue, keyboard drag, focus-within (PR #4)
@@ -218,21 +220,21 @@ Each reviews the full PR from a different angle:
 - [x] H14: Standardize glass effects — reduce glass-heavy usage (PR #6)
 - [x] H15: Bulk actions discoverability (count badge + action bar) (PR #6)
 
-### Medium Priority
+### Medium Priority (All Complete)
 
-- [ ] M1: Typography hierarchy — restrict DM Serif to 3xl+
-- [ ] M2: Card border-radius and shadow standardization
-- [ ] M3: Checkbox spring animation on completion
-- [ ] M4: Drag-and-drop ghost/lift feedback
-- [ ] M5: Stats grid responsive cols-2/cols-4
-- [ ] M6: Sidebar breakpoint lg→md (768px)
-- [ ] M7: mx-auto + max-w-5xl on all page roots
-- [ ] M8: Timer single-focus nudge + prominent running state
-- [ ] M9: Stats charts — increase height, add Y-axis labels
-- [ ] M10: Settings page — reorder by usage frequency
-- [ ] M11: Move Focus Mode/Thoughts to sidebar footer
+- [x] M1: Typography hierarchy — restrict DM Serif to 3xl+ (PR #7)
+- [x] M2: Card border-radius and shadow standardization (PR #7)
+- [x] M3: Checkbox spring animation on completion (PR #7)
+- [x] M4: Drag-and-drop ghost/lift feedback (PR #7)
+- [x] M5: Stats grid responsive cols-2/cols-4 (PR #7)
+- [x] M6: Sidebar breakpoint lg→md (768px) (PR #8)
+- [x] M7: mx-auto + max-w-5xl on all page roots (PR #8)
+- [x] M8: Timer single-focus nudge + prominent running state (PR #8)
+- [x] M9: Stats charts — increase height, add Y-axis labels (PR #8)
+- [x] M10: Settings page — reorder by usage frequency (PR #8)
+- [x] M11: Move Focus Mode/Thoughts to sidebar footer (PR #8)
 
-### Low Priority
+### Low Priority (All Complete)
 
-- [ ] L1: Matrix page — dismissible onboarding banner
-- [ ] L2: Skeleton loading states for async content
+- [x] L1: Matrix page — dismissible onboarding banner (PR #9)
+- [x] L2: Skeleton loading states for async content (PR #9)
