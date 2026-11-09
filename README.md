@@ -104,7 +104,7 @@ The project uses GitHub Actions for continuous integration and deployment:
 Code push → CI tests → Docker build → Docker Hub → Watchtower → Auto-update
 ```
 
-- **Test job:** TypeScript type-checking + Vitest (324+ tests)
+- **Test job:** TypeScript type-checking + Vitest unit tests
 - **Docker job:** Multi-arch build (amd64/arm64), pushes to Docker Hub + GHCR
 - **Versioning:** Semver tags on GitHub releases (e.g., `v1.8.1` → Docker tag `1.8.1`)
 
