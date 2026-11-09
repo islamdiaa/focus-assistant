@@ -6,6 +6,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.9.1] - 2026-11-09
+
+### Added
+
+- `GET /health` endpoint for Docker health checks and uptime probes.
+- `HEALTHCHECK` in the Docker image (respects `PORT`) and a matching `healthcheck` block in `docker-compose.yml`, so `docker ps` and Unraid show real health status.
+
+### Security
+
+- Obsidian vault sync now validates the configured vault path before writing: traversal segments (`..`) and sensitive system directories (`/etc`, `/proc`, `/sys`, `/dev`) are rejected.
+
+### Fixed
+
+- Documentation drift: corrected stale test counts (README, CLAUDE.md) and marked the completed M/L design-improvement checklist items as done.
+
+---
+
 ## [1.9.0] - 2026-10-30
 
 ### Added
