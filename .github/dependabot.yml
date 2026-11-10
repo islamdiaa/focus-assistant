@@ -1,0 +1,42 @@
+# Dependabot version updates.
+# Security alerts + security-update PRs are enabled at the repo level;
+# this config adds weekly maintenance PRs for dependencies and Actions.
+
+version: 2
+updates:
+  # JavaScript/TypeScript dependencies (pnpm lockfile)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    # Group minor/patch bumps into one PR per ecosystem to keep the
+    # inbox manageable; majors still get their own PRs.
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    # wouter is pinned to 3.7.1 by patches/wouter@3.7.1.patch —
+    # bumping it breaks pnpm install until the patch is rebased.
+    ignore:
+      - dependency-name: "wouter"
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(dev-deps)"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 5
+
+  # Keep GitHub Actions versions current (checkout, setup-node, etc.)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      actions:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
