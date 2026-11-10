@@ -1,6 +1,8 @@
 # FocusAssist
 
 [![CI](https://github.com/islamdiaa/focus-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/islamdiaa/focus-assistant/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/islamdiaa/focus-assistant)](https://github.com/islamdiaa/focus-assistant/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![Docker Pulls](https://img.shields.io/docker/pulls/islamdiaa/focus-assistant)](https://hub.docker.com/r/islamdiaa/focus-assistant)
 [![Docker Image](https://img.shields.io/docker/image-size/islamdiaa/focus-assistant/latest)](https://hub.docker.com/r/islamdiaa/focus-assistant)
 
@@ -138,7 +140,7 @@ environment:
 
 Focus Assistant is a single-user app with **no login**. Anyone who can reach its port can read and change your data, and see the Google Sheets API key if you set one. Run it on your home network, over a VPN such as Tailscale, or behind a reverse proxy with authentication (Authelia, Authentik, Cloudflare Access). Don't expose port 1992 directly to the internet.
 
-To report a security issue, please use [GitHub private vulnerability reporting](https://github.com/islamdiaa/focus-assistant/security/advisories/new) instead of a public issue.
+To report a security issue, please use [GitHub private vulnerability reporting](https://github.com/islamdiaa/focus-assistant/security/advisories/new) instead of a public issue. See [SECURITY.md](./SECURITY.md) for the full policy, and [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) for our community standards.
 
 ## Project Structure
 
@@ -196,10 +198,23 @@ The UI follows a "Warm Scandinavian" design language with DM Serif Display + DM 
 | `Ctrl+Z`         | Undo              |
 | `Ctrl+Shift+Z`   | Redo              |
 
+## Support the Project
+
+Focus Assistant is a free, open-source side project. You can help it grow by:
+
+- ⭐ **Starring the repo** if it helps your day
+- 🐛 **Reporting bugs and rough edges** — [open an issue](https://github.com/islamdiaa/focus-assistant/issues); see [SUPPORT.md](./SUPPORT.md) for help finding the right place
+- 💬 **Sharing it** with someone who needs a calmer task manager
+- ✍️ **Improving docs or code** — contributions welcome, see [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+## Acknowledgements
+
+Built on excellent open-source work: React, Express, tRPC, Vite, Zod, Tailwind CSS, shadcn/ui, Tiptap, and Framer Motion — and shaped by ADHD users who wanted tools that don't shout at them.
+
 ## Author
 
 [Islam ElTayar](https://itayar.com)
 
 ## License
 
-[MIT](./LICENSE)
+[MIT](./LICENSE) — free to use, fork, and self-host.
