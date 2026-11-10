@@ -99,7 +99,7 @@
     "@vitejs/plugin-react": "^5.2.0",
     "esbuild": "^0.28.2",
     "husky": "^9.1.7",
-    "pnpm": "^10.34.9",
+    "pnpm": "^12.18.0",
     "postcss": "^8.5.32",
     "prettier": "^3.9.10",
     "tailwindcss": "^4.3.5",
