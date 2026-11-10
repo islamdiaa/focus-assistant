@@ -11,7 +11,7 @@
  * (timing-dependent). These tests focus on the default page (Tasks) which
  * loads without navigation, plus structural checks that work on any page.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 test.describe("Mobile Touch UX", () => {
   test("search placeholder does not mention keyboard shortcut", async ({
