@@ -11,7 +11,7 @@
  * 7. Responsive layout (mobile hamburger, desktop sidebar)
  * 8. No console errors or unhandled rejections
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 test.describe("App Loading & Navigation", () => {
   test("homepage loads with content", async ({ page }) => {
