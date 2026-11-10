@@ -14,7 +14,7 @@
   <Support>https://github.com/islamdiaa/focus-assistant/issues</Support>
   <Project>https://github.com/islamdiaa/focus-assistant</Project>
   <Overview>
-    Focus Assistant is an ADHD-friendly productivity app featuring task management with the Eisenhower Matrix, a Pomodoro timer, daily planning, weekly reviews, reading list, reminders, and detailed statistics. All data is stored locally in Markdown files — no external database required.
+    Focus Assistant is an ADHD-friendly productivity app featuring task management with the Eisenhower Matrix, a Pomodoro timer, daily planning, weekly reviews, reading list, reminders, and detailed statistics. All data is stored locally in Markdown files — no external database required. Single container, includes a Docker healthcheck. Note: single-user app with no login by design — anyone who can reach the port can access it, so keep it on your home network or behind a VPN/reverse proxy.
   </Overview>
   <Category>Productivity: Tools:</Category>
   <WebUI>http://[IP]:[PORT:1992]/</WebUI>
@@ -47,34 +47,4 @@
     Display="always"
     Required="true"
     Mask="false">/mnt/user/appdata/focus-assistant</Config>
-  <Config
-    Name="GOOGLE_SHEETS_ID"
-    Target="GOOGLE_SHEETS_ID"
-    Default=""
-    Mode=""
-    Description="(Optional) Google Sheets ID for cloud sync. Leave blank to use local Markdown storage only."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="false"/>
-  <Config
-    Name="GOOGLE_SERVICE_ACCOUNT_EMAIL"
-    Target="GOOGLE_SERVICE_ACCOUNT_EMAIL"
-    Default=""
-    Mode=""
-    Description="(Optional) Google service account email for Sheets sync."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="false"/>
-  <Config
-    Name="GOOGLE_PRIVATE_KEY"
-    Target="GOOGLE_PRIVATE_KEY"
-    Default=""
-    Mode=""
-    Description="(Optional) Google service account private key for Sheets sync."
-    Type="Variable"
-    Display="always"
-    Required="false"
-    Mask="true"/>
 </Container>
