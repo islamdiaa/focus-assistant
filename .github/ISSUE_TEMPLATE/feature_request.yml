@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an idea for Focus Assistant
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Focus Assistant is deliberately a calm, single-user, ADHD-friendly app — small and focused suggestions fit best.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: The situation or friction you ran into, rather than the solution.
+      placeholder: I keep forgetting to…
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like to happen?
+      description: Describe your idea. Sketches or screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+  - type: checkboxes
+    id: fits
+    attributes:
+      label: Fit with the project
+      options:
+        - label: This works offline / locally (no new cloud service or account required)
+          required: false
+        - label: This keeps the app calm and keyboard-friendly
+          required: false

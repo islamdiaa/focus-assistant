@@ -1,0 +1,61 @@
+name: Bug report
+description: Something is broken or behaving unexpectedly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please include enough detail for someone to reproduce it.
+        **Security issues:** do not use this form — use [private vulnerability reporting](https://github.com/islamdiaa/focus-assistant/security/advisories/new) instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: The streak counter reset to 0 after…
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to …
+        2. Click …
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Docker tag (e.g. `1.9.1`, `latest`) or commit — check Settings in the app or `docker inspect`.
+      placeholder: "1.9.1"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser + OS, or Docker host / Unraid version.
+      placeholder: "Chrome 130 / macOS, Docker on Unraid 7.0"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: From `docker logs focus-assistant` or the browser console. No API keys or personal data, please.
+      render: shell
+  - type: textarea
+    id: data-file
+    attributes:
+      label: Data file excerpt (if relevant)
+      description: Focus Assistant stores data as Markdown (see the `data/` volume). Include only the relevant lines, and remove anything private.
+      render: markdown

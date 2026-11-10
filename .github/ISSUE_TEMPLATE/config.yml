@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & self-hosting help
+    url: https://github.com/islamdiaa/focus-assistant/blob/main/SUPPORT.md
+    about: Check the support guide and Docker guide before opening an issue.
+  - name: Security disclosures
+    url: https://github.com/islamdiaa/focus-assistant/security/advisories/new
+    about: Please use private vulnerability reporting for security issues — not a public issue.
