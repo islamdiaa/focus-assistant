@@ -9,7 +9,7 @@
  * 5. Bulk Task Actions
  * 6. Auto-Complete Parent + Available Hours (Settings)
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 // ---------------------------------------------------------------------------
 // 1. Command Palette (Ctrl+K)
