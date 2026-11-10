@@ -88,9 +88,18 @@ docker run -d \
 | Key        | Value        |
 | ---------- | ------------ |
 | `NODE_ENV` | `production` |
-| `PORT`     | `3000`       |
+| `PORT`     | `1992`       |
 
 5. Click **Apply**
+
+### Method 2b: Install from the app's Unraid template
+
+The repo ships an Unraid container template ([`unraid-template.xml`](../unraid-template.xml)) preconfigured with the port and appdata paths above, plus a container healthcheck.
+
+1. In Unraid: **Docker** → **Add Container** → **Template URL**
+2. Paste:
+   `https://raw.githubusercontent.com/islamdiaa/focus-assistant/main/unraid-template.xml`
+3. Review the port and `/mnt/user/appdata/focus-assistant` path, then **Apply**
 
 ### Method 3: Build on Unraid via SSH
 
@@ -329,3 +338,19 @@ Your data persists in the volume — it survives container rebuilds and image up
 | `NODE_ENV` | `production` | Set to `production` for Docker |
 | `PORT`     | `1992`       | Server port (inside container) |
 | `DATA_DIR` | `/app/data`  | Path to data directory         |
+
+## Unraid Community Apps Submission
+
+Everything is in place for a Community Applications listing:
+
+- **Template:** [`unraid-template.xml`](../unraid-template.xml) at the repo root, reachable at the stable raw URL CA requires (`https://raw.githubusercontent.com/islamdiaa/focus-assistant/main/unraid-template.xml`). It declares the Docker Hub repository, WebUI port, appdata path, support/project links, and category.
+- **Image:** multi-arch (`amd64`/`arm64`) on [Docker Hub](https://hub.docker.com/r/islamdiaa/focus-assistant) and GHCR, version-tagged from GitHub releases (`v1.9.1` → `1.9.1`) plus `latest` on every merge.
+- **Health:** the image ships a `HEALTHCHECK` against `/health`, so Unraid shows real health status.
+- **Docs:** this guide plus the README cover install, backup/restore, and the single-user security model.
+
+Remaining steps to go live in CA (maintainer actions):
+
+1. Post a support thread on the [Unraid forums](https://forums.unraid.net/) for the app and link it in the template's `<Support>` field.
+2. Request inclusion in Community Applications (the CA authors thread) with the template URL.
+3. Fill in the Docker Hub repository description so the listing shows the overview text.
+4. After listing, set `<DonateLink>` if you'd like a sponsorship link in the app card.
